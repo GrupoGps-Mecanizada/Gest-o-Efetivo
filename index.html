@@ -1985,45 +1985,30 @@
             img.src = url + '?test=' + Date.now();
         }
 
-        function sincronizar() {
+        function configurarPlanilha() {
             const url = sistemaData.config.appsScriptUrl;
             if (!url) {
-                showNotification('Configure a integração primeiro', 'warning');
+                showNotification('Configure a URL primeiro', 'warning');
                 return;
             }
             
-            if (sistemaData.funcionarios.length === 0) {
-                showNotification('Nenhum dado para sincronizar', 'warning');
-                return;
-            }
+            showNotification('Configurando planilha...', 'info');
             
-            showNotification('Preparando sincronização...', 'info');
-            
-            // Criar janela popup para sincronização
-            const formData = {
-                action: 'write',
-                tab: 'Funcionarios',
-                data: JSON.stringify(sistemaData.funcionarios)
-            };
-            
-            const params = Object.keys(formData).map(key => 
-                encodeURIComponent(key) + '=' + encodeURIComponent(formData[key])
-            ).join('&');
-            
+            // Abrir popup para configurar planilha
             const popup = window.open(
-                url + '?' + params,
-                'sync',
+                url + '?action=setup',
+                'setup',
                 'width=600,height=400,scrollbars=yes,resizable=yes'
             );
             
             if (popup) {
-                showNotification('Dados enviados! Verifique a janela aberta e a planilha.', 'success');
+                showNotification('Configuração iniciada! Aguarde o resultado na janela aberta.', 'info');
                 
                 // Monitorar se a janela foi fechada
                 const checkClosed = setInterval(() => {
                     if (popup.closed) {
                         clearInterval(checkClosed);
-                        showNotification('Sincronização concluída!', 'info');
+                        showNotification('Planilha configurada! Pode fechar a janela se ainda estiver aberta.', 'success');
                     }
                 }, 1000);
                 
@@ -2036,9 +2021,101 @@
             }
         }
 
-        // Função alternativa para sincronização manual
+        function sincronizar() {
+            const url = sistemaData.config.appsScriptUrl;
+            if (!url) {
+                showNotification('Configure a integração primeiro', 'warning');
+                return;
+            }
+            
+            if (sistemaData.funcionarios.length === 0) {
+                showNotification('Nenhum funcionário para sincronizar. Cadastre funcionários primeiro.', 'warning');
+                return;
+            }
+            
+            showNotification('Preparando sincronização de ' + sistemaData.funcionarios.length + ' funcionários...', 'info');
+            
+            // Preparar dados para sincronização
+            const dadosParaSincronizar = sistemaData.funcionarios.map(func => ({
+                id: func.id,
+                nome: func.nome || '',
+                cpf: func.cpf || '',
+                nascimento: func.nascimento || '',
+                telefone: func.telefone || '',
+                matricula: func.matricula || '',
+                funcao: func.funcao || '',
+                supervisor: func.supervisor || '',
+                equipamento: func.equipamento || '',
+                escala: func.escala || '',
+                admissao: func.admissao || '',
+                status: func.status || 'Ativo',
+                aso: func.aso || '',
+                cnh: func.cnh || '',
+                cnhVenc: func.cnhVenc || '',
+                observacoes: func.observacoes || '',
+                dataCadastro: func.dataCadastro || new Date().toISOString()
+            }));
+            
+            // Criar URL com parâmetros
+            const params = new URLSearchParams({
+                action: 'write',
+                tab: 'Funcionarios',
+                data: JSON.stringify(dadosParaSincronizar)
+            });
+            
+            const urlCompleta = url + '?' + params.toString();
+            
+            // Verificar se URL não é muito longa
+            if (urlCompleta.length > 8000) {
+                // Se muito longa, usar método alternativo
+                sincronizarManual();
+                return;
+            }
+            
+            const popup = window.open(
+                urlCompleta,
+                'sync',
+                'width=800,height=600,scrollbars=yes,resizable=yes'
+            );
+            
+            if (popup) {
+                showNotification('Dados enviados! Verifique o resultado na janela aberta.', 'success');
+                
+                // Monitorar se a janela foi fechada
+                let tentativas = 0;
+                const checkClosed = setInterval(() => {
+                    if (popup.closed) {
+                        clearInterval(checkClosed);
+                        showNotification('Sincronização concluída! Verifique sua planilha Google Sheets.', 'success');
+                    }
+                    tentativas++;
+                    if (tentativas > 30) { // 30 segundos
+                        clearInterval(checkClosed);
+                        showNotification('Sincronização em andamento. Verifique a janela e sua planilha.', 'info');
+                    }
+                }, 1000);
+            } else {
+                showNotification('Popups bloqueados! Permita popups neste site e tente novamente.', 'error');
+                // Mostrar alternativa
+                setTimeout(() => {
+                    if (confirm('Popups bloqueados. Deseja tentar sincronização manual?')) {
+                        sincronizarManual();
+                    }
+                }, 2000);
+            }
+        }
+
+        // Melhorar sincronização manual
         function sincronizarManual() {
+            if (sistemaData.funcionarios.length === 0) {
+                showNotification('Nenhum funcionário para sincronizar', 'warning');
+                return;
+            }
+            
             const dados = {
+                acao: 'Sincronização Manual - Sistema GrupoGPS',
+                timestamp: new Date().toLocaleString('pt-BR'),
+                totalFuncionarios: sistemaData.funcionarios.length,
                 funcionarios: sistemaData.funcionarios,
                 faltas: sistemaData.faltas,
                 atestados: sistemaData.atestados,
@@ -2048,26 +2125,61 @@
             
             const dadosFormatados = JSON.stringify(dados, null, 2);
             
-            // Criar textarea com dados para copiar
+            // Criar modal com dados
             const modal = document.createElement('div');
             modal.className = 'modal show';
             modal.innerHTML = `
-                <div class="modal-content">
+                <div class="modal-content" style="max-width: 90%; max-height: 90%;">
                     <div class="modal-header">
-                        <h3>Dados para Sincronização Manual</h3>
+                        <h3>Sincronização Manual</h3>
                         <button onclick="this.closest('.modal').remove()">&times;</button>
                     </div>
                     <div class="modal-body">
-                        <p>Copie os dados abaixo e cole no Google Apps Script:</p>
-                        <textarea style="width: 100%; height: 300px; font-family: monospace;" readonly>${dadosFormatados}</textarea>
-                        <button class="btn btn-primary" onclick="navigator.clipboard.writeText(this.previousElementSibling.value); showNotification('Dados copiados!', 'success');">
-                            <i class="fas fa-copy"></i> Copiar Dados
-                        </button>
+                        <p><strong>Instruções:</strong></p>
+                        <ol>
+                            <li>Clique em "Copiar Dados" abaixo</li>
+                            <li>Abra seu Google Apps Script</li>
+                            <li>Execute a função <code>testSystem()</code> manualmente</li>
+                            <li>Ou use os dados copiados conforme necessário</li>
+                        </ol>
+                        <p><strong>Dados para sincronização (${sistemaData.funcionarios.length} funcionários):</strong></p>
+                        <textarea id="dadosSync" style="width: 100%; height: 300px; font-family: monospace; font-size: 12px;" readonly>${dadosFormatados}</textarea>
+                        <div style="margin-top: 1rem; display: flex; gap: 1rem;">
+                            <button class="btn btn-primary" onclick="copiarDados()">
+                                <i class="fas fa-copy"></i> Copiar Dados
+                            </button>
+                            <button class="btn btn-success" onclick="abrirAppsScript()">
+                                <i class="fas fa-external-link-alt"></i> Abrir Apps Script
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
             
             document.body.appendChild(modal);
+            
+            // Funções para o modal
+            window.copiarDados = function() {
+                const textarea = document.getElementById('dadosSync');
+                textarea.select();
+                document.execCommand('copy');
+                showNotification('Dados copiados para área de transferência!', 'success');
+            };
+            
+            window.abrirAppsScript = function() {
+                const url = sistemaData.config.appsScriptUrl;
+                if (url) {
+                    // Extrair ID do script da URL
+                    const scriptId = url.match(/\/d\/(.+?)\/exec/)?.[1];
+                    if (scriptId) {
+                        window.open(`https://script.google.com/d/${scriptId}/edit`, '_blank');
+                    } else {
+                        window.open('https://script.google.com/', '_blank');
+                    }
+                } else {
+                    window.open('https://script.google.com/', '_blank');
+                }
+            };
         }
 
         // BACKUP
