@@ -861,7 +861,7 @@
                                        placeholder="ID da planilha Google Sheets">
                             </div>
                         </div>
-                        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                        <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
                             <button class="btn btn-primary" onclick="salvarConfiguracao()">
                                 <i class="fas fa-save"></i>
                                 Salvar
@@ -870,9 +870,17 @@
                                 <i class="fas fa-check"></i>
                                 Testar
                             </button>
-                            <button class="btn btn-warning" onclick="sincronizar()">
+                            <button class="btn btn-warning" onclick="configurarPlanilha()">
+                                <i class="fas fa-cogs"></i>
+                                Configurar Planilha
+                            </button>
+                            <button class="btn btn-info" onclick="sincronizar()">
                                 <i class="fas fa-sync"></i>
                                 Sincronizar
+                            </button>
+                            <button class="btn btn-secondary" onclick="sincronizarManual()">
+                                <i class="fas fa-file-export"></i>
+                                Manual
                             </button>
                         </div>
                     </div>
