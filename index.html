@@ -1963,18 +1963,40 @@
                 return;
             }
             
-            fetch(url + '?action=test')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showNotification('Conexão OK!', 'success');
-                    } else {
-                        showNotification('Erro na conexão', 'error');
-                    }
-                })
-                .catch(error => {
-                    showNotification('Erro na conexão', 'error');
-                });
+            showNotification('Testando conexão...', 'info');
+            
+            // Usar JSONP como alternativa ao CORS
+            const script = document.createElement('script');
+            const callbackName = 'callback_' + Date.now();
+            
+            // Timeout para a requisição
+            const timeout = setTimeout(() => {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                showNotification('Timeout na conexão - Verifique a URL', 'error');
+            }, 10000);
+            
+            window[callbackName] = function(data) {
+                clearTimeout(timeout);
+                document.head.removeChild(script);
+                delete window[callbackName];
+                
+                if (data && (data.success || data.message)) {
+                    showNotification('Conexão estabelecida com sucesso!', 'success');
+                } else {
+                    showNotification('Erro na resposta do servidor', 'error');
+                }
+            };
+            
+            script.src = `${url}?action=test&callback=${callbackName}`;
+            script.onerror = function() {
+                clearTimeout(timeout);
+                document.head.removeChild(script);
+                delete window[callbackName];
+                showNotification('Erro na conexão - Verifique se o Apps Script foi publicado corretamente', 'error');
+            };
+            
+            document.head.appendChild(script);
         }
 
         function sincronizar() {
@@ -1984,27 +2006,39 @@
                 return;
             }
             
-            // Sincronizar funcionários
-            fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'write',
-                    tab: 'Funcionarios',
-                    data: sistemaData.funcionarios
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification('Dados sincronizados!', 'success');
-                } else {
-                    showNotification('Erro na sincronização', 'error');
-                }
-            })
-            .catch(error => {
-                showNotification('Erro na sincronização', 'error');
-            });
+            showNotification('Sincronizando dados...', 'info');
+            
+            // Criar um formulário oculto para POST (contorna CORS)
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = url;
+            form.target = '_blank'; // Abre em nova aba para não sair da aplicação
+            form.style.display = 'none';
+            
+            // Adicionar dados como campos ocultos
+            const actionField = document.createElement('input');
+            actionField.type = 'hidden';
+            actionField.name = 'action';
+            actionField.value = 'write';
+            form.appendChild(actionField);
+            
+            const tabField = document.createElement('input');
+            tabField.type = 'hidden';
+            tabField.name = 'tab';
+            tabField.value = 'Funcionarios';
+            form.appendChild(tabField);
+            
+            const dataField = document.createElement('input');
+            dataField.type = 'hidden';
+            dataField.name = 'data';
+            dataField.value = JSON.stringify(sistemaData.funcionarios);
+            form.appendChild(dataField);
+            
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+            
+            showNotification('Dados enviados! Verifique a planilha.', 'success');
         }
 
         // BACKUP
