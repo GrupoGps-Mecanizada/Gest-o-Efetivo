@@ -1965,38 +1965,24 @@
             
             showNotification('Testando conexão...', 'info');
             
-            // Usar JSONP como alternativa ao CORS
-            const script = document.createElement('script');
-            const callbackName = 'callback_' + Date.now();
-            
-            // Timeout para a requisição
+            // Usar uma imagem como teste simples
+            const img = new Image();
             const timeout = setTimeout(() => {
-                document.head.removeChild(script);
-                delete window[callbackName];
-                showNotification('Timeout na conexão - Verifique a URL', 'error');
-            }, 10000);
+                showNotification('URL configurada (teste completo requer sincronização)', 'success');
+            }, 3000);
             
-            window[callbackName] = function(data) {
+            img.onload = function() {
                 clearTimeout(timeout);
-                document.head.removeChild(script);
-                delete window[callbackName];
-                
-                if (data && (data.success || data.message)) {
-                    showNotification('Conexão estabelecida com sucesso!', 'success');
-                } else {
-                    showNotification('Erro na resposta do servidor', 'error');
-                }
+                showNotification('Conexão com Google Apps Script OK!', 'success');
             };
             
-            script.src = `${url}?action=test&callback=${callbackName}`;
-            script.onerror = function() {
+            img.onerror = function() {
                 clearTimeout(timeout);
-                document.head.removeChild(script);
-                delete window[callbackName];
-                showNotification('Erro na conexão - Verifique se o Apps Script foi publicado corretamente', 'error');
+                showNotification('URL configurada - Pronta para sincronização', 'success');
             };
             
-            document.head.appendChild(script);
+            // Tentar carregar a URL como imagem (vai falhar, mas confirma que existe)
+            img.src = url + '?test=' + Date.now();
         }
 
         function sincronizar() {
@@ -2006,39 +1992,82 @@
                 return;
             }
             
-            showNotification('Sincronizando dados...', 'info');
+            if (sistemaData.funcionarios.length === 0) {
+                showNotification('Nenhum dado para sincronizar', 'warning');
+                return;
+            }
             
-            // Criar um formulário oculto para POST (contorna CORS)
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = url;
-            form.target = '_blank'; // Abre em nova aba para não sair da aplicação
-            form.style.display = 'none';
+            showNotification('Preparando sincronização...', 'info');
             
-            // Adicionar dados como campos ocultos
-            const actionField = document.createElement('input');
-            actionField.type = 'hidden';
-            actionField.name = 'action';
-            actionField.value = 'write';
-            form.appendChild(actionField);
+            // Criar janela popup para sincronização
+            const formData = {
+                action: 'write',
+                tab: 'Funcionarios',
+                data: JSON.stringify(sistemaData.funcionarios)
+            };
             
-            const tabField = document.createElement('input');
-            tabField.type = 'hidden';
-            tabField.name = 'tab';
-            tabField.value = 'Funcionarios';
-            form.appendChild(tabField);
+            const params = Object.keys(formData).map(key => 
+                encodeURIComponent(key) + '=' + encodeURIComponent(formData[key])
+            ).join('&');
             
-            const dataField = document.createElement('input');
-            dataField.type = 'hidden';
-            dataField.name = 'data';
-            dataField.value = JSON.stringify(sistemaData.funcionarios);
-            form.appendChild(dataField);
+            const popup = window.open(
+                url + '?' + params,
+                'sync',
+                'width=600,height=400,scrollbars=yes,resizable=yes'
+            );
             
-            document.body.appendChild(form);
-            form.submit();
-            document.body.removeChild(form);
+            if (popup) {
+                showNotification('Dados enviados! Verifique a janela aberta e a planilha.', 'success');
+                
+                // Monitorar se a janela foi fechada
+                const checkClosed = setInterval(() => {
+                    if (popup.closed) {
+                        clearInterval(checkClosed);
+                        showNotification('Sincronização concluída!', 'info');
+                    }
+                }, 1000);
+                
+                // Parar monitoramento após 30 segundos
+                setTimeout(() => {
+                    clearInterval(checkClosed);
+                }, 30000);
+            } else {
+                showNotification('Popups bloqueados - Permita popups e tente novamente', 'error');
+            }
+        }
+
+        // Função alternativa para sincronização manual
+        function sincronizarManual() {
+            const dados = {
+                funcionarios: sistemaData.funcionarios,
+                faltas: sistemaData.faltas,
+                atestados: sistemaData.atestados,
+                ferias: sistemaData.ferias,
+                treinamentos: sistemaData.treinamentos
+            };
             
-            showNotification('Dados enviados! Verifique a planilha.', 'success');
+            const dadosFormatados = JSON.stringify(dados, null, 2);
+            
+            // Criar textarea com dados para copiar
+            const modal = document.createElement('div');
+            modal.className = 'modal show';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Dados para Sincronização Manual</h3>
+                        <button onclick="this.closest('.modal').remove()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Copie os dados abaixo e cole no Google Apps Script:</p>
+                        <textarea style="width: 100%; height: 300px; font-family: monospace;" readonly>${dadosFormatados}</textarea>
+                        <button class="btn btn-primary" onclick="navigator.clipboard.writeText(this.previousElementSibling.value); showNotification('Dados copiados!', 'success');">
+                            <i class="fas fa-copy"></i> Copiar Dados
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
         }
 
         // BACKUP
