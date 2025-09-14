@@ -5,386 +5,939 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Gestão de Efetivo - GrupoGPS</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #16a34a;
+            --warning: #ca8a04;
+            --danger: #dc2626;
+            --info: #0891b2;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-900);
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: var(--white);
+            border-right: 1px solid var(--gray-200);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+        }
+
+        .sidebar-brand {
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar-menu {
+            padding: 1rem 0;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: var(--gray-700);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .menu-item:hover {
+            background: var(--gray-100);
+            color: var(--primary);
+        }
+
+        .menu-item.active {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .menu-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            background: var(--gray-50);
+        }
+
+        .header {
+            background: var(--white);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .page-content {
+            padding: 2rem;
+            display: none;
+        }
+
+        .page-content.active {
+            display: block;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--gray-900);
+        }
+
+        .page-subtitle {
+            color: var(--gray-600);
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: var(--white);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: var(--white);
+        }
+
+        .btn-secondary {
+            background: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 0.5rem;
+            border: 1px solid var(--gray-200);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th {
+            background: var(--gray-50);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--gray-700);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .table tr:hover {
+            background: var(--gray-50);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius: 0.75rem;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray-500);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: rgba(22, 163, 74, 0.1);
+            color: var(--success);
+        }
+
+        .badge-warning {
+            background: rgba(202, 138, 4, 0.1);
+            color: var(--warning);
+        }
+
+        .badge-danger {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--danger);
+        }
+
+        .badge-info {
+            background: rgba(8, 145, 178, 0.1);
+            color: var(--info);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card-title {
+            color: var(--gray-600);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .escala-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .escala-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid var(--primary);
+        }
+
+        .escala-supervisor {
+            font-weight: 600;
+            font-size: 1.125rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .escala-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .escala-funcionarios {
+            background: var(--gray-50);
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+
+        .notification {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            color: var(--white);
+            font-weight: 600;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .notification.success {
+            background: var(--success);
+        }
+
+        .notification.error {
+            background: var(--danger);
+        }
+
+        .notification.warning {
+            background: var(--warning);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-muted {
+            color: var(--gray-500);
+        }
+
+        .mb-0 { margin-bottom: 0; }
+        .mb-1 { margin-bottom: 0.25rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-3 { margin-bottom: 0.75rem; }
+        .mb-4 { margin-bottom: 1rem; }
+    </style>
 </head>
 <body>
     <div class="app-container">
         <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
+        <nav class="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-brand">
                     <i class="fas fa-users-cog"></i>
-                    <span>GrupoGPS</span>
+                    Sistema GrupoGPS
                 </div>
             </div>
             
-            <nav class="sidebar-menu">
-                <a href="#" class="menu-item active" data-page="dashboard">
+            <div class="sidebar-menu">
+                <button class="menu-item active" onclick="showPage('dashboard')">
                     <i class="fas fa-tachometer-alt"></i>
-                    <span>Dashboard</span>
-                </a>
+                    Dashboard
+                </button>
                 
-                <a href="#" class="menu-item" data-page="funcionarios">
+                <button class="menu-item" onclick="showPage('funcionarios')">
                     <i class="fas fa-users"></i>
-                    <span>Funcionários</span>
-                </a>
+                    Funcionários
+                </button>
                 
-                <a href="#" class="menu-item" data-page="escalas">
+                <button class="menu-item" onclick="showPage('escalas')">
                     <i class="fas fa-calendar-alt"></i>
-                    <span>Escalas</span>
-                </a>
+                    Escalas
+                </button>
                 
-                <a href="#" class="menu-item" data-page="ponto">
-                    <i class="fas fa-clock"></i>
-                    <span>Controle de Ponto</span>
-                </a>
-                
-                <a href="#" class="menu-item" data-page="faltas">
+                <button class="menu-item" onclick="showPage('faltas')">
                     <i class="fas fa-user-times"></i>
-                    <span>Registro de Faltas</span>
-                </a>
+                    Faltas
+                </button>
                 
-                <a href="#" class="menu-item" data-page="atestados">
+                <button class="menu-item" onclick="showPage('atestados')">
                     <i class="fas fa-file-medical"></i>
-                    <span>Atestados</span>
-                </a>
+                    Atestados
+                </button>
                 
-                <a href="#" class="menu-item" data-page="ferias">
+                <button class="menu-item" onclick="showPage('ferias')">
                     <i class="fas fa-umbrella-beach"></i>
-                    <span>Férias</span>
-                </a>
+                    Férias
+                </button>
                 
-                <a href="#" class="menu-item" data-page="treinamentos">
+                <button class="menu-item" onclick="showPage('treinamentos')">
                     <i class="fas fa-graduation-cap"></i>
-                    <span>Treinamentos</span>
-                </a>
+                    Treinamentos
+                </button>
                 
-                <div class="menu-separator"></div>
-                
-                <a href="#" class="menu-item" data-page="relatorios">
+                <button class="menu-item" onclick="showPage('relatorios')">
                     <i class="fas fa-chart-bar"></i>
-                    <span>Relatórios</span>
-                </a>
+                    Relatórios
+                </button>
                 
-                <a href="#" class="menu-item" data-page="configuracoes">
+                <button class="menu-item" onclick="showPage('configuracoes')">
                     <i class="fas fa-cog"></i>
-                    <span>Configurações</span>
-                </a>
-            </nav>
-        </aside>
+                    Configurações
+                </button>
+            </div>
+        </nav>
 
         <!-- Main Content -->
-        <div class="main-wrapper">
-            <!-- Header -->
+        <main class="main-content">
             <header class="header">
-                <div class="header-left">
-                    <button class="sidebar-toggle" id="sidebarToggle">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    
-                    <div class="search-bar">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="globalSearch" placeholder="Buscar funcionário, matrícula...">
-                    </div>
-                </div>
-                
-                <div class="header-right">
-                    <button class="header-btn" id="syncBtn">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
-                    
-                    <button class="header-btn" id="notificationBtn">
-                        <i class="fas fa-bell"></i>
-                        <span class="notification-badge" id="notificationBadge"></span>
-                    </button>
-                    
-                    <div class="user-menu">
-                        <div class="user-avatar">GA</div>
-                        <div>
-                            <div class="user-name">Gestor Admin</div>
-                            <div class="user-role">Administrador</div>
-                        </div>
-                    </div>
-                </div>
+                <h1>Sistema de Gestão de Efetivo</h1>
             </header>
 
-            <!-- Content Area -->
-            <main class="content">
-                <!-- Dashboard Page -->
-                <div id="dashboard" class="page-content active">
-                    <div class="page-header">
-                        <h1 class="page-title">Dashboard</h1>
-                        <p class="page-subtitle">Visão geral do efetivo e indicadores</p>
+            <!-- Dashboard -->
+            <div id="dashboard" class="page-content active">
+                <h2 class="page-title">Dashboard</h2>
+                <p class="page-subtitle">Visão geral do efetivo</p>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-card-title">Total de Funcionários</div>
+                        <div class="stat-card-value" id="totalFuncionarios">0</div>
                     </div>
+                    <div class="stat-card">
+                        <div class="stat-card-title">Funcionários Ativos</div>
+                        <div class="stat-card-value" id="funcionariosAtivos">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-title">Em Férias</div>
+                        <div class="stat-card-value" id="funcionariosFerias">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-title">Afastados</div>
+                        <div class="stat-card-value" id="funcionariosAfastados">0</div>
+                    </div>
+                </div>
 
-                    <!-- KPIs Grid -->
-                    <div class="kpi-grid">
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <span class="kpi-title">Total Funcionários</span>
-                                <div class="kpi-icon primary">
-                                    <i class="fas fa-users"></i>
-                                </div>
-                            </div>
-                            <div class="kpi-value" id="totalFuncionarios">0</div>
-                            <div class="kpi-change positive" id="funcionariosChange">0%</div>
-                        </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-bell"></i>
+                            Alertas Importantes
+                        </h3>
+                    </div>
+                    <div class="card-body" id="alertasContainer">
+                        <p class="text-center text-muted">Nenhum alerta no momento</p>
+                    </div>
+                </div>
+            </div>
 
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <span class="kpi-title">Funcionários Ativos</span>
-                                <div class="kpi-icon success">
-                                    <i class="fas fa-user-check"></i>
-                                </div>
-                            </div>
-                            <div class="kpi-value" id="funcionariosAtivos">0</div>
-                            <div class="kpi-change positive" id="ativosChange">0%</div>
-                        </div>
+            <!-- Funcionários -->
+            <div id="funcionarios" class="page-content">
+                <h2 class="page-title">Funcionários</h2>
+                <p class="page-subtitle">Gestão completa do efetivo</p>
 
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <span class="kpi-title">Faltas Este Mês</span>
-                                <div class="kpi-icon warning">
-                                    <i class="fas fa-user-times"></i>
-                                </div>
-                            </div>
-                            <div class="kpi-value" id="faltasMes">0</div>
-                            <div class="kpi-change" id="faltasChange">0%</div>
-                        </div>
-
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <span class="kpi-title">Treinamentos Vencendo</span>
-                                <div class="kpi-icon danger">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                </div>
-                            </div>
-                            <div class="kpi-value" id="treinamentosVencendo">0</div>
-                            <div class="kpi-change negative" id="treinamentosChange">0</div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Lista de Funcionários</h3>
+                        <button class="btn btn-primary" onclick="openModal('funcionarioModal')">
+                            <i class="fas fa-plus"></i>
+                            Novo Funcionário
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Matrícula</th>
+                                        <th>Função</th>
+                                        <th>Supervisor</th>
+                                        <th>Equipamento</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="funcionariosTable">
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted">Nenhum funcionário cadastrado</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <!-- Alertas -->
+            <!-- Escalas -->
+            <div id="escalas" class="page-content">
+                <h2 class="page-title">Escalas</h2>
+                <p class="page-subtitle">Controle de turnos e supervisores</p>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Consultar Escala</h3>
+                    </div>
+                    <div class="card-body">
+                        <div style="display: flex; gap: 1rem; align-items: end; margin-bottom: 2rem;">
+                            <div style="flex: 1;">
+                                <label class="form-label">Data de Consulta</label>
+                                <input type="date" id="dataEscala" class="form-input" onchange="calcularEscalas()">
+                            </div>
+                            <button class="btn btn-primary" onclick="calcularEscalas()">
+                                <i class="fas fa-search"></i>
+                                Consultar
+                            </button>
+                            <button class="btn btn-secondary" onclick="setHoje()">
+                                Hoje
+                            </button>
+                        </div>
+
+                        <div id="escalasResult">
+                            <p class="text-center text-muted">Selecione uma data para consultar a escala</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Faltas -->
+            <div id="faltas" class="page-content">
+                <h2 class="page-title">Faltas</h2>
+                <p class="page-subtitle">Registro e controle de faltas</p>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Registro de Faltas</h3>
+                        <button class="btn btn-primary" onclick="openModal('faltaModal')">
+                            <i class="fas fa-plus"></i>
+                            Registrar Falta
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Funcionário</th>
+                                        <th>Motivo</th>
+                                        <th>Cobertura</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="faltasTable">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">Nenhuma falta registrada</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Atestados -->
+            <div id="atestados" class="page-content">
+                <h2 class="page-title">Atestados</h2>
+                <p class="page-subtitle">Controle de atestados médicos</p>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Atestados Médicos</h3>
+                        <button class="btn btn-primary" onclick="openModal('atestadoModal')">
+                            <i class="fas fa-plus"></i>
+                            Novo Atestado
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Funcionário</th>
+                                        <th>Data Início</th>
+                                        <th>Data Fim</th>
+                                        <th>Dias</th>
+                                        <th>CID</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="atestadosTable">
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted">Nenhum atestado registrado</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Férias -->
+            <div id="ferias" class="page-content">
+                <h2 class="page-title">Férias</h2>
+                <p class="page-subtitle">Controle de períodos de férias</p>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Períodos de Férias</h3>
+                        <button class="btn btn-primary" onclick="openModal('feriasModal')">
+                            <i class="fas fa-plus"></i>
+                            Novo Período
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Funcionário</th>
+                                        <th>Data Início</th>
+                                        <th>Data Fim</th>
+                                        <th>Dias</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="feriasTable">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">Nenhum período registrado</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Treinamentos -->
+            <div id="treinamentos" class="page-content">
+                <h2 class="page-title">Treinamentos</h2>
+                <p class="page-subtitle">Controle de treinamentos e validades</p>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Treinamentos</h3>
+                        <button class="btn btn-primary" onclick="openModal('treinamentoModal')">
+                            <i class="fas fa-plus"></i>
+                            Novo Treinamento
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Funcionário</th>
+                                        <th>Tipo</th>
+                                        <th>Data Realização</th>
+                                        <th>Vencimento</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="treinamentosTable">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">Nenhum treinamento registrado</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Relatórios -->
+            <div id="relatorios" class="page-content">
+                <h2 class="page-title">Relatórios</h2>
+                <p class="page-subtitle">Relatórios e análises</p>
+
+                <div class="stats-grid">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-bell"></i>
-                                Alertas Importantes
-                            </h3>
+                            <h3 class="card-title">Relatório por Supervisor</h3>
                         </div>
                         <div class="card-body">
-                            <div id="alertsContainer"></div>
+                            <button class="btn btn-primary" onclick="gerarRelatorioSupervisor()">
+                                <i class="fas fa-file-pdf"></i>
+                                Gerar Relatório
+                            </button>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Funcionários Page -->
-                <div id="funcionarios" class="page-content">
-                    <div class="page-header">
-                        <h1 class="page-title">Funcionários</h1>
-                        <p class="page-subtitle">Cadastro e controle do efetivo</p>
                     </div>
 
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">Lista de Funcionários</h3>
-                            <div class="card-actions">
-                                <button class="btn btn-primary" id="addFuncionarioBtn">
-                                    <i class="fas fa-plus"></i> Novo Funcionário
-                                </button>
-                            </div>
+                            <h3 class="card-title">Relatório de Faltas</h3>
                         </div>
                         <div class="card-body">
-                            <div class="table-container">
-                                <table class="table" id="funcionariosTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Nome</th>
-                                            <th>Matrícula</th>
-                                            <th>Função</th>
-                                            <th>Supervisor</th>
-                                            <th>Equipamento</th>
-                                            <th>Escala</th>
-                                            <th>Status</th>
-                                            <th>Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="funcionariosTableBody"></tbody>
-                                </table>
-                            </div>
+                            <button class="btn btn-primary" onclick="gerarRelatorioFaltas()">
+                                <i class="fas fa-file-pdf"></i>
+                                Gerar Relatório
+                            </button>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Escalas Page -->
-                <div id="escalas" class="page-content">
-                    <div class="page-header">
-                        <h1 class="page-title">Escalas</h1>
-                        <p class="page-subtitle">Controle de turnos e escalas</p>
                     </div>
 
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">Consultar Escala</h3>
+                            <h3 class="card-title">Relatório de Treinamentos</h3>
                         </div>
                         <div class="card-body">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">Data de Consulta</label>
-                                    <input type="date" id="escalaDate" class="form-input">
-                                </div>
-                                <div class="form-group">
-                                    <button class="btn btn-primary" id="consultarEscalaBtn">
-                                        <i class="fas fa-search"></i> Consultar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="escalasResult"></div>
-                </div>
-
-                <!-- Faltas Page -->
-                <div id="faltas" class="page-content">
-                    <div class="page-header">
-                        <h1 class="page-title">Registro de Faltas</h1>
-                        <p class="page-subtitle">Controle de faltas e coberturas</p>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">Registros de Faltas</h3>
-                            <div class="card-actions">
-                                <button class="btn btn-primary" id="addFaltaBtn">
-                                    <i class="fas fa-plus"></i> Registrar Falta
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-container">
-                                <table class="table" id="faltasTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Data</th>
-                                            <th>Funcionário</th>
-                                            <th>Motivo</th>
-                                            <th>Cobertura</th>
-                                            <th>Observações</th>
-                                            <th>Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="faltasTableBody"></tbody>
-                                </table>
-                            </div>
+                            <button class="btn btn-primary" onclick="gerarRelatorioTreinamentos()">
+                                <i class="fas fa-file-pdf"></i>
+                                Gerar Relatório
+                            </button>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Atestados Page -->
-                <div id="atestados" class="page-content">
-                    <div class="page-header">
-                        <h1 class="page-title">Atestados Médicos</h1>
-                        <p class="page-subtitle">Histórico de atestados</p>
+            <!-- Configurações -->
+            <div id="configuracoes" class="page-content">
+                <h2 class="page-title">Configurações</h2>
+                <p class="page-subtitle">Configurações do sistema e integração</p>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-cloud"></i>
+                            Integração Google Sheets
+                        </h3>
                     </div>
-
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">Registro de Atestados</h3>
-                            <div class="card-actions">
-                                <button class="btn btn-primary" id="addAtestadoBtn">
-                                    <i class="fas fa-plus"></i> Registrar Atestado
-                                </button>
+                    <div class="card-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">URL do Apps Script</label>
+                                <input type="url" id="appsScriptUrl" class="form-input" 
+                                       placeholder="https://script.google.com/...">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">ID da Planilha</label>
+                                <input type="text" id="spreadsheetId" class="form-input" 
+                                       placeholder="ID da planilha Google Sheets">
                             </div>
                         </div>
-                        <div class="card-body">
-                            <div class="table-container">
-                                <table class="table" id="atestadosTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Data Início</th>
-                                            <th>Data Fim</th>
-                                            <th>Funcionário</th>
-                                            <th>CID</th>
-                                            <th>Dias</th>
-                                            <th>Status</th>
-                                            <th>Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="atestadosTableBody"></tbody>
-                                </table>
-                            </div>
+                        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                            <button class="btn btn-primary" onclick="salvarConfiguracao()">
+                                <i class="fas fa-save"></i>
+                                Salvar
+                            </button>
+                            <button class="btn btn-success" onclick="testarConexao()">
+                                <i class="fas fa-check"></i>
+                                Testar
+                            </button>
+                            <button class="btn btn-warning" onclick="sincronizar()">
+                                <i class="fas fa-sync"></i>
+                                Sincronizar
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Outras páginas seguem o mesmo padrão -->
-                <div id="ponto" class="page-content">
-                    <div class="page-header">
-                        <h1 class="page-title">Controle de Ponto</h1>
-                        <p class="page-subtitle">Registro de entrada e saída</p>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-database"></i>
+                            Backup de Dados
+                        </h3>
                     </div>
-                    <!-- Conteúdo do ponto -->
-                </div>
-
-                <div id="ferias" class="page-content">
-                    <div class="page-header">
-                        <h1 class="page-title">Férias</h1>
-                        <p class="page-subtitle">Gestão de férias</p>
+                    <div class="card-body">
+                        <div style="display: flex; gap: 1rem;">
+                            <button class="btn btn-secondary" onclick="fazerBackup()">
+                                <i class="fas fa-download"></i>
+                                Fazer Backup
+                            </button>
+                            <button class="btn btn-secondary" onclick="document.getElementById('backupFile').click()">
+                                <i class="fas fa-upload"></i>
+                                Restaurar Backup
+                            </button>
+                            <input type="file" id="backupFile" accept=".json" style="display: none;" onchange="restaurarBackup(this)">
+                        </div>
                     </div>
-                    <!-- Conteúdo das férias -->
                 </div>
-
-                <div id="treinamentos" class="page-content">
-                    <div class="page-header">
-                        <h1 class="page-title">Treinamentos</h1>
-                        <p class="page-subtitle">Controle de treinamentos e validades</p>
-                    </div>
-                    <!-- Conteúdo dos treinamentos -->
-                </div>
-
-                <div id="relatorios" class="page-content">
-                    <div class="page-header">
-                        <h1 class="page-title">Relatórios</h1>
-                        <p class="page-subtitle">Relatórios e análises</p>
-                    </div>
-                    <!-- Conteúdo dos relatórios -->
-                </div>
-
-                <div id="configuracoes" class="page-content">
-                    <div class="page-header">
-                        <h1 class="page-title">Configurações</h1>
-                        <p class="page-subtitle">Configurações do sistema</p>
-                    </div>
-                    <!-- Conteúdo das configurações -->
-                </div>
-            </main>
-        </div>
+            </div>
+        </main>
     </div>
 
-    <!-- Modals -->
     <!-- Modal Funcionário -->
     <div class="modal" id="funcionarioModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">Cadastro de Funcionário</h3>
-                <button class="modal-close">&times;</button>
+                <h3 class="modal-title">Cadastro Completo de Funcionário</h3>
+                <button class="modal-close" onclick="closeModal('funcionarioModal')">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="funcionarioForm">
-                    <div class="form-row">
+                    <h4>Dados Pessoais</h4>
+                    <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label">Nome Completo *</label>
                             <input type="text" id="funcNome" class="form-input" required>
                         </div>
-                        
+                        <div class="form-group">
+                            <label class="form-label">CPF</label>
+                            <input type="text" id="funcCpf" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Data de Nascimento</label>
+                            <input type="date" id="funcNascimento" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Telefone</label>
+                            <input type="tel" id="funcTelefone" class="form-input">
+                        </div>
+                    </div>
+
+                    <h4 style="margin-top: 2rem;">Dados Profissionais</h4>
+                    <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label">Matrícula *</label>
                             <input type="text" id="funcMatricula" class="form-input" required>
                         </div>
-                    </div>
-                    
-                    <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Função *</label>
                             <select id="funcFuncao" class="form-select" required>
@@ -396,7 +949,6 @@
                                 <option value="Administrativo">Administrativo</option>
                             </select>
                         </div>
-                        
                         <div class="form-group">
                             <label class="form-label">Supervisor</label>
                             <select id="funcSupervisor" class="form-select">
@@ -407,32 +959,24 @@
                                 <option value="D">Letra D - Wellison</option>
                             </select>
                         </div>
-                    </div>
-                    
-                    <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Equipamento</label>
-                            <input type="text" id="funcEquipamento" class="form-input" placeholder="Ex: Veículo 001">
+                            <input type="text" id="funcEquipamento" class="form-input">
                         </div>
-                        
                         <div class="form-group">
                             <label class="form-label">Escala</label>
                             <select id="funcEscala" class="form-select">
                                 <option value="">Selecione</option>
-                                <option value="4x4">4x4 (4 dias trabalho, 4 folga)</option>
-                                <option value="6x3">6x3 (6 dias trabalho, 3 folga)</option>
+                                <option value="4x4">4x4 (4 trabalho, 4 folga)</option>
+                                <option value="6x3">6x3 (6 trabalho, 3 folga)</option>
                                 <option value="12x36">12x36 (12h trabalho, 36h folga)</option>
-                                <option value="ADM">Administrativo (Seg-Sex)</option>
+                                <option value="ADM">Administrativo</option>
                             </select>
                         </div>
-                    </div>
-                    
-                    <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">Contato</label>
-                            <input type="tel" id="funcContato" class="form-input" placeholder="(00) 00000-0000">
+                            <label class="form-label">Data de Admissão</label>
+                            <input type="date" id="funcAdmissao" class="form-input">
                         </div>
-                        
                         <div class="form-group">
                             <label class="form-label">Status</label>
                             <select id="funcStatus" class="form-select">
@@ -443,24 +987,41 @@
                             </select>
                         </div>
                     </div>
-                    
-                    <div class="form-row">
+
+                    <h4 style="margin-top: 2rem;">Documentos e Exames</h4>
+                    <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label">ASO - Vencimento</label>
                             <input type="date" id="funcAso" class="form-input">
                         </div>
-                        
                         <div class="form-group">
-                            <label class="form-label">Data Admissão</label>
-                            <input type="date" id="funcDataAdmissao" class="form-input">
+                            <label class="form-label">Carteira de Habilitação</label>
+                            <select id="funcCnh" class="form-select">
+                                <option value="">Não possui</option>
+                                <option value="A">Categoria A</option>
+                                <option value="B">Categoria B</option>
+                                <option value="C">Categoria C</option>
+                                <option value="D">Categoria D</option>
+                                <option value="E">Categoria E</option>
+                            </select>
                         </div>
+                        <div class="form-group">
+                            <label class="form-label">Vencimento CNH</label>
+                            <input type="date" id="funcCnhVenc" class="form-input">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Observações</label>
+                        <textarea id="funcObservacoes" class="form-textarea" rows="3"></textarea>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" id="cancelFuncionarioBtn">Cancelar</button>
-                <button class="btn btn-primary" id="saveFuncionarioBtn">
-                    <i class="fas fa-save"></i> Salvar
+                <button class="btn btn-secondary" onclick="closeModal('funcionarioModal')">Cancelar</button>
+                <button class="btn btn-primary" onclick="salvarFuncionario()">
+                    <i class="fas fa-save"></i>
+                    Salvar
                 </button>
             </div>
         </div>
@@ -471,45 +1032,38 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 class="modal-title">Registrar Falta</h3>
-                <button class="modal-close">&times;</button>
+                <button class="modal-close" onclick="closeModal('faltaModal')">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="faltaForm">
-                    <div class="form-row">
+                    <div class="form-grid">
                         <div class="form-group">
-                            <label class="form-label">Data da Falta *</label>
+                            <label class="form-label">Data *</label>
                             <input type="date" id="faltaData" class="form-input" required>
                         </div>
-                        
                         <div class="form-group">
                             <label class="form-label">Funcionário *</label>
                             <select id="faltaFuncionario" class="form-select" required>
                                 <option value="">Selecione</option>
                             </select>
                         </div>
-                    </div>
-                    
-                    <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Motivo *</label>
                             <select id="faltaMotivo" class="form-select" required>
                                 <option value="">Selecione</option>
                                 <option value="Atestado Médico">Atestado Médico</option>
-                                <option value="Falta Injustificada">Falta Injustificada</option>
                                 <option value="Falta Justificada">Falta Justificada</option>
-                                <option value="Acidente">Acidente</option>
-                                <option value="Outros">Outros</option>
+                                <option value="Falta Injustificada">Falta Injustificada</option>
+                                <option value="Licença">Licença</option>
                             </select>
                         </div>
-                        
                         <div class="form-group">
-                            <label class="form-label">Quem Cobriu</label>
+                            <label class="form-label">Cobertura</label>
                             <select id="faltaCobertura" class="form-select">
-                                <option value="">Selecione</option>
+                                <option value="">Ninguém</option>
                             </select>
                         </div>
                     </div>
-                    
                     <div class="form-group">
                         <label class="form-label">Observações</label>
                         <textarea id="faltaObservacoes" class="form-textarea" rows="3"></textarea>
@@ -517,9 +1071,10 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" id="cancelFaltaBtn">Cancelar</button>
-                <button class="btn btn-primary" id="saveFaltaBtn">
-                    <i class="fas fa-save"></i> Salvar
+                <button class="btn btn-secondary" onclick="closeModal('faltaModal')">Cancelar</button>
+                <button class="btn btn-primary" onclick="salvarFalta()">
+                    <i class="fas fa-save"></i>
+                    Salvar
                 </button>
             </div>
         </div>
@@ -530,52 +1085,30 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 class="modal-title">Registrar Atestado</h3>
-                <button class="modal-close">&times;</button>
+                <button class="modal-close" onclick="closeModal('atestadoModal')">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="atestadoForm">
-                    <div class="form-row">
+                    <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label">Funcionário *</label>
                             <select id="atestadoFuncionario" class="form-select" required>
                                 <option value="">Selecione</option>
                             </select>
                         </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">CID</label>
-                            <input type="text" id="atestadoCid" class="form-input" placeholder="Ex: M79.3">
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Data Início *</label>
                             <input type="date" id="atestadoInicio" class="form-input" required>
                         </div>
-                        
                         <div class="form-group">
                             <label class="form-label">Data Fim *</label>
                             <input type="date" id="atestadoFim" class="form-input" required>
                         </div>
-                    </div>
-                    
-                    <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">Dias</label>
-                            <input type="number" id="atestadoDias" class="form-input" readonly>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Status</label>
-                            <select id="atestadoStatus" class="form-select">
-                                <option value="Ativo">Ativo</option>
-                                <option value="Finalizado">Finalizado</option>
-                                <option value="Cancelado">Cancelado</option>
-                            </select>
+                            <label class="form-label">CID</label>
+                            <input type="text" id="atestadoCid" class="form-input">
                         </div>
                     </div>
-                    
                     <div class="form-group">
                         <label class="form-label">Observações</label>
                         <textarea id="atestadoObservacoes" class="form-textarea" rows="3"></textarea>
@@ -583,25 +1116,1035 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" id="cancelAtestadoBtn">Cancelar</button>
-                <button class="btn btn-primary" id="saveAtestadoBtn">
-                    <i class="fas fa-save"></i> Salvar
+                <button class="btn btn-secondary" onclick="closeModal('atestadoModal')">Cancelar</button>
+                <button class="btn btn-primary" onclick="salvarAtestado()">
+                    <i class="fas fa-save"></i>
+                    Salvar
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Loading Overlay -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="loading-spinner"></div>
-        <p>Carregando...</p>
+    <!-- Modal Férias -->
+    <div class="modal" id="feriasModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Registrar Férias</h3>
+                <button class="modal-close" onclick="closeModal('feriasModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="feriasForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Funcionário *</label>
+                            <select id="feriasFuncionario" class="form-select" required>
+                                <option value="">Selecione</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Data Início *</label>
+                            <input type="date" id="feriasInicio" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Data Fim *</label>
+                            <input type="date" id="feriasFim" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <select id="feriasStatus" class="form-select">
+                                <option value="Programado">Programado</option>
+                                <option value="Em andamento">Em andamento</option>
+                                <option value="Concluído">Concluído</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Observações</label>
+                        <textarea id="feriasObservacoes" class="form-textarea" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('feriasModal')">Cancelar</button>
+                <button class="btn btn-primary" onclick="salvarFerias()">
+                    <i class="fas fa-save"></i>
+                    Salvar
+                </button>
+            </div>
+        </div>
     </div>
 
-    <!-- Notification Container -->
-    <div class="notification-container" id="notificationContainer"></div>
+    <!-- Modal Treinamento -->
+    <div class="modal" id="treinamentoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Registrar Treinamento</h3>
+                <button class="modal-close" onclick="closeModal('treinamentoModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="treinamentoForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Funcionário *</label>
+                            <select id="treinamentoFuncionario" class="form-select" required>
+                                <option value="">Selecione</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tipo de Treinamento *</label>
+                            <select id="treinamentoTipo" class="form-select" required>
+                                <option value="">Selecione</option>
+                                <option value="NR10">NR10 - Eletricidade</option>
+                                <option value="NR33">NR33 - Espaço Confinado</option>
+                                <option value="NR35">NR35 - Trabalho em Altura</option>
+                                <option value="Direção Defensiva">Direção Defensiva</option>
+                                <option value="Primeiros Socorros">Primeiros Socorros</option>
+                                <option value="MOPP">MOPP</option>
+                                <option value="Outros">Outros</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Data de Realização *</label>
+                            <input type="date" id="treinamentoData" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Validade (meses)</label>
+                            <select id="treinamentoValidade" class="form-select" onchange="calcularVencimento()">
+                                <option value="">Não vence</option>
+                                <option value="12">12 meses</option>
+                                <option value="24">24 meses</option>
+                                <option value="36">36 meses</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Data de Vencimento</label>
+                            <input type="date" id="treinamentoVencimento" class="form-input" readonly>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Observações</label>
+                        <textarea id="treinamentoObservacoes" class="form-textarea" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('treinamentoModal')">Cancelar</button>
+                <button class="btn btn-primary" onclick="salvarTreinamento()">
+                    <i class="fas fa-save"></i>
+                    Salvar
+                </button>
+            </div>
+        </div>
+    </div>
 
-    <!-- Scripts -->
-    <script src="sistema.js"></script>
-    <script src="integracao.js"></script>
+    <script>
+        // SISTEMA COMPLETO DE GESTÃO DE EFETIVO
+        
+        // Estado global do sistema
+        let sistemaData = {
+            funcionarios: [],
+            faltas: [],
+            atestados: [],
+            ferias: [],
+            treinamentos: [],
+            config: {
+                appsScriptUrl: '',
+                spreadsheetId: ''
+            }
+        };
+
+        // Configurações de escala dos supervisores
+        const ESCALAS = {
+            'A': { // Ozias
+                nome: 'Ozias',
+                ciclo: [1,1,1,1,0,0,0,0], // 4 trabalho, 4 folga
+                inicio: new Date('2025-01-01') // Data de referência
+            },
+            'B': { // Matoza  
+                nome: 'Matoza',
+                ciclo: [0,0,1,1,1,1,0,0], // Defasado 2 dias
+                inicio: new Date('2025-01-01')
+            },
+            'C': { // Israel
+                nome: 'Israel', 
+                ciclo: [0,0,0,0,1,1,1,1], // Defasado 4 dias
+                inicio: new Date('2025-01-01')
+            },
+            'D': { // Wellison
+                nome: 'Wellison',
+                ciclo: [1,1,0,0,0,0,1,1], // Defasado 6 dias
+                inicio: new Date('2025-01-01')
+            }
+        };
+
+        // Inicialização do sistema
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Sistema GrupoGPS carregado');
+            carregarDados();
+            atualizarDashboard();
+            setHoje();
+        });
+
+        // NAVEGAÇÃO
+        function showPage(pageId) {
+            // Esconder todas as páginas
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Remover active de todos os menus
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Mostrar página selecionada
+            document.getElementById(pageId).classList.add('active');
+            
+            // Ativar menu correspondente
+            event.target.classList.add('active');
+            
+            // Atualizar conteúdo específico da página
+            if (pageId === 'funcionarios') {
+                renderizarFuncionarios();
+            } else if (pageId === 'faltas') {
+                renderizarFaltas();
+            } else if (pageId === 'atestados') {
+                renderizarAtestados();
+            } else if (pageId === 'ferias') {
+                renderizarFerias();
+            } else if (pageId === 'treinamentos') {
+                renderizarTreinamentos();
+            } else if (pageId === 'dashboard') {
+                atualizarDashboard();
+            }
+        }
+
+        // MODALS
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.add('show');
+            
+            // Carregar funcionários nos selects se necessário
+            if (modalId === 'faltaModal' || modalId === 'atestadoModal' || modalId === 'feriasModal' || modalId === 'treinamentoModal') {
+                carregarFuncionariosSelect(modalId);
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('show');
+            
+            // Limpar formulário
+            const form = modal.querySelector('form');
+            if (form) {
+                form.reset();
+            }
+        }
+
+        function carregarFuncionariosSelect(modalId) {
+            const funcionariosAtivos = sistemaData.funcionarios.filter(f => f.status === 'Ativo');
+            
+            let selectId = '';
+            let selectCobertura = null;
+            
+            switch(modalId) {
+                case 'faltaModal':
+                    selectId = 'faltaFuncionario';
+                    selectCobertura = document.getElementById('faltaCobertura');
+                    break;
+                case 'atestadoModal':
+                    selectId = 'atestadoFuncionario';
+                    break;
+                case 'feriasModal':
+                    selectId = 'feriasFuncionario';
+                    break;
+                case 'treinamentoModal':
+                    selectId = 'treinamentoFuncionario';
+                    break;
+            }
+            
+            const select = document.getElementById(selectId);
+            select.innerHTML = '<option value="">Selecione</option>';
+            
+            funcionariosAtivos.forEach(func => {
+                const option = document.createElement('option');
+                option.value = func.id;
+                option.textContent = `${func.nome} - ${func.matricula}`;
+                select.appendChild(option);
+            });
+            
+            // Preencher select de cobertura se existir
+            if (selectCobertura) {
+                selectCobertura.innerHTML = '<option value="">Ninguém</option>';
+                funcionariosAtivos.forEach(func => {
+                    const option = document.createElement('option');
+                    option.value = func.id;
+                    option.textContent = `${func.nome} - ${func.matricula}`;
+                    selectCobertura.appendChild(option);
+                });
+            }
+        }
+
+        // FUNCIONÁRIOS
+        function salvarFuncionario() {
+            const funcionario = {
+                id: Date.now(),
+                nome: document.getElementById('funcNome').value,
+                cpf: document.getElementById('funcCpf').value,
+                nascimento: document.getElementById('funcNascimento').value,
+                telefone: document.getElementById('funcTelefone').value,
+                matricula: document.getElementById('funcMatricula').value,
+                funcao: document.getElementById('funcFuncao').value,
+                supervisor: document.getElementById('funcSupervisor').value,
+                equipamento: document.getElementById('funcEquipamento').value,
+                escala: document.getElementById('funcEscala').value,
+                admissao: document.getElementById('funcAdmissao').value,
+                status: document.getElementById('funcStatus').value,
+                aso: document.getElementById('funcAso').value,
+                cnh: document.getElementById('funcCnh').value,
+                cnhVenc: document.getElementById('funcCnhVenc').value,
+                observacoes: document.getElementById('funcObservacoes').value,
+                dataCadastro: new Date().toISOString()
+            };
+
+            // Validação básica
+            if (!funcionario.nome || !funcionario.matricula || !funcionario.funcao) {
+                showNotification('Preencha os campos obrigatórios', 'error');
+                return;
+            }
+
+            sistemaData.funcionarios.push(funcionario);
+            salvarDados();
+            renderizarFuncionarios();
+            atualizarDashboard();
+            closeModal('funcionarioModal');
+            showNotification('Funcionário cadastrado com sucesso!', 'success');
+        }
+
+        function renderizarFuncionarios() {
+            const tbody = document.getElementById('funcionariosTable');
+            
+            if (sistemaData.funcionarios.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Nenhum funcionário cadastrado</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = sistemaData.funcionarios.map(func => `
+                <tr>
+                    <td>${func.nome}</td>
+                    <td>${func.matricula}</td>
+                    <td>${func.funcao}</td>
+                    <td>${func.supervisor ? `Letra ${func.supervisor} - ${ESCALAS[func.supervisor]?.nome}` : '-'}</td>
+                    <td>${func.equipamento || '-'}</td>
+                    <td><span class="badge badge-${getBadgeClass(func.status)}">${func.status}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="excluirFuncionario(${func.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function excluirFuncionario(id) {
+            if (confirm('Confirma a exclusão deste funcionário?')) {
+                sistemaData.funcionarios = sistemaData.funcionarios.filter(f => f.id !== id);
+                salvarDados();
+                renderizarFuncionarios();
+                atualizarDashboard();
+                showNotification('Funcionário excluído', 'success');
+            }
+        }
+
+        // ESCALAS
+        function setHoje() {
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('dataEscala').value = hoje;
+            calcularEscalas();
+        }
+
+        function calcularEscalas() {
+            const dataInput = document.getElementById('dataEscala');
+            if (!dataInput.value) {
+                showNotification('Selecione uma data', 'warning');
+                return;
+            }
+
+            const dataConsulta = new Date(dataInput.value);
+            const resultContainer = document.getElementById('escalasResult');
+            
+            // Calcular posição no ciclo para cada supervisor
+            const resultados = Object.keys(ESCALAS).map(letra => {
+                const supervisor = ESCALAS[letra];
+                const diasDiff = Math.floor((dataConsulta - supervisor.inicio) / (1000 * 60 * 60 * 24));
+                const posicao = diasDiff % 8; // Ciclo de 8 dias
+                const trabalhando = supervisor.ciclo[posicao] === 1;
+                
+                // Buscar funcionários deste supervisor
+                const funcionarios = sistemaData.funcionarios.filter(f => 
+                    f.supervisor === letra && f.status === 'Ativo'
+                );
+                
+                return {
+                    letra,
+                    nome: supervisor.nome,
+                    trabalhando,
+                    turno: trabalhando ? 'Diurno' : 'Folga',
+                    funcionarios
+                };
+            });
+
+            // Renderizar resultado
+            resultContainer.innerHTML = `
+                <div class="escala-grid">
+                    ${resultados.map(sup => `
+                        <div class="escala-card" style="border-left-color: ${sup.trabalhando ? 'var(--success)' : 'var(--warning)'}">
+                            <div class="escala-supervisor">
+                                Supervisor ${sup.nome} (Letra ${sup.letra})
+                            </div>
+                            <div class="escala-status">
+                                <span class="badge badge-${sup.trabalhando ? 'success' : 'warning'}">
+                                    <i class="fas fa-${sup.trabalhando ? 'check' : 'clock'}"></i>
+                                    ${sup.turno}
+                                </span>
+                            </div>
+                            <div class="escala-funcionarios">
+                                <strong>Funcionários (${sup.funcionarios.length}):</strong><br>
+                                ${sup.funcionarios.length > 0 
+                                    ? sup.funcionarios.map(f => `• ${f.nome}`).join('<br>')
+                                    : 'Nenhum funcionário'
+                                }
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // FALTAS
+        function salvarFalta() {
+            const funcionarioId = document.getElementById('faltaFuncionario').value;
+            const funcionario = sistemaData.funcionarios.find(f => f.id == funcionarioId);
+            
+            const coberturaId = document.getElementById('faltaCobertura').value;
+            const cobertura = coberturaId ? sistemaData.funcionarios.find(f => f.id == coberturaId) : null;
+
+            const falta = {
+                id: Date.now(),
+                data: document.getElementById('faltaData').value,
+                funcionarioId: funcionarioId,
+                funcionarioNome: funcionario?.nome || '',
+                motivo: document.getElementById('faltaMotivo').value,
+                coberturaId: coberturaId || null,
+                coberturaNome: cobertura?.nome || '',
+                observacoes: document.getElementById('faltaObservacoes').value,
+                dataCadastro: new Date().toISOString()
+            };
+
+            if (!falta.data || !falta.funcionarioId || !falta.motivo) {
+                showNotification('Preencha os campos obrigatórios', 'error');
+                return;
+            }
+
+            sistemaData.faltas.push(falta);
+            salvarDados();
+            renderizarFaltas();
+            closeModal('faltaModal');
+            showNotification('Falta registrada com sucesso!', 'success');
+        }
+
+        function renderizarFaltas() {
+            const tbody = document.getElementById('faltasTable');
+            
+            if (sistemaData.faltas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Nenhuma falta registrada</td></tr>';
+                return;
+            }
+
+            // Ordenar por data (mais recente primeiro)
+            const faltasOrdenadas = sistemaData.faltas.sort((a, b) => new Date(b.data) - new Date(a.data));
+
+            tbody.innerHTML = faltasOrdenadas.map(falta => `
+                <tr>
+                    <td>${formatarData(falta.data)}</td>
+                    <td>${falta.funcionarioNome}</td>
+                    <td><span class="badge badge-${getMotivoBadge(falta.motivo)}">${falta.motivo}</span></td>
+                    <td>${falta.coberturaNome || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="excluirFalta(${falta.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function excluirFalta(id) {
+            if (confirm('Confirma a exclusão desta falta?')) {
+                sistemaData.faltas = sistemaData.faltas.filter(f => f.id !== id);
+                salvarDados();
+                renderizarFaltas();
+                showNotification('Falta excluída', 'success');
+            }
+        }
+
+        // ATESTADOS
+        function salvarAtestado() {
+            const funcionarioId = document.getElementById('atestadoFuncionario').value;
+            const funcionario = sistemaData.funcionarios.find(f => f.id == funcionarioId);
+            
+            const dataInicio = document.getElementById('atestadoInicio').value;
+            const dataFim = document.getElementById('atestadoFim').value;
+            
+            // Calcular dias
+            const inicio = new Date(dataInicio);
+            const fim = new Date(dataFim);
+            const dias = Math.ceil((fim - inicio) / (1000 * 60 * 60 * 24)) + 1;
+
+            const atestado = {
+                id: Date.now(),
+                funcionarioId: funcionarioId,
+                funcionarioNome: funcionario?.nome || '',
+                dataInicio: dataInicio,
+                dataFim: dataFim,
+                dias: dias,
+                cid: document.getElementById('atestadoCid').value,
+                observacoes: document.getElementById('atestadoObservacoes').value,
+                status: 'Ativo',
+                dataCadastro: new Date().toISOString()
+            };
+
+            if (!atestado.funcionarioId || !atestado.dataInicio || !atestado.dataFim) {
+                showNotification('Preencha os campos obrigatórios', 'error');
+                return;
+            }
+
+            sistemaData.atestados.push(atestado);
+            salvarDados();
+            renderizarAtestados();
+            closeModal('atestadoModal');
+            showNotification('Atestado registrado com sucesso!', 'success');
+        }
+
+        function renderizarAtestados() {
+            const tbody = document.getElementById('atestadosTable');
+            
+            if (sistemaData.atestados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Nenhum atestado registrado</td></tr>';
+                return;
+            }
+
+            const atestadosOrdenados = sistemaData.atestados.sort((a, b) => new Date(b.dataInicio) - new Date(a.dataInicio));
+
+            tbody.innerHTML = atestadosOrdenados.map(atestado => `
+                <tr>
+                    <td>${atestado.funcionarioNome}</td>
+                    <td>${formatarData(atestado.dataInicio)}</td>
+                    <td>${formatarData(atestado.dataFim)}</td>
+                    <td>${atestado.dias}</td>
+                    <td>${atestado.cid || '-'}</td>
+                    <td><span class="badge badge-success">${atestado.status}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="excluirAtestado(${atestado.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function excluirAtestado(id) {
+            if (confirm('Confirma a exclusão deste atestado?')) {
+                sistemaData.atestados = sistemaData.atestados.filter(a => a.id !== id);
+                salvarDados();
+                renderizarAtestados();
+                showNotification('Atestado excluído', 'success');
+            }
+        }
+
+        // FÉRIAS
+        function salvarFerias() {
+            const funcionarioId = document.getElementById('feriasFuncionario').value;
+            const funcionario = sistemaData.funcionarios.find(f => f.id == funcionarioId);
+            
+            const dataInicio = document.getElementById('feriasInicio').value;
+            const dataFim = document.getElementById('feriasFim').value;
+            
+            const inicio = new Date(dataInicio);
+            const fim = new Date(dataFim);
+            const dias = Math.ceil((fim - inicio) / (1000 * 60 * 60 * 24)) + 1;
+
+            const ferias = {
+                id: Date.now(),
+                funcionarioId: funcionarioId,
+                funcionarioNome: funcionario?.nome || '',
+                dataInicio: dataInicio,
+                dataFim: dataFim,
+                dias: dias,
+                status: document.getElementById('feriasStatus').value,
+                observacoes: document.getElementById('feriasObservacoes').value,
+                dataCadastro: new Date().toISOString()
+            };
+
+            if (!ferias.funcionarioId || !ferias.dataInicio || !ferias.dataFim) {
+                showNotification('Preencha os campos obrigatórios', 'error');
+                return;
+            }
+
+            sistemaData.ferias.push(ferias);
+            salvarDados();
+            renderizarFerias();
+            closeModal('feriasModal');
+            showNotification('Férias registradas com sucesso!', 'success');
+        }
+
+        function renderizarFerias() {
+            const tbody = document.getElementById('feriasTable');
+            
+            if (sistemaData.ferias.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Nenhum período registrado</td></tr>';
+                return;
+            }
+
+            const feriasOrdenadas = sistemaData.ferias.sort((a, b) => new Date(b.dataInicio) - new Date(a.dataInicio));
+
+            tbody.innerHTML = feriasOrdenadas.map(ferias => `
+                <tr>
+                    <td>${ferias.funcionarioNome}</td>
+                    <td>${formatarData(ferias.dataInicio)}</td>
+                    <td>${formatarData(ferias.dataFim)}</td>
+                    <td>${ferias.dias}</td>
+                    <td><span class="badge badge-${getStatusBadge(ferias.status)}">${ferias.status}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="excluirFerias(${ferias.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function excluirFerias(id) {
+            if (confirm('Confirma a exclusão deste período?')) {
+                sistemaData.ferias = sistemaData.ferias.filter(f => f.id !== id);
+                salvarDados();
+                renderizarFerias();
+                showNotification('Período excluído', 'success');
+            }
+        }
+
+        // TREINAMENTOS
+        function calcularVencimento() {
+            const dataRealizacao = document.getElementById('treinamentoData').value;
+            const validadeMeses = document.getElementById('treinamentoValidade').value;
+            
+            if (dataRealizacao && validadeMeses) {
+                const data = new Date(dataRealizacao);
+                data.setMonth(data.getMonth() + parseInt(validadeMeses));
+                document.getElementById('treinamentoVencimento').value = data.toISOString().split('T')[0];
+            } else {
+                document.getElementById('treinamentoVencimento').value = '';
+            }
+        }
+
+        function salvarTreinamento() {
+            const funcionarioId = document.getElementById('treinamentoFuncionario').value;
+            const funcionario = sistemaData.funcionarios.find(f => f.id == funcionarioId);
+
+            const treinamento = {
+                id: Date.now(),
+                funcionarioId: funcionarioId,
+                funcionarioNome: funcionario?.nome || '',
+                tipo: document.getElementById('treinamentoTipo').value,
+                dataRealizacao: document.getElementById('treinamentoData').value,
+                dataVencimento: document.getElementById('treinamentoVencimento').value,
+                observacoes: document.getElementById('treinamentoObservacoes').value,
+                status: 'Válido',
+                dataCadastro: new Date().toISOString()
+            };
+
+            if (!treinamento.funcionarioId || !treinamento.tipo || !treinamento.dataRealizacao) {
+                showNotification('Preencha os campos obrigatórios', 'error');
+                return;
+            }
+
+            sistemaData.treinamentos.push(treinamento);
+            salvarDados();
+            renderizarTreinamentos();
+            closeModal('treinamentoModal');
+            showNotification('Treinamento registrado com sucesso!', 'success');
+        }
+
+        function renderizarTreinamentos() {
+            const tbody = document.getElementById('treinamentosTable');
+            
+            if (sistemaData.treinamentos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Nenhum treinamento registrado</td></tr>';
+                return;
+            }
+
+            const treinamentosOrdenados = sistemaData.treinamentos.sort((a, b) => new Date(b.dataRealizacao) - new Date(a.dataRealizacao));
+
+            tbody.innerHTML = treinamentosOrdenados.map(treinamento => {
+                // Verificar se está vencendo
+                let statusClass = 'success';
+                let statusText = treinamento.status;
+                
+                if (treinamento.dataVencimento) {
+                    const hoje = new Date();
+                    const vencimento = new Date(treinamento.dataVencimento);
+                    const diasRestantes = Math.ceil((vencimento - hoje) / (1000 * 60 * 60 * 24));
+                    
+                    if (diasRestantes < 0) {
+                        statusClass = 'danger';
+                        statusText = 'Vencido';
+                    } else if (diasRestantes <= 30) {
+                        statusClass = 'warning';
+                        statusText = 'Vencendo';
+                    }
+                }
+                
+                return `
+                    <tr>
+                        <td>${treinamento.funcionarioNome}</td>
+                        <td>${treinamento.tipo}</td>
+                        <td>${formatarData(treinamento.dataRealizacao)}</td>
+                        <td>${treinamento.dataVencimento ? formatarData(treinamento.dataVencimento) : 'Não vence'}</td>
+                        <td><span class="badge badge-${statusClass}">${statusText}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-danger" onclick="excluirTreinamento(${treinamento.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function excluirTreinamento(id) {
+            if (confirm('Confirma a exclusão deste treinamento?')) {
+                sistemaData.treinamentos = sistemaData.treinamentos.filter(t => t.id !== id);
+                salvarDados();
+                renderizarTreinamentos();
+                showNotification('Treinamento excluído', 'success');
+            }
+        }
+
+        // DASHBOARD
+        function atualizarDashboard() {
+            const funcionarios = sistemaData.funcionarios;
+            
+            document.getElementById('totalFuncionarios').textContent = funcionarios.length;
+            document.getElementById('funcionariosAtivos').textContent = funcionarios.filter(f => f.status === 'Ativo').length;
+            document.getElementById('funcionariosFerias').textContent = funcionarios.filter(f => f.status === 'Férias').length;
+            document.getElementById('funcionariosAfastados').textContent = funcionarios.filter(f => f.status === 'Afastado').length;
+            
+            // Alertas
+            const alertas = [];
+            const hoje = new Date();
+            
+            // ASOs vencendo
+            funcionarios.forEach(func => {
+                if (func.aso) {
+                    const vencimento = new Date(func.aso);
+                    const dias = Math.ceil((vencimento - hoje) / (1000 * 60 * 60 * 24));
+                    
+                    if (dias <= 0) {
+                        alertas.push(`ASO vencido: ${func.nome}`);
+                    } else if (dias <= 30) {
+                        alertas.push(`ASO vencendo em ${dias} dias: ${func.nome}`);
+                    }
+                }
+            });
+            
+            // Treinamentos vencendo
+            sistemaData.treinamentos.forEach(treinamento => {
+                if (treinamento.dataVencimento) {
+                    const vencimento = new Date(treinamento.dataVencimento);
+                    const dias = Math.ceil((vencimento - hoje) / (1000 * 60 * 60 * 24));
+                    
+                    if (dias <= 0) {
+                        alertas.push(`Treinamento vencido: ${treinamento.tipo} - ${treinamento.funcionarioNome}`);
+                    } else if (dias <= 30) {
+                        alertas.push(`Treinamento vencendo em ${dias} dias: ${treinamento.tipo} - ${treinamento.funcionarioNome}`);
+                    }
+                }
+            });
+            
+            const alertasContainer = document.getElementById('alertasContainer');
+            if (alertas.length === 0) {
+                alertasContainer.innerHTML = '<p class="text-center text-muted">Nenhum alerta no momento</p>';
+            } else {
+                alertasContainer.innerHTML = alertas.map(alerta => `
+                    <div style="padding: 0.75rem; background: var(--warning); color: white; border-radius: 0.5rem; margin-bottom: 0.5rem;">
+                        <i class="fas fa-exclamation-triangle"></i> ${alerta}
+                    </div>
+                `).join('');
+            }
+        }
+
+        // RELATÓRIOS
+        function gerarRelatorioSupervisor() {
+            const dados = sistemaData.funcionarios.reduce((acc, func) => {
+                if (func.supervisor) {
+                    if (!acc[func.supervisor]) {
+                        acc[func.supervisor] = [];
+                    }
+                    acc[func.supervisor].push(func);
+                }
+                return acc;
+            }, {});
+            
+            let relatorio = 'RELATÓRIO POR SUPERVISOR\n\n';
+            
+            Object.keys(dados).forEach(letra => {
+                const supervisor = ESCALAS[letra];
+                relatorio += `Supervisor ${supervisor?.nome || letra} (Letra ${letra}):\n`;
+                relatorio += `Total: ${dados[letra].length} funcionários\n`;
+                dados[letra].forEach(func => {
+                    relatorio += `- ${func.nome} (${func.matricula}) - ${func.funcao}\n`;
+                });
+                relatorio += '\n';
+            });
+            
+            baixarArquivo('relatorio-supervisor.txt', relatorio);
+        }
+
+        function gerarRelatorioFaltas() {
+            let relatorio = 'RELATÓRIO DE FALTAS\n\n';
+            
+            const faltasOrdenadas = sistemaData.faltas.sort((a, b) => new Date(b.data) - new Date(a.data));
+            
+            faltasOrdenadas.forEach(falta => {
+                relatorio += `Data: ${formatarData(falta.data)}\n`;
+                relatorio += `Funcionário: ${falta.funcionarioNome}\n`;
+                relatorio += `Motivo: ${falta.motivo}\n`;
+                relatorio += `Cobertura: ${falta.coberturaNome || 'Nenhuma'}\n`;
+                if (falta.observacoes) {
+                    relatorio += `Observações: ${falta.observacoes}\n`;
+                }
+                relatorio += '\n';
+            });
+            
+            baixarArquivo('relatorio-faltas.txt', relatorio);
+        }
+
+        function gerarRelatorioTreinamentos() {
+            let relatorio = 'RELATÓRIO DE TREINAMENTOS\n\n';
+            
+            const treinamentosOrdenados = sistemaData.treinamentos.sort((a, b) => new Date(b.dataRealizacao) - new Date(a.dataRealizacao));
+            
+            treinamentosOrdenados.forEach(treinamento => {
+                relatorio += `Funcionário: ${treinamento.funcionarioNome}\n`;
+                relatorio += `Tipo: ${treinamento.tipo}\n`;
+                relatorio += `Data: ${formatarData(treinamento.dataRealizacao)}\n`;
+                relatorio += `Vencimento: ${treinamento.dataVencimento ? formatarData(treinamento.dataVencimento) : 'Não vence'}\n`;
+                if (treinamento.observacoes) {
+                    relatorio += `Observações: ${treinamento.observacoes}\n`;
+                }
+                relatorio += '\n';
+            });
+            
+            baixarArquivo('relatorio-treinamentos.txt', relatorio);
+        }
+
+        // CONFIGURAÇÕES
+        function salvarConfiguracao() {
+            sistemaData.config.appsScriptUrl = document.getElementById('appsScriptUrl').value;
+            sistemaData.config.spreadsheetId = document.getElementById('spreadsheetId').value;
+            salvarDados();
+            showNotification('Configuração salva!', 'success');
+        }
+
+        function testarConexao() {
+            const url = sistemaData.config.appsScriptUrl;
+            if (!url) {
+                showNotification('Configure a URL primeiro', 'warning');
+                return;
+            }
+            
+            fetch(url + '?action=test')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Conexão OK!', 'success');
+                    } else {
+                        showNotification('Erro na conexão', 'error');
+                    }
+                })
+                .catch(error => {
+                    showNotification('Erro na conexão', 'error');
+                });
+        }
+
+        function sincronizar() {
+            const url = sistemaData.config.appsScriptUrl;
+            if (!url) {
+                showNotification('Configure a integração primeiro', 'warning');
+                return;
+            }
+            
+            // Sincronizar funcionários
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'write',
+                    tab: 'Funcionarios',
+                    data: sistemaData.funcionarios
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Dados sincronizados!', 'success');
+                } else {
+                    showNotification('Erro na sincronização', 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('Erro na sincronização', 'error');
+            });
+        }
+
+        // BACKUP
+        function fazerBackup() {
+            const backup = {
+                data: new Date().toISOString(),
+                dados: sistemaData
+            };
+            
+            const blob = new Blob([JSON.stringify(backup, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup-grupogps-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            
+            URL.revokeObjectURL(url);
+            showNotification('Backup criado!', 'success');
+        }
+
+        function restaurarBackup(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const backup = JSON.parse(e.target.result);
+                    if (backup.dados && confirm('Restaurar backup? Isso substituirá todos os dados atuais.')) {
+                        sistemaData = backup.dados;
+                        salvarDados();
+                        atualizarDashboard();
+                        showNotification('Backup restaurado!', 'success');
+                        location.reload(); // Recarregar para atualizar todas as telas
+                    }
+                } catch (error) {
+                    showNotification('Arquivo inválido', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // UTILIDADES
+        function formatarData(data) {
+            if (!data) return '-';
+            return new Date(data + 'T00:00:00').toLocaleDateString('pt-BR');
+        }
+
+        function getBadgeClass(status) {
+            switch(status) {
+                case 'Ativo': return 'success';
+                case 'Férias': return 'info';
+                case 'Afastado': return 'warning';
+                case 'Desligado': return 'danger';
+                default: return 'secondary';
+            }
+        }
+
+        function getMotivoBadge(motivo) {
+            switch(motivo) {
+                case 'Atestado Médico': return 'info';
+                case 'Falta Justificada': return 'warning';
+                case 'Falta Injustificada': return 'danger';
+                default: return 'secondary';
+            }
+        }
+
+        function getStatusBadge(status) {
+            switch(status) {
+                case 'Programado': return 'warning';
+                case 'Em andamento': return 'info';
+                case 'Concluído': return 'success';
+                default: return 'secondary';
+            }
+        }
+
+        function baixarArquivo(nome, conteudo) {
+            const blob = new Blob([conteudo], {type: 'text/plain'});
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = nome;
+            a.click();
+            
+            URL.revokeObjectURL(url);
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'exclamation'}"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // PERSISTÊNCIA
+        function salvarDados() {
+            try {
+                localStorage.setItem('grupogps-sistema', JSON.stringify(sistemaData));
+            } catch (error) {
+                console.error('Erro ao salvar dados:', error);
+            }
+        }
+
+        function carregarDados() {
+            try {
+                const dados = localStorage.getItem('grupogps-sistema');
+                if (dados) {
+                    const dadosCarregados = JSON.parse(dados);
+                    // Merge com estrutura padrão para compatibilidade
+                    sistemaData = {
+                        funcionarios: dadosCarregados.funcionarios || [],
+                        faltas: dadosCarregados.faltas || [],
+                        atestados: dadosCarregados.atestados || [],
+                        ferias: dadosCarregados.ferias || [],
+                        treinamentos: dadosCarregados.treinamentos || [],
+                        config: dadosCarregados.config || { appsScriptUrl: '', spreadsheetId: '' }
+                    };
+                    
+                    // Carregar configurações nos inputs
+                    setTimeout(() => {
+                        document.getElementById('appsScriptUrl').value = sistemaData.config.appsScriptUrl || '';
+                        document.getElementById('spreadsheetId').value = sistemaData.config.spreadsheetId || '';
+                    }, 100);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+            }
+        }
+
+        console.log('Sistema GrupoGPS v2.0 - Totalmente funcional');
+    </script>
 </body>
 </html>
