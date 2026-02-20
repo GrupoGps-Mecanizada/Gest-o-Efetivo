@@ -1,952 +1,2287 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>SGE — Sistema de Gestão de Efetivo</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
-<style>
-/* ===================== RESET & BASE ===================== */
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg-0:#070d1a;
-  --bg-1:#0f172a;
-  --bg-2:#1e293b;
-  --bg-3:#263348;
-  --bg-4:#2d3d57;
-  --border:#2d3f58;
-  --border-bright:#3d5070;
-  --accent:#3b82f6;
-  --accent-dim:#1d4ed8;
-  --accent-glow:#3b82f620;
-  --text-1:#f1f5f9;
-  --text-2:#94a3b8;
-  --text-3:#64748b;
-  --green:#22c55e;
-  --orange:#f97316;
-  --purple:#a855f7;
-  --yellow:#eab308;
-  --red:#ef4444;
-  --cyan:#06b6d4;
-  --font-display:'Syne',sans-serif;
-  --font-mono:'JetBrains Mono',monospace;
-  --radius:8px;
-  --shadow:0 4px 24px #00000040;
-  --shadow-lg:0 8px 40px #00000060;
-}
-html{height:100%;overflow:hidden}
-body{
-  height:100%;
-  background:var(--bg-0);
-  color:var(--text-1);
-  font-family:var(--font-display);
-  font-size:14px;
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SGE — Sistema de Gestão de Efetivo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ===================== RESET & BASE ===================== */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
 
-/* ===================== SCROLLBAR ===================== */
-::-webkit-scrollbar{width:5px;height:5px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--border-bright);border-radius:4px}
+    :root {
+      --bg-0: #f5f7fa;
+      --bg-1: #ffffff;
+      --bg-2: #f0f2f5;
+      --bg-3: #e8ebf0;
+      --bg-4: #dde1e8;
+      --border: #d8dce5;
+      --border-bright: #c5cbda;
+      --accent: #4a7fd7;
+      --accent-dim: #3a6abf;
+      --accent-glow: #4a7fd715;
+      --text-1: #2d3748;
+      --text-2: #5a6676;
+      --text-3: #8a95a5;
+      --green: #2e9e5a;
+      --orange: #e0872a;
+      --purple: #8b5ec9;
+      --yellow: #c99a1a;
+      --red: #d64545;
+      --cyan: #1a9eb8;
+      --font-display: 'Inter', sans-serif;
+      --font-mono: 'Inter', sans-serif;
+      --radius: 12px;
+      --shadow: 0 2px 12px #0000000a;
+      --shadow-lg: 0 6px 28px #00000010;
+    }
 
-/* ===================== LAYOUT ===================== */
-#app{display:flex;height:100%;flex-direction:column}
+    html {
+      height: 100%;
+      overflow: hidden
+    }
 
-/* ===================== TOPBAR ===================== */
-#topbar{
-  display:flex;align-items:center;gap:16px;
-  padding:0 20px;height:56px;min-height:56px;
-  background:var(--bg-1);
-  border-bottom:1px solid var(--border);
-  z-index:100;
-}
-.logo{
-  display:flex;align-items:center;gap:10px;
-  font-family:var(--font-display);font-weight:800;font-size:18px;
-  letter-spacing:-0.5px;color:var(--text-1);
-  white-space:nowrap;
-}
-.logo-icon{
-  width:30px;height:30px;background:var(--accent);border-radius:6px;
-  display:flex;align-items:center;justify-content:center;font-size:14px;
-}
-.logo span{color:var(--text-3);font-weight:400;font-size:12px;margin-left:4px}
-#nav{display:flex;gap:2px;margin-left:8px}
-.nav-btn{
-  padding:6px 14px;border:none;background:none;color:var(--text-2);
-  font-family:var(--font-display);font-size:13px;font-weight:600;
-  border-radius:6px;cursor:pointer;transition:all .15s;
-  display:flex;align-items:center;gap:6px;letter-spacing:.2px;
-}
-.nav-btn:hover{background:var(--bg-2);color:var(--text-1)}
-.nav-btn.active{background:var(--accent-glow);color:var(--accent);border:1px solid var(--accent)30}
-.nav-btn svg{width:14px;height:14px;flex-shrink:0}
-#topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
-.stats-pill{
-  display:flex;align-items:center;gap:6px;
-  background:var(--bg-2);border:1px solid var(--border);
-  border-radius:20px;padding:4px 12px;
-  font-family:var(--font-mono);font-size:11px;color:var(--text-2);
-}
-.stats-pill strong{color:var(--text-1)}
-#refresh-btn{
-  width:32px;height:32px;border:1px solid var(--border);background:var(--bg-2);
-  border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;
-  color:var(--text-2);transition:all .15s;
-}
-#refresh-btn:hover{background:var(--bg-3);color:var(--text-1)}
-#refresh-btn svg{width:14px;height:14px}
+    body {
+      height: 100%;
+      background: var(--bg-0);
+      color: var(--text-1);
+      font-family: var(--font-display);
+      font-size: 14px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
 
-/* ===================== FILTER BAR ===================== */
-#filterbar{
-  display:flex;align-items:center;gap:8px;
-  padding:8px 20px;
-  background:var(--bg-1);border-bottom:1px solid var(--border);
-  overflow-x:auto;flex-shrink:0;
-}
-#filterbar::-webkit-scrollbar{display:none}
-.filter-label{font-size:11px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
-.filter-sep{width:1px;height:18px;background:var(--border);margin:0 4px;flex-shrink:0}
-.filter-chip{
-  padding:4px 10px;border-radius:4px;border:1px solid var(--border);
-  background:transparent;color:var(--text-2);font-family:var(--font-mono);font-size:11px;
-  cursor:pointer;transition:all .15s;white-space:nowrap;
-}
-.filter-chip:hover{border-color:var(--accent);color:var(--accent)}
-.filter-chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+    /* ===================== SCROLLBAR ===================== */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px
+    }
 
-/* ===================== MAIN CONTENT ===================== */
-#main{flex:1;overflow:hidden;position:relative}
-.view{display:none;height:100%;overflow:hidden}
-.view.active{display:flex;flex-direction:column}
+    ::-webkit-scrollbar-track {
+      background: transparent
+    }
 
-/* ===================== KANBAN ===================== */
-#kanban-view{flex-direction:row!important;overflow-x:auto;overflow-y:hidden;padding:16px;gap:14px}
-#kanban-view::-webkit-scrollbar{height:6px}
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-bright);
+      border-radius: 10px
+    }
 
-.kanban-col{
-  min-width:270px;max-width:270px;
-  display:flex;flex-direction:column;
-  background:var(--bg-1);border:1px solid var(--border);
-  border-radius:10px;overflow:hidden;flex-shrink:0;
-}
-.col-header{
-  padding:12px 14px 10px;
-  border-bottom:1px solid var(--border);
-  background:var(--bg-2);
-  position:sticky;top:0;
-}
-.col-title{
-  font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-1);
-  display:flex;align-items:center;gap:8px;
-}
-.col-count{
-  background:var(--bg-3);border-radius:4px;padding:1px 7px;
-  font-family:var(--font-mono);font-size:11px;color:var(--text-2);
-  margin-left:auto;
-}
-.col-regime{font-family:var(--font-mono);font-size:10px;color:var(--text-3);margin-top:2px}
-.col-body{
-  flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:6px;
-  min-height:100px;
-}
-.col-body::-webkit-scrollbar{width:3px}
-.col-body.drag-over{background:var(--accent-glow);border-radius:6px}
+    /* ===================== LAYOUT ===================== */
+    #app {
+      display: flex;
+      height: 100%;
+      flex-direction: column
+    }
 
-/* ===================== CARDS ===================== */
-.card{
-  background:var(--bg-2);border:1px solid var(--border);border-radius:8px;
-  padding:10px 12px;cursor:grab;transition:all .15s;
-  position:relative;user-select:none;
-}
-.card:hover{border-color:var(--accent)50;background:var(--bg-3);transform:translateY(-1px);box-shadow:var(--shadow)}
-.card.dragging{opacity:.4;transform:scale(.96);cursor:grabbing}
-.card.dragging-ghost{opacity:1;box-shadow:0 12px 40px #0008,0 0 0 2px var(--accent);transform:rotate(1.5deg) scale(1.02)}
-.card-top{display:flex;align-items:flex-start;gap:6px;margin-bottom:6px}
-.card-id{font-family:var(--font-mono);font-size:9px;color:var(--text-3);margin-top:1px;flex-shrink:0}
-.card-name{font-size:12px;font-weight:700;line-height:1.3;flex:1;color:var(--text-1)}
-.card-badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
-.badge{
-  display:inline-flex;align-items:center;gap:3px;
-  padding:2px 7px;border-radius:3px;font-family:var(--font-mono);font-size:10px;font-weight:500;
-}
-/* regime badges */
-.badge-24A{background:#16653a30;color:#4ade80;border:1px solid #16653a}
-.badge-24B{background:#1d3a8a30;color:#60a5fa;border:1px solid #1d3a8a}
-.badge-24C{background:#7c2d0830;color:#fb923c;border:1px solid #7c2d08}
-.badge-24D{background:#58186830;color:#c084fc;border:1px solid #581868}
-.badge-ADM{background:#1e293b;color:#94a3b8;border:1px solid #334155}
-.badge-16HS{background:#71350d30;color:#fbbf24;border:1px solid #71350d}
-.badge-SEM{background:#4c0a0a30;color:#f87171;border:1px solid #4c0a0a}
-/* funcao badges */
-.badge-OP{background:#1e3a5f30;color:#93c5fd;border:1px solid #1e3a5f}
-.badge-MOT{background:#14532d30;color:#86efac;border:1px solid #14532d}
-/* alert */
-.card-alert{
-  position:absolute;top:8px;right:8px;width:7px;height:7px;
-  border-radius:50%;background:var(--red);
-  box-shadow:0 0 6px var(--red);
-}
-.card-vaga{
-  font-family:var(--font-mono);font-size:10px;color:var(--text-3);
-  margin-top:5px;display:flex;align-items:center;gap:4px;
-}
-.card-vaga svg{width:10px;height:10px;flex-shrink:0}
+    /* ===================== TOPBAR ===================== */
+    #topbar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 20px;
+      height: 56px;
+      min-height: 56px;
+      background: var(--bg-1);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
 
-/* ===================== SKELETON ===================== */
-.skeleton{
-  background:linear-gradient(90deg,var(--bg-2),var(--bg-3),var(--bg-2));
-  background-size:200%;animation:shimmer 1.4s infinite;
-  border-radius:4px;
-}
-@keyframes shimmer{0%{background-position:200%}100%{background-position:-200%}}
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: -0.5px;
+      color: var(--text-1);
+      white-space: nowrap;
+    }
 
-/* ===================== SEARCH VIEW ===================== */
-#search-view{padding:20px;flex-direction:column;gap:16px}
-#search-bar{
-  display:flex;gap:8px;align-items:center;
-}
-#search-input{
-  flex:1;padding:10px 16px;background:var(--bg-2);border:1px solid var(--border);
-  border-radius:8px;color:var(--text-1);font-family:var(--font-display);font-size:14px;
-  outline:none;transition:border .15s;
-}
-#search-input:focus{border-color:var(--accent)}
-#search-input::placeholder{color:var(--text-3)}
-#search-results{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;align-content:start}
-.search-card{
-  background:var(--bg-2);border:1px solid var(--border);border-radius:8px;
-  padding:14px;cursor:pointer;transition:all .15s;
-}
-.search-card:hover{border-color:var(--accent)50;background:var(--bg-3)}
-.search-card-header{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px}
-.search-card-id{font-family:var(--font-mono);font-size:10px;color:var(--text-3)}
-.search-card-name{font-size:13px;font-weight:700;color:var(--text-1);flex:1}
-.search-card-sup{font-size:11px;color:var(--text-2);margin-top:4px}
-.search-empty{
-  grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-3);
-}
-.search-empty svg{width:40px;height:40px;margin:0 auto 12px;display:block;opacity:.4}
+    .logo-icon {
+      width: 30px;
+      height: 30px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
 
-/* ===================== HISTORY VIEW ===================== */
-#history-view{padding:20px;gap:16px;overflow:hidden}
-.history-filters{display:flex;gap:8px;flex-wrap:wrap}
-.history-filter-input{
-  padding:7px 12px;background:var(--bg-2);border:1px solid var(--border);
-  border-radius:6px;color:var(--text-1);font-family:var(--font-display);font-size:12px;
-  outline:none;transition:border .15s;
-}
-.history-filter-input:focus{border-color:var(--accent)}
-.history-filter-input::placeholder{color:var(--text-3)}
-#export-btn{
-  margin-left:auto;padding:7px 14px;background:var(--accent);border:none;
-  border-radius:6px;color:#fff;font-family:var(--font-display);font-size:12px;font-weight:600;
-  cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .15s;
-}
-#export-btn:hover{background:var(--accent-dim)}
-#history-table-wrap{flex:1;overflow:auto;border:1px solid var(--border);border-radius:8px}
-#history-table{width:100%;border-collapse:collapse;font-size:12px}
-#history-table th{
-  background:var(--bg-2);padding:10px 14px;text-align:left;
-  font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--text-3);
-  border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:2;
-}
-#history-table td{
-  padding:9px 14px;border-bottom:1px solid var(--border)80;color:var(--text-2);
-  white-space:nowrap;
-}
-#history-table tr:hover td{background:var(--bg-2)}
-#history-table tr:last-child td{border-bottom:none}
-.mov-arrow{color:var(--text-3);margin:0 4px}
+    .logo span {
+      color: var(--text-3);
+      font-weight: 400;
+      font-size: 12px;
+      margin-left: 4px
+    }
 
-/* ===================== SETTINGS VIEW ===================== */
-#settings-view{padding:20px;gap:20px;overflow-y:auto}
-.settings-section{
-  background:var(--bg-1);border:1px solid var(--border);border-radius:10px;overflow:hidden;
-}
-.settings-section-header{
-  padding:14px 18px;border-bottom:1px solid var(--border);background:var(--bg-2);
-  font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;
-}
-.settings-section-header svg{width:14px;height:14px;color:var(--accent)}
-.settings-section-body{padding:16px 18px;display:flex;flex-direction:column;gap:12px}
-.settings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
-.sup-card{
-  background:var(--bg-2);border:1px solid var(--border);border-radius:8px;
-  padding:12px;display:flex;align-items:center;gap:8px;
-}
-.sup-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.sup-dot.active{background:var(--green);box-shadow:0 0 6px var(--green)60}
-.sup-dot.inactive{background:var(--text-3)}
-.sup-name{flex:1;font-size:12px;font-weight:600}
-.sup-regime{font-family:var(--font-mono);font-size:10px;color:var(--text-3)}
-.toggle-btn{
-  padding:4px 10px;border-radius:4px;border:1px solid var(--border);
-  background:transparent;color:var(--text-2);font-size:11px;cursor:pointer;
-  font-family:var(--font-mono);transition:all .15s;
-}
-.toggle-btn:hover{border-color:var(--accent);color:var(--accent)}
-.settings-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.form-field{display:flex;flex-direction:column;gap:4px}
-.form-field label{font-size:11px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.form-field input,.form-field select{
-  padding:8px 12px;background:var(--bg-2);border:1px solid var(--border);
-  border-radius:6px;color:var(--text-1);font-family:var(--font-display);font-size:13px;outline:none;
-  transition:border .15s;
-}
-.form-field input:focus,.form-field select:focus{border-color:var(--accent)}
-.form-field select{cursor:pointer}
-.form-field select option{background:var(--bg-2)}
-.btn-primary{
-  padding:9px 18px;background:var(--accent);border:none;border-radius:6px;
-  color:#fff;font-family:var(--font-display);font-size:13px;font-weight:600;cursor:pointer;
-  transition:background .15s;margin-top:4px;
-}
-.btn-primary:hover{background:var(--accent-dim)}
-.btn-danger{background:var(--red)20;border:1px solid var(--red)40;color:var(--red)}
-.btn-danger:hover{background:var(--red)30}
-.sem-id-list{display:flex;flex-direction:column;gap:8px}
-.sem-id-item{
-  background:var(--bg-2);border:1px solid var(--red)30;border-radius:8px;
-  padding:12px;display:flex;align-items:center;gap:10px;
-}
-.sem-id-name{flex:1;font-size:12px;font-weight:600}
-.sem-id-input{
-  padding:5px 10px;background:var(--bg-1);border:1px solid var(--border);
-  border-radius:5px;color:var(--text-1);font-family:var(--font-mono);font-size:12px;
-  width:130px;outline:none;
-}
-.sem-id-input:focus{border-color:var(--accent)}
-.sem-id-save{
-  padding:5px 12px;background:var(--green)20;border:1px solid var(--green)50;
-  border-radius:5px;color:var(--green);font-size:11px;cursor:pointer;font-weight:600;
-  font-family:var(--font-mono);transition:all .15s;
-}
-.sem-id-save:hover{background:var(--green)30}
+    #nav {
+      display: flex;
+      gap: 2px;
+      margin-left: 8px
+    }
 
-/* ===================== DRAWER ===================== */
-#drawer-overlay{
-  position:fixed;inset:0;background:#00000070;z-index:200;
-  opacity:0;pointer-events:none;transition:opacity .2s;
-}
-#drawer-overlay.open{opacity:1;pointer-events:all}
-#drawer{
-  position:fixed;top:0;right:0;bottom:0;width:380px;
-  background:var(--bg-1);border-left:1px solid var(--border);
-  z-index:201;transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);
-  display:flex;flex-direction:column;overflow:hidden;
-}
-#drawer.open{transform:translateX(0)}
-#drawer-header{
-  padding:16px 18px;border-bottom:1px solid var(--border);background:var(--bg-2);
-  display:flex;align-items:flex-start;gap:10px;
-}
-#drawer-close{
-  background:none;border:none;color:var(--text-2);cursor:pointer;margin-left:auto;
-  width:28px;height:28px;display:flex;align-items:center;justify-content:center;
-  border-radius:5px;transition:all .15s;flex-shrink:0;
-}
-#drawer-close:hover{background:var(--bg-3);color:var(--text-1)}
-#drawer-title{font-size:16px;font-weight:800;color:var(--text-1);flex:1;line-height:1.3}
-#drawer-id{font-family:var(--font-mono);font-size:10px;color:var(--text-3);margin-top:2px}
-#drawer-body{flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:14px}
-.drawer-field{display:flex;flex-direction:column;gap:3px}
-.drawer-field-label{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.8px;font-weight:600}
-.drawer-field-value{font-size:13px;color:var(--text-1);font-weight:500}
-.drawer-fields-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-#drawer-footer{
-  padding:12px 18px;border-top:1px solid var(--border);
-  display:flex;gap:8px;flex-wrap:wrap;
-}
-.drawer-btn{
-  flex:1;padding:9px;border:1px solid var(--border);background:var(--bg-2);
-  border-radius:6px;color:var(--text-1);font-family:var(--font-display);font-size:12px;font-weight:600;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;
-}
-.drawer-btn:hover{background:var(--bg-3);border-color:var(--border-bright)}
-.drawer-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-.drawer-btn.primary:hover{background:var(--accent-dim)}
-.drawer-btn svg{width:13px;height:13px}
-.drawer-history{display:flex;flex-direction:column;gap:6px}
-.drawer-mov-item{
-  background:var(--bg-2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;
-}
-.drawer-mov-date{font-family:var(--font-mono);font-size:10px;color:var(--text-3);margin-bottom:4px}
-.drawer-mov-text{font-size:11px;color:var(--text-2)}
-.drawer-mov-motivo{
-  display:inline-block;margin-top:4px;padding:2px 6px;
-  background:var(--bg-3);border-radius:3px;font-size:10px;color:var(--text-3);
-}
+    .nav-btn {
+      padding: 6px 14px;
+      border: none;
+      background: none;
+      color: var(--text-2);
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all .15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: .2px;
+    }
 
-/* ===================== MODAL ===================== */
-#modal-overlay{
-  position:fixed;inset:0;background:#00000080;z-index:300;
-  display:none;align-items:center;justify-content:center;padding:20px;
-  backdrop-filter:blur(4px);
-}
-#modal-overlay.open{display:flex}
-#modal{
-  background:var(--bg-1);border:1px solid var(--border);border-radius:12px;
-  width:100%;max-width:460px;overflow:hidden;
-  box-shadow:var(--shadow-lg);animation:modal-in .2s ease;
-}
-@keyframes modal-in{from{opacity:0;transform:scale(.94) translateY(10px)}}
-.modal-header{
-  padding:16px 20px;border-bottom:1px solid var(--border);background:var(--bg-2);
-}
-.modal-title{font-size:15px;font-weight:800;color:var(--text-1)}
-.modal-subtitle{font-size:12px;color:var(--text-2);margin-top:3px}
-.modal-body{padding:20px;display:flex;flex-direction:column;gap:14px}
-.modal-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
-.btn-cancel{
-  padding:9px 18px;background:var(--bg-2);border:1px solid var(--border);
-  border-radius:6px;color:var(--text-2);font-family:var(--font-display);font-size:13px;cursor:pointer;
-  transition:all .15s;
-}
-.btn-cancel:hover{background:var(--bg-3);color:var(--text-1)}
-.btn-confirm{
-  padding:9px 22px;background:var(--accent);border:none;border-radius:6px;
-  color:#fff;font-family:var(--font-display);font-size:13px;font-weight:700;cursor:pointer;
-  transition:background .15s;
-}
-.btn-confirm:hover{background:var(--accent-dim)}
-.modal-colname{
-  display:flex;align-items:center;gap:6px;padding:10px 14px;
-  background:var(--bg-2);border:1px solid var(--border);border-radius:6px;
-  font-size:14px;font-weight:700;color:var(--accent);
-}
-.move-arrow{display:flex;align-items:center;justify-content:center;color:var(--text-3)}
+    .nav-btn:hover {
+      background: var(--bg-2);
+      color: var(--text-1)
+    }
 
-/* ===================== TOAST ===================== */
-#toast-container{
-  position:fixed;bottom:20px;right:20px;z-index:999;
-  display:flex;flex-direction:column;gap:8px;
-}
-.toast{
-  padding:11px 16px;border-radius:8px;min-width:240px;
-  font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;
-  animation:toast-in .25s ease;box-shadow:var(--shadow);
-}
-.toast svg{width:15px;height:15px;flex-shrink:0}
-.toast.success{background:#14532d;border:1px solid var(--green)50;color:var(--green)}
-.toast.error{background:#4c0a0a;border:1px solid var(--red)50;color:var(--red)}
-.toast.info{background:#1e3a5f;border:1px solid var(--accent)50;color:var(--accent)}
-@keyframes toast-in{from{opacity:0;transform:translateY(10px) scale(.95)}}
+    .nav-btn.active {
+      background: var(--accent-glow);
+      color: var(--accent);
+      border: 1px solid var(--accent)30
+    }
 
-/* ===================== MISC ===================== */
-.section-title{
-  font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;
-  color:var(--text-3);padding-bottom:6px;border-bottom:1px solid var(--border);margin-bottom:4px;
-}
-.alert-banner{
-  display:flex;align-items:center;gap:8px;padding:8px 14px;
-  background:#4c0a0a20;border:1px solid var(--red)30;border-radius:6px;
-  font-size:12px;color:var(--red);
-}
-.empty-col{
-  text-align:center;padding:24px 12px;color:var(--text-3);font-size:11px;
-}
+    .nav-btn svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0
+    }
 
-/* ===================== EDIT MODAL ===================== */
-.edit-modal-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-</style>
+    #topbar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .stats-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-2);
+    }
+
+    .stats-pill strong {
+      color: var(--text-1)
+    }
+
+    #refresh-btn {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--border);
+      background: var(--bg-2);
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-2);
+      transition: all .15s;
+    }
+
+    #refresh-btn:hover {
+      background: var(--bg-3);
+      color: var(--text-1)
+    }
+
+    #refresh-btn svg {
+      width: 14px;
+      height: 14px
+    }
+
+    /* ===================== FILTER BAR ===================== */
+    #filterbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      background: var(--bg-1);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      flex-shrink: 0;
+    }
+
+    #filterbar::-webkit-scrollbar {
+      display: none
+    }
+
+    .filter-label {
+      font-size: 11px;
+      color: var(--text-3);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      white-space: nowrap
+    }
+
+    .filter-sep {
+      width: 1px;
+      height: 18px;
+      background: var(--border);
+      margin: 0 4px;
+      flex-shrink: 0
+    }
+
+    .filter-chip {
+      padding: 4px 12px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-2);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all .15s;
+      white-space: nowrap;
+    }
+
+    .filter-chip:hover {
+      border-color: var(--accent);
+      color: var(--accent)
+    }
+
+    .filter-chip.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      border-radius: 16px;
+    }
+
+    /* ===================== MAIN CONTENT ===================== */
+    #main {
+      flex: 1;
+      overflow: hidden;
+      position: relative
+    }
+
+    .view {
+      display: none;
+      height: 100%;
+      overflow: hidden
+    }
+
+    .view.active {
+      display: flex;
+      flex-direction: column
+    }
+
+    /* ===================== KANBAN ===================== */
+    #kanban-wrap {
+      position: relative;
+      display: flex;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #kanban-view {
+      flex: 1;
+      flex-direction: row !important;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 16px;
+      gap: 14px;
+      scroll-behavior: smooth;
+      height: 100%;
+    }
+
+    #kanban-view::-webkit-scrollbar {
+      height: 6px
+    }
+
+    .kanban-col {
+      min-width: 270px;
+      max-width: 270px;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      flex-shrink: 0;
+      box-shadow: var(--shadow);
+      max-height: 100%;
+    }
+
+    /* Kanban scroll arrows */
+    .kanban-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 20;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--bg-1);
+      box-shadow: 0 2px 16px rgba(0, 0, 0, .12);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-1);
+      transition: all .2s;
+    }
+
+    .kanban-arrow:hover {
+      background: var(--bg-3);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, .18);
+      transform: translateY(-50%) scale(1.08);
+    }
+
+    .kanban-arrow.left {
+      left: 6px;
+    }
+
+    .kanban-arrow.right {
+      right: 6px;
+    }
+
+    .kanban-arrow svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .kanban-arrow.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .col-header {
+      padding: 12px 14px 10px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-2);
+      position: sticky;
+      top: 0;
+      border-radius: 13px 13px 0 0;
+    }
+
+    .col-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .col-count {
+      background: var(--bg-3);
+      border-radius: 10px;
+      padding: 1px 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-2);
+      margin-left: auto;
+    }
+
+    .col-regime {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-3);
+      margin-top: 2px
+    }
+
+    .col-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-height: 100px;
+    }
+
+    .col-body::-webkit-scrollbar {
+      width: 3px
+    }
+
+    .col-body.drag-over {
+      background: var(--accent-glow);
+      border-radius: 6px
+    }
+
+    /* ===================== CARDS ===================== */
+    .card {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 11px 13px;
+      cursor: grab;
+      transition: all .18s ease;
+      position: relative;
+      user-select: none;
+    }
+
+    .card:hover {
+      border-color: var(--accent)40;
+      background: var(--bg-3);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 14px #00000008;
+    }
+
+    .card.dragging {
+      opacity: .4;
+      transform: scale(.96);
+      cursor: grabbing
+    }
+
+    .card.dragging-ghost {
+      opacity: 1;
+      box-shadow: 0 12px 40px #00000018, 0 0 0 2px var(--accent);
+      transform: rotate(1.5deg) scale(1.02);
+      border-radius: 12px;
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      margin-bottom: 6px
+    }
+
+    .card-id {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--text-3);
+      margin-top: 1px;
+      flex-shrink: 0
+    }
+
+    .card-name {
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.3;
+      flex: 1;
+      color: var(--text-1)
+    }
+
+    .card-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 4px
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 500;
+    }
+
+    /* regime badges */
+    .badge-24A {
+      background: #e8f5ee;
+      color: #1a7a42;
+      border: 1px solid #b5ddc5
+    }
+
+    .badge-24B {
+      background: #e6eef9;
+      color: #2c5ea8;
+      border: 1px solid #b0c8e8
+    }
+
+    .badge-24C {
+      background: #fdf0e4;
+      color: #b06318;
+      border: 1px solid #ecc9a0
+    }
+
+    .badge-24D {
+      background: #f3ecfb;
+      color: #7b49b0;
+      border: 1px solid #d0b8e8
+    }
+
+    .badge-ADM {
+      background: #eef0f4;
+      color: #5a6676;
+      border: 1px solid #c8ced8
+    }
+
+    .badge-16HS {
+      background: #fdf5e0;
+      color: #9a7510;
+      border: 1px solid #e8d699
+    }
+
+    .badge-SEM {
+      background: #fce8e8;
+      color: #c43030;
+      border: 1px solid #e8b0b0
+    }
+
+    /* funcao badges */
+    .badge-OP {
+      background: #e6eef9;
+      color: #2c5ea8;
+      border: 1px solid #b0c8e8
+    }
+
+    .badge-MOT {
+      background: #e8f5ee;
+      color: #1a7a42;
+      border: 1px solid #b5ddc5
+    }
+
+    /* alert */
+    .card-alert {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 6px var(--red);
+    }
+
+    .card-vaga {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-3);
+      margin-top: 5px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .card-vaga svg {
+      width: 10px;
+      height: 10px;
+      flex-shrink: 0
+    }
+
+    /* ===================== SKELETON ===================== */
+    .skeleton {
+      background: linear-gradient(90deg, var(--bg-2), var(--bg-3), var(--bg-2));
+      background-size: 200%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 4px;
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: 200%
+      }
+
+      100% {
+        background-position: -200%
+      }
+    }
+
+    /* ===================== SEARCH VIEW ===================== */
+    #search-view {
+      padding: 20px;
+      flex-direction: column;
+      gap: 16px
+    }
+
+    #search-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    #search-input {
+      flex: 1;
+      padding: 10px 16px;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-1);
+      font-family: var(--font-display);
+      font-size: 14px;
+      outline: none;
+      transition: border .15s;
+    }
+
+    #search-input:focus {
+      border-color: var(--accent)
+    }
+
+    #search-input::placeholder {
+      color: var(--text-3)
+    }
+
+    #search-results {
+      flex: 1;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 10px;
+      align-content: start
+    }
+
+    .search-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .search-card:hover {
+      border-color: var(--accent)50;
+      background: var(--bg-3)
+    }
+
+    .search-card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 8px
+    }
+
+    .search-card-id {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-3)
+    }
+
+    .search-card-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-1);
+      flex: 1
+    }
+
+    .search-card-sup {
+      font-size: 11px;
+      color: var(--text-2);
+      margin-top: 4px
+    }
+
+    .search-empty {
+      grid-column: 1/-1;
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-3);
+    }
+
+    .search-empty svg {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 12px;
+      display: block;
+      opacity: .4
+    }
+
+    /* ===================== HISTORY VIEW ===================== */
+    #history-view {
+      padding: 20px;
+      gap: 16px;
+      overflow: hidden
+    }
+
+    .history-filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap
+    }
+
+    .history-filter-input {
+      padding: 7px 12px;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-1);
+      font-family: var(--font-display);
+      font-size: 12px;
+      outline: none;
+      transition: border .15s;
+    }
+
+    .history-filter-input:focus {
+      border-color: var(--accent)
+    }
+
+    .history-filter-input::placeholder {
+      color: var(--text-3)
+    }
+
+    #export-btn {
+      margin-left: auto;
+      padding: 7px 14px;
+      background: var(--accent);
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-family: var(--font-display);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background .15s;
+    }
+
+    #export-btn:hover {
+      background: var(--accent-dim)
+    }
+
+    #history-table-wrap {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px
+    }
+
+    #history-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px
+    }
+
+    #history-table th {
+      background: var(--bg-2);
+      padding: 10px 14px;
+      text-align: left;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: var(--text-3);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    #history-table td {
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--border)80;
+      color: var(--text-2);
+      white-space: nowrap;
+    }
+
+    #history-table tr:hover td {
+      background: var(--bg-2)
+    }
+
+    #history-table tr:last-child td {
+      border-bottom: none
+    }
+
+    .mov-arrow {
+      color: var(--text-3);
+      margin: 0 4px
+    }
+
+    /* ===================== SETTINGS VIEW ===================== */
+    #settings-view {
+      padding: 20px;
+      gap: 20px;
+      overflow-y: auto
+    }
+
+    .settings-section {
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .settings-section-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-2);
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .settings-section-header svg {
+      width: 14px;
+      height: 14px;
+      color: var(--accent)
+    }
+
+    .settings-section-body {
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px
+    }
+
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 8px
+    }
+
+    .sup-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sup-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0
+    }
+
+    .sup-dot.active {
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green)60
+    }
+
+    .sup-dot.inactive {
+      background: var(--text-3)
+    }
+
+    .sup-name {
+      flex: 1;
+      font-size: 12px;
+      font-weight: 600
+    }
+
+    .sup-regime {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-3)
+    }
+
+    .toggle-btn {
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-2);
+      font-size: 11px;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      transition: all .15s;
+    }
+
+    .toggle-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent)
+    }
+
+    .settings-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px
+    }
+
+    .form-field label {
+      font-size: 11px;
+      color: var(--text-3);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .5px
+    }
+
+    .form-field input,
+    .form-field select {
+      padding: 8px 12px;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-1);
+      font-family: var(--font-display);
+      font-size: 13px;
+      outline: none;
+      transition: border .15s;
+    }
+
+    .form-field input:focus,
+    .form-field select:focus {
+      border-color: var(--accent)
+    }
+
+    .form-field select {
+      cursor: pointer
+    }
+
+    .form-field select option {
+      background: var(--bg-2)
+    }
+
+    .btn-primary {
+      padding: 9px 18px;
+      background: var(--accent);
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+      margin-top: 4px;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-dim)
+    }
+
+    .btn-danger {
+      background: var(--red)20;
+      border: 1px solid var(--red)40;
+      color: var(--red)
+    }
+
+    .btn-danger:hover {
+      background: var(--red)30
+    }
+
+    .sem-id-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px
+    }
+
+    .sem-id-item {
+      background: var(--bg-2);
+      border: 1px solid var(--red)30;
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sem-id-name {
+      flex: 1;
+      font-size: 12px;
+      font-weight: 600
+    }
+
+    .sem-id-input {
+      padding: 5px 10px;
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--text-1);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      width: 130px;
+      outline: none;
+    }
+
+    .sem-id-input:focus {
+      border-color: var(--accent)
+    }
+
+    .sem-id-save {
+      padding: 5px 12px;
+      background: var(--green)20;
+      border: 1px solid var(--green)50;
+      border-radius: 5px;
+      color: var(--green);
+      font-size: 11px;
+      cursor: pointer;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      transition: all .15s;
+    }
+
+    .sem-id-save:hover {
+      background: var(--green)30
+    }
+
+    /* ===================== DRAWER ===================== */
+    #drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: #00000025;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+    }
+
+    #drawer-overlay.open {
+      opacity: 1;
+      pointer-events: all
+    }
+
+    #drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 380px;
+      background: var(--bg-1);
+      border-left: 1px solid var(--border);
+      z-index: 201;
+      transform: translateX(100%);
+      transition: transform .25s cubic-bezier(.4, 0, .2, 1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #drawer.open {
+      transform: translateX(0)
+    }
+
+    #drawer-header {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-2);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    #drawer-close {
+      background: none;
+      border: none;
+      color: var(--text-2);
+      cursor: pointer;
+      margin-left: auto;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 5px;
+      transition: all .15s;
+      flex-shrink: 0;
+    }
+
+    #drawer-close:hover {
+      background: var(--bg-3);
+      color: var(--text-1)
+    }
+
+    #drawer-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text-1);
+      flex: 1;
+      line-height: 1.3
+    }
+
+    #drawer-id {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-3);
+      margin-top: 2px
+    }
+
+    #drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px
+    }
+
+    .drawer-field {
+      display: flex;
+      flex-direction: column;
+      gap: 3px
+    }
+
+    .drawer-field-label {
+      font-size: 10px;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      font-weight: 600
+    }
+
+    .drawer-field-value {
+      font-size: 13px;
+      color: var(--text-1);
+      font-weight: 500
+    }
+
+    .drawer-fields-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px
+    }
+
+    #drawer-footer {
+      padding: 12px 18px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .drawer-btn {
+      flex: 1;
+      padding: 9px;
+      border: 1px solid var(--border);
+      background: var(--bg-2);
+      border-radius: 6px;
+      color: var(--text-1);
+      font-family: var(--font-display);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all .15s;
+    }
+
+    .drawer-btn:hover {
+      background: var(--bg-3);
+      border-color: var(--border-bright)
+    }
+
+    .drawer-btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff
+    }
+
+    .drawer-btn.primary:hover {
+      background: var(--accent-dim)
+    }
+
+    .drawer-btn svg {
+      width: 13px;
+      height: 13px
+    }
+
+    .drawer-history {
+      display: flex;
+      flex-direction: column;
+      gap: 6px
+    }
+
+    .drawer-mov-item {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+    }
+
+    .drawer-mov-date {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-3);
+      margin-bottom: 4px
+    }
+
+    .drawer-mov-text {
+      font-size: 11px;
+      color: var(--text-2)
+    }
+
+    .drawer-mov-motivo {
+      display: inline-block;
+      margin-top: 4px;
+      padding: 2px 6px;
+      background: var(--bg-3);
+      border-radius: 3px;
+      font-size: 10px;
+      color: var(--text-3);
+    }
+
+    /* ===================== MODAL ===================== */
+    #modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: #00000025;
+      z-index: 300;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(4px);
+    }
+
+    #modal-overlay.open {
+      display: flex
+    }
+
+    #modal {
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 460px;
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+      animation: modal-in .2s ease;
+    }
+
+    @keyframes modal-in {
+      from {
+        opacity: 0;
+        transform: scale(.94) translateY(10px)
+      }
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-2);
+    }
+
+    .modal-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-1)
+    }
+
+    .modal-subtitle {
+      font-size: 12px;
+      color: var(--text-2);
+      margin-top: 3px
+    }
+
+    .modal-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px
+    }
+
+    .modal-footer {
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end
+    }
+
+    .btn-cancel {
+      padding: 9px 18px;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-2);
+      font-family: var(--font-display);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .btn-cancel:hover {
+      background: var(--bg-3);
+      color: var(--text-1)
+    }
+
+    .btn-confirm {
+      padding: 9px 22px;
+      background: var(--accent);
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s;
+    }
+
+    .btn-confirm:hover {
+      background: var(--accent-dim)
+    }
+
+    .modal-colname {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 14px;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .move-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-3)
+    }
+
+    /* ===================== TOAST ===================== */
+    #toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      padding: 11px 16px;
+      border-radius: 8px;
+      min-width: 240px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: toast-in .25s ease;
+      box-shadow: var(--shadow);
+    }
+
+    .toast svg {
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0
+    }
+
+    .toast.success {
+      background: #e8f5ee;
+      border: 1px solid #b5ddc5;
+      color: #1a7a42
+    }
+
+    .toast.error {
+      background: #fce8e8;
+      border: 1px solid #e8b0b0;
+      color: #c43030
+    }
+
+    .toast.info {
+      background: #e6eef9;
+      border: 1px solid #b0c8e8;
+      color: #2c5ea8
+    }
+
+    @keyframes toast-in {
+      from {
+        opacity: 0;
+        transform: translateY(10px) scale(.95)
+      }
+    }
+
+    /* ===================== MISC ===================== */
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-3);
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 4px;
+    }
+
+    .alert-banner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: #fce8e8;
+      border: 1px solid #e8b0b0;
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--red);
+    }
+
+    .empty-col {
+      text-align: center;
+      padding: 24px 12px;
+      color: var(--text-3);
+      font-size: 11px;
+    }
+
+    /* ===================== EDIT MODAL ===================== */
+    .edit-modal-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px
+    }
+
+    /* ===================== COLUMN DRAG ===================== */
+    .kanban-col.col-dragging {
+      opacity: .35;
+      transform: scale(.97);
+    }
+
+    .kanban-col.col-drag-over {
+      outline: 2px dashed var(--accent);
+      outline-offset: -2px;
+    }
+
+    .col-header {
+      cursor: grab;
+    }
+
+    .col-header:active {
+      cursor: grabbing;
+    }
+
+    /* ===================== VISUALIZATION VIEW ===================== */
+    #viz-view {
+      padding: 0;
+      gap: 0;
+      overflow: hidden;
+    }
+
+    .viz-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .viz-btn {
+      padding: 5px 12px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-2);
+      font-family: var(--font-display);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .15s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .viz-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .viz-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .viz-btn svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    /* Table (Excel) view */
+    #viz-content {
+      flex: 1;
+      overflow: auto;
+      padding: 12px 20px 20px;
+    }
+
+    .viz-table-wrap {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: auto;
+      height: 100%;
+    }
+
+    .viz-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .viz-table th {
+      background: var(--bg-2);
+      padding: 9px 12px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      color: var(--text-3);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      cursor: pointer;
+      user-select: none;
+      transition: background .1s;
+    }
+
+    .viz-table th:hover {
+      background: var(--bg-3);
+      color: var(--text-1);
+    }
+
+    .viz-table th .sort-arrow {
+      font-size: 10px;
+      margin-left: 3px;
+      opacity: .4;
+    }
+
+    .viz-table th.sorted .sort-arrow {
+      opacity: 1;
+      color: var(--accent);
+    }
+
+    .viz-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-2);
+      white-space: nowrap;
+    }
+
+    .viz-table tr:hover td {
+      background: var(--accent-glow);
+    }
+
+    .viz-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .viz-table td.name-cell {
+      font-weight: 600;
+      color: var(--text-1);
+    }
+
+    .viz-table td.id-cell {
+      font-size: 10px;
+      color: var(--text-3);
+    }
+
+    /* Group view */
+    .viz-groups {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+      height: 100%;
+      padding-bottom: 20px;
+    }
+
+    .viz-group {
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      transition: border-color .15s;
+    }
+
+    .viz-group:hover {
+      border-color: var(--border-bright);
+    }
+
+    .viz-group-header {
+      padding: 11px 14px;
+      background: var(--bg-2);
+      border-bottom: 1px solid transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-1);
+      transition: background .12s, border-color .12s;
+    }
+
+    .viz-group-header:hover {
+      background: var(--bg-3);
+    }
+
+    .viz-group-header.expanded {
+      border-bottom-color: var(--border);
+    }
+
+    .viz-group-header .chevron-icon {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      transition: transform .25s cubic-bezier(.4, 0, .2, 1);
+      color: var(--text-3);
+    }
+
+    .viz-group-header.expanded .chevron-icon {
+      transform: rotate(90deg);
+    }
+
+    .viz-group-header .group-label {
+      flex: 1;
+    }
+
+    .viz-group-header .group-preview {
+      font-size: 11px;
+      color: var(--text-3);
+      font-weight: 400;
+      max-width: 400px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      transition: opacity .2s;
+    }
+
+    .viz-group-header.expanded .group-preview {
+      opacity: 0;
+      width: 0;
+      max-width: 0;
+    }
+
+    .viz-group-header .group-count {
+      background: var(--bg-3);
+      border-radius: 10px;
+      padding: 1px 9px;
+      font-size: 11px;
+      color: var(--text-3);
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .viz-group-body {
+      display: none;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 8px;
+      padding: 10px;
+    }
+
+    .viz-group-body.open {
+      display: grid;
+    }
+
+    .viz-expand-all {
+      margin-left: auto;
+      padding: 4px 10px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-3);
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .15s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .viz-expand-all:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+  </style>
 </head>
+
 <body>
-<div id="app">
-  <!-- TOPBAR -->
-  <div id="topbar">
-    <div class="logo">
-      <div class="logo-icon">⚙</div>
-      SGE <span>/ Sistema de Gestão de Efetivo</span>
-    </div>
-    <nav id="nav">
-      <button class="nav-btn active" data-view="kanban">
-        <svg viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="4" height="14" rx="1"/><rect x="6" y="1" width="4" height="10" rx="1"/><rect x="11" y="1" width="4" height="12" rx="1"/></svg>
-        Kanban
-      </button>
-      <button class="nav-btn" data-view="search">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M15 15l-3-3"/></svg>
-        Pesquisa
-      </button>
-      <button class="nav-btn" data-view="history">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="7"/><path d="M8 4v4l3 1.5"/></svg>
-        Histórico
-      </button>
-      <button class="nav-btn" data-view="settings">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M11.54 4.46l-1.41 1.41M4.46 11.54l-1.41 1.41"/></svg>
-        Configurações
-      </button>
-    </nav>
-    <div id="topbar-right">
-      <div class="stats-pill">Total: <strong id="stat-total">—</strong></div>
-      <div class="stats-pill">Ativos: <strong id="stat-ativos">—</strong></div>
-      <div class="stats-pill">Sem ID: <strong id="stat-semid" style="color:var(--red)">—</strong></div>
-      <button id="refresh-btn" title="Atualizar">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 8a6 6 0 11-1.5-4"/><path d="M14 1v3.5L10.5 4.5"/></svg>
-      </button>
-    </div>
-  </div>
-
-  <!-- FILTER BAR (kanban only) -->
-  <div id="filterbar">
-    <span class="filter-label">Regime</span>
-    <button class="filter-chip active" data-filter-regime="">Todos</button>
-    <button class="filter-chip" data-filter-regime="24HS-A">24HS-A</button>
-    <button class="filter-chip" data-filter-regime="24HS-B">24HS-B</button>
-    <button class="filter-chip" data-filter-regime="24HS-C">24HS-C</button>
-    <button class="filter-chip" data-filter-regime="24HS-D">24HS-D</button>
-    <button class="filter-chip" data-filter-regime="ADM">ADM</button>
-    <button class="filter-chip" data-filter-regime="16HS-5X2">16HS-5X2</button>
-    <button class="filter-chip" data-filter-regime="16HS-6X3">16HS-6X3</button>
-    <div class="filter-sep"></div>
-    <span class="filter-label">Função</span>
-    <button class="filter-chip active" data-filter-funcao="">Todos</button>
-    <button class="filter-chip" data-filter-funcao="OP">OP</button>
-    <button class="filter-chip" data-filter-funcao="MOT">MOT</button>
-    <div class="filter-sep"></div>
-    <span class="filter-label">Status</span>
-    <button class="filter-chip active" data-filter-status="">Todos</button>
-    <button class="filter-chip" data-filter-status="FÉRIAS - FEVEREIRO">Férias</button>
-    <button class="filter-chip" data-filter-status="SEM VAGA">Sem Vaga</button>
-    <button class="filter-chip" data-filter-status="SEM_ID">Sem ID</button>
-  </div>
-
-  <!-- MAIN -->
-  <div id="main">
-    <!-- KANBAN -->
-    <div id="kanban-view" class="view active"></div>
-
-    <!-- SEARCH -->
-    <div id="search-view" class="view">
-      <div id="search-bar">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--text-3)" stroke-width="2" style="flex-shrink:0"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M15 15l-3-3"/></svg>
-        <input id="search-input" placeholder="Buscar por nome, ID, função, regime, supervisor, vaga…" autocomplete="off"/>
+  <div id="app">
+    <!-- TOPBAR -->
+    <div id="topbar">
+      <div class="logo">
+        <div class="logo-icon">⚙</div>
+        SGE <span>/ Sistema de Gestão de Efetivo</span>
       </div>
-      <div id="search-results"></div>
-    </div>
-
-    <!-- HISTORY -->
-    <div id="history-view" class="view">
-      <div class="history-filters">
-        <input class="history-filter-input" id="hf-colaborador" placeholder="Colaborador…" style="width:180px"/>
-        <input class="history-filter-input" id="hf-supervisor" placeholder="Supervisor…" style="width:150px"/>
-        <input class="history-filter-input" id="hf-motivo" placeholder="Motivo…" style="width:140px"/>
-        <input class="history-filter-input" type="date" id="hf-data-inicio" style="width:140px"/>
-        <input class="history-filter-input" type="date" id="hf-data-fim" style="width:140px"/>
-        <button id="export-btn">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h10M8 3v7M5 7l3 3 3-3"/></svg>
-          Exportar CSV
+      <nav id="nav">
+        <button class="nav-btn active" data-view="kanban">
+          <svg viewBox="0 0 16 16" fill="currentColor">
+            <rect x="1" y="1" width="4" height="14" rx="1" />
+            <rect x="6" y="1" width="4" height="10" rx="1" />
+            <rect x="11" y="1" width="4" height="12" rx="1" />
+          </svg>
+          Kanban
+        </button>
+        <button class="nav-btn" data-view="search">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="6.5" cy="6.5" r="4.5" />
+            <path d="M15 15l-3-3" />
+          </svg>
+          Pesquisa
+        </button>
+        <button class="nav-btn" data-view="history">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="8" cy="8" r="7" />
+            <path d="M8 4v4l3 1.5" />
+          </svg>
+          Histórico
+        </button>
+        <button class="nav-btn" data-view="viz">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="1" y="1" width="14" height="14" rx="1" />
+            <path d="M1 5h14M5 5v10M10 5v10" />
+          </svg>
+          Visualização
+        </button>
+        <button class="nav-btn" data-view="settings">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="8" cy="8" r="2.5" />
+            <path
+              d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M11.54 4.46l-1.41 1.41M4.46 11.54l-1.41 1.41" />
+          </svg>
+          Configurações
+        </button>
+      </nav>
+      <div id="topbar-right">
+        <div class="stats-pill">Total: <strong id="stat-total">—</strong></div>
+        <div class="stats-pill">Ativos: <strong id="stat-ativos">—</strong></div>
+        <div class="stats-pill">Sem ID: <strong id="stat-semid" style="color:var(--red)">—</strong></div>
+        <button id="refresh-btn" title="Atualizar">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M14 8a6 6 0 11-1.5-4" />
+            <path d="M14 1v3.5L10.5 4.5" />
+          </svg>
         </button>
       </div>
-      <div id="history-table-wrap">
-        <table id="history-table">
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th>Colaborador</th>
-              <th>Supervisor</th>
-              <th>Regime</th>
-              <th>Vaga</th>
-              <th>Motivo</th>
-              <th>Usuário</th>
-            </tr>
-          </thead>
-          <tbody id="history-tbody"></tbody>
-        </table>
-      </div>
     </div>
 
-    <!-- SETTINGS -->
-    <div id="settings-view" class="view">
-      <div class="settings-section">
-        <div class="settings-section-header">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2"/></svg>
-          Supervisores (Colunas do Kanban)
+    <!-- FILTER BAR (kanban only) -->
+    <div id="filterbar">
+      <span class="filter-label">Regime</span>
+      <button class="filter-chip active" data-filter-regime="">Todos</button>
+      <button class="filter-chip" data-filter-regime="24HS-A">24HS-A</button>
+      <button class="filter-chip" data-filter-regime="24HS-B">24HS-B</button>
+      <button class="filter-chip" data-filter-regime="24HS-C">24HS-C</button>
+      <button class="filter-chip" data-filter-regime="24HS-D">24HS-D</button>
+      <button class="filter-chip" data-filter-regime="ADM">ADM</button>
+      <button class="filter-chip" data-filter-regime="16HS-5X2">16HS-5X2</button>
+      <button class="filter-chip" data-filter-regime="16HS-6X3">16HS-6X3</button>
+      <div class="filter-sep"></div>
+      <span class="filter-label">Função</span>
+      <button class="filter-chip active" data-filter-funcao="">Todos</button>
+      <button class="filter-chip" data-filter-funcao="OP">OP</button>
+      <button class="filter-chip" data-filter-funcao="MOT">MOT</button>
+      <div class="filter-sep"></div>
+      <span class="filter-label">Status</span>
+      <button class="filter-chip active" data-filter-status="">Todos</button>
+      <button class="filter-chip" data-filter-status="FÉRIAS - FEVEREIRO">Férias</button>
+      <button class="filter-chip" data-filter-status="SEM VAGA">Sem Vaga</button>
+      <button class="filter-chip" data-filter-status="SEM_ID">Sem ID</button>
+    </div>
+
+    <!-- MAIN -->
+    <div id="main">
+      <!-- KANBAN -->
+      <div id="kanban-wrap">
+        <button class="kanban-arrow left" id="kanban-arrow-left" title="Rolar para esquerda">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <path d="M10 3L5 8l5 5" />
+          </svg>
+        </button>
+        <div id="kanban-view" class="view active"></div>
+        <button class="kanban-arrow right" id="kanban-arrow-right" title="Rolar para direita">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <path d="M6 3l5 5-5 5" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- VISUALIZATION -->
+      <div id="viz-view" class="view">
+        <div class="viz-toolbar" id="viz-toolbar"></div>
+        <div id="viz-content"></div>
+      </div>
+
+      <!-- SEARCH -->
+      <div id="search-view" class="view">
+        <div id="search-bar">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--text-3)" stroke-width="2"
+            style="flex-shrink:0">
+            <circle cx="6.5" cy="6.5" r="4.5" />
+            <path d="M15 15l-3-3" />
+          </svg>
+          <input id="search-input" placeholder="Buscar por nome, ID, função, regime, supervisor, vaga…"
+            autocomplete="off" />
         </div>
-        <div class="settings-section-body">
-          <div id="settings-sups-grid" class="settings-grid"></div>
-          <div style="display:flex;gap:8px;margin-top:4px">
-            <input class="form-field input" id="new-sup-nome" placeholder="Nome do supervisor" style="flex:1;padding:8px 12px;background:var(--bg-2);border:1px solid var(--border);border-radius:6px;color:var(--text-1);font-family:var(--font-display);font-size:13px;outline:none"/>
-            <input class="form-field input" id="new-sup-regime" placeholder="Regime (ex: ADM)" style="width:140px;padding:8px 12px;background:var(--bg-2);border:1px solid var(--border);border-radius:6px;color:var(--text-1);font-family:var(--font-display);font-size:13px;outline:none"/>
-            <button class="btn-primary" id="add-sup-btn" style="white-space:nowrap">+ Adicionar</button>
+        <div id="search-results"></div>
+      </div>
+
+      <!-- HISTORY -->
+      <div id="history-view" class="view">
+        <div class="history-filters">
+          <input class="history-filter-input" id="hf-colaborador" placeholder="Colaborador…" style="width:180px" />
+          <input class="history-filter-input" id="hf-supervisor" placeholder="Supervisor…" style="width:150px" />
+          <input class="history-filter-input" id="hf-motivo" placeholder="Motivo…" style="width:140px" />
+          <input class="history-filter-input" type="date" id="hf-data-inicio" style="width:140px" />
+          <input class="history-filter-input" type="date" id="hf-data-fim" style="width:140px" />
+          <button id="export-btn">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 12h10M8 3v7M5 7l3 3 3-3" />
+            </svg>
+            Exportar CSV
+          </button>
+        </div>
+        <div id="history-table-wrap">
+          <table id="history-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Colaborador</th>
+                <th>Supervisor</th>
+                <th>Regime</th>
+                <th>Vaga</th>
+                <th>Motivo</th>
+                <th>Usuário</th>
+              </tr>
+            </thead>
+            <tbody id="history-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div id="settings-view" class="view">
+        <div class="settings-section">
+          <div class="settings-section-header">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="8" cy="8" r="3" />
+              <path d="M8 1v2M8 13v2M1 8h2M13 8h2" />
+            </svg>
+            Supervisores (Colunas do Kanban)
+          </div>
+          <div class="settings-section-body">
+            <div id="settings-sups-grid" class="settings-grid"></div>
+            <div style="display:flex;gap:8px;margin-top:4px">
+              <input class="form-field input" id="new-sup-nome" placeholder="Nome do supervisor"
+                style="flex:1;padding:8px 12px;background:var(--bg-2);border:1px solid var(--border);border-radius:6px;color:var(--text-1);font-family:var(--font-display);font-size:13px;outline:none" />
+              <input class="form-field input" id="new-sup-regime" placeholder="Regime (ex: ADM)"
+                style="width:140px;padding:8px 12px;background:var(--bg-2);border:1px solid var(--border);border-radius:6px;color:var(--text-1);font-family:var(--font-display);font-size:13px;outline:none" />
+              <button class="btn-primary" id="add-sup-btn" style="white-space:nowrap">+ Adicionar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-header">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="8" cy="5" r="3" />
+              <path d="M1 14c0-3.87 3.13-7 7-7s7 3.13 7 7" />
+            </svg>
+            Cadastrar Novo Colaborador
+          </div>
+          <div class="settings-section-body">
+            <div class="settings-form" id="new-col-form">
+              <div class="form-field"><label>Nome Completo</label><input id="nc-nome" placeholder="Nome…" /></div>
+              <div class="form-field"><label>ID</label><input id="nc-id" placeholder="COL000…" /></div>
+              <div class="form-field"><label>Função</label>
+                <select id="nc-funcao">
+                  <option value="OP">OP</option>
+                  <option value="MOT">MOT</option>
+                </select>
+              </div>
+              <div class="form-field"><label>Regime</label>
+                <select id="nc-regime">
+                  <option>24HS-A</option>
+                  <option>24HS-B</option>
+                  <option>24HS-C</option>
+                  <option>24HS-D</option>
+                  <option>ADM</option>
+                  <option>16HS-5X2</option>
+                  <option>16HS-6X3</option>
+                  <option>SEM REGISTRO</option>
+                </select>
+              </div>
+              <div class="form-field"><label>Supervisor</label><select id="nc-supervisor"></select></div>
+              <div class="form-field"><label>Vaga / Placa</label><input id="nc-vaga" placeholder="AP 01…" /></div>
+            </div>
+            <button class="btn-primary" id="create-col-btn" style="width:fit-content">Cadastrar Colaborador</button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-header">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M8 1L1 14h14z" />
+              <path d="M8 6v4M8 11v1" />
+            </svg>
+            Colaboradores Sem ID <span id="semid-count" style="color:var(--red);font-size:11px;margin-left:auto"></span>
+          </div>
+          <div class="settings-section-body">
+            <div id="sem-id-list" class="sem-id-list"></div>
           </div>
         </div>
       </div>
+    </div>
+  </div>
 
-      <div class="settings-section">
-        <div class="settings-section-header">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M1 14c0-3.87 3.13-7 7-7s7 3.13 7 7"/></svg>
-          Cadastrar Novo Colaborador
-        </div>
-        <div class="settings-section-body">
-          <div class="settings-form" id="new-col-form">
-            <div class="form-field"><label>Nome Completo</label><input id="nc-nome" placeholder="Nome…"/></div>
-            <div class="form-field"><label>ID</label><input id="nc-id" placeholder="COL000…"/></div>
-            <div class="form-field"><label>Função</label>
-              <select id="nc-funcao"><option value="OP">OP</option><option value="MOT">MOT</option></select>
-            </div>
-            <div class="form-field"><label>Regime</label>
-              <select id="nc-regime">
-                <option>24HS-A</option><option>24HS-B</option><option>24HS-C</option><option>24HS-D</option>
-                <option>ADM</option><option>16HS-5X2</option><option>16HS-6X3</option><option>SEM REGISTRO</option>
-              </select>
-            </div>
-            <div class="form-field"><label>Supervisor</label><select id="nc-supervisor"></select></div>
-            <div class="form-field"><label>Vaga / Placa</label><input id="nc-vaga" placeholder="AP 01…"/></div>
-          </div>
-          <button class="btn-primary" id="create-col-btn" style="width:fit-content">Cadastrar Colaborador</button>
-        </div>
+  <!-- DRAWER -->
+  <div id="drawer-overlay"></div>
+  <div id="drawer">
+    <div id="drawer-header">
+      <div style="flex:1">
+        <div id="drawer-title">—</div>
+        <div id="drawer-id">—</div>
       </div>
+      <button id="drawer-close">✕</button>
+    </div>
+    <div id="drawer-body"></div>
+    <div id="drawer-footer">
+      <button class="drawer-btn" id="drawer-edit-btn">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M11 2l3 3-8 8H3v-3z" />
+        </svg>
+        Editar
+      </button>
+      <button class="drawer-btn primary" id="drawer-move-btn">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M3 8h10M9 4l4 4-4 4" />
+        </svg>
+        Mover
+      </button>
+    </div>
+  </div>
 
-      <div class="settings-section">
-        <div class="settings-section-header">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1L1 14h14z"/><path d="M8 6v4M8 11v1"/></svg>
-          Colaboradores Sem ID <span id="semid-count" style="color:var(--red);font-size:11px;margin-left:auto"></span>
-        </div>
-        <div class="settings-section-body">
-          <div id="sem-id-list" class="sem-id-list"></div>
-        </div>
+  <!-- MODAL MOVER -->
+  <div id="modal-overlay">
+    <div id="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modal-title">Confirmar Movimentação</div>
+        <div class="modal-subtitle" id="modal-subtitle"></div>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="modal-cancel">Cancelar</button>
+        <button class="btn-confirm" id="modal-confirm">Confirmar</button>
       </div>
     </div>
   </div>
-</div>
 
-<!-- DRAWER -->
-<div id="drawer-overlay"></div>
-<div id="drawer">
-  <div id="drawer-header">
-    <div style="flex:1">
-      <div id="drawer-title">—</div>
-      <div id="drawer-id">—</div>
-    </div>
-    <button id="drawer-close">✕</button>
-  </div>
-  <div id="drawer-body"></div>
-  <div id="drawer-footer">
-    <button class="drawer-btn" id="drawer-edit-btn">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 2l3 3-8 8H3v-3z"/></svg>
-      Editar
-    </button>
-    <button class="drawer-btn primary" id="drawer-move-btn">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-      Mover
-    </button>
-  </div>
-</div>
+  <!-- TOAST -->
+  <div id="toast-container"></div>
 
-<!-- MODAL MOVER -->
-<div id="modal-overlay">
-  <div id="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="modal-title">Confirmar Movimentação</div>
-      <div class="modal-subtitle" id="modal-subtitle"></div>
-    </div>
-    <div class="modal-body" id="modal-body"></div>
-    <div class="modal-footer">
-      <button class="btn-cancel" id="modal-cancel">Cancelar</button>
-      <button class="btn-confirm" id="modal-confirm">Confirmar</button>
-    </div>
-  </div>
-</div>
+  <script>
+    'use strict';
+    // ================================================================
+    //  DATA
+    // ================================================================
+    const COLABORADORES_INICIAL = [
+      { id: 'COL095', nome: 'ABNER ARAUJO DOS SANTOS', funcao: 'OP', regime: '24HS-B', supervisor: 'MATUSALEM', status: 'ATIVO', vaga: 'COQUERIA' },
+      { id: 'COL070', nome: 'ADÃO DOS SANTOS GODOI', funcao: 'OP', regime: '24HS-C', supervisor: 'ISRAEL', status: 'ATIVO', vaga: 'AP 01' },
+      { id: 'COL019', nome: 'ADAO GERALDO', funcao: 'MOT', regime: 'ADM', supervisor: 'JUNIOR PEREIRA', status: 'ATIVO', vaga: 'NÃO INFORMADA' },
+      { id: 'COL115', nome: 'ADELSON ALVES DE SOUZA', funcao: 'MOT', regime: '24HS-A', supervisor: 'OZIAS', status: 'ATIVO', vaga: 'AP 08' },
+      { id: 'COL112', nome: 'ADENILSON TEXEIRA MENDES', funcao: 'OP', regime: '24HS-D', supervisor: 'WELLISON', status: 'FÉRIAS - FEVEREIRO', vaga: 'FÉRIAS - FEVEREIRO' },
+      { id: 'COL140', nome: 'ADILSON DAMASCENO', funcao: 'OP', regime: '16HS-5X2', supervisor: '16 HORAS', status: 'ATIVO', vaga: 'AP 07' },
+      { id: 'COL126', nome: 'ADSON RENNAN', funcao: 'OP', regime: '24HS-A', supervisor: 'OZIAS', status: 'ATIVO', vaga: 'AP 01' },
+      { id: 'COL071', nome: 'ALDERINO ALVES QUEIROZ', funcao: 'OP', regime: '24HS-C', supervisor: 'ISRAEL', status: 'ATIVO', vaga: 'AP 08' },
+      { id: 'COL012', nome: 'ANTONIO CARLOS', funcao: 'OP', regime: 'ADM', supervisor: 'SEBASTIÃO', status: 'ATIVO', vaga: 'BROOK 03' },
+      { id: 'COL054', nome: 'ARÃO', funcao: 'OP', regime: 'ADM', supervisor: 'ASPIRADOR', status: 'ATIVO', vaga: 'BROOK 01' },
+      { id: 'COL139', nome: 'ARTHUR RODRIGUES OLIVEIRA', funcao: 'OP', regime: '16HS-5X2', supervisor: '16 HORAS', status: 'ATIVO', vaga: 'NÃO INFORMADA' },
+      { id: 'COL096', nome: 'AUGUSTO SOUZA SERTAO', funcao: 'OP', regime: '24HS-B', supervisor: 'MATUSALEM', status: 'ATIVO', vaga: 'AP 11' },
+      { id: 'COL076', nome: 'BRUNO MATIAS DA SILVA', funcao: 'OP', regime: '24HS-C', supervisor: 'ISRAEL', status: 'ATIVO', vaga: 'AP 01' },
+      { id: 'COL102', nome: 'BRUNO RIBEIRO', funcao: 'MOT', regime: '24HS-D', supervisor: 'WELLISON', status: 'ATIVO', vaga: 'HV 3' },
+      { id: 'COL036', nome: 'CADMIEL MENESES DE OLIVEIRA', funcao: 'OP', regime: 'ADM', supervisor: 'JUNIOR PEREIRA', status: 'ATIVO', vaga: 'NÃO INFORMADA' },
+      { id: 'COL143', nome: 'CESAR SILVA MACIEL', funcao: 'MOT', regime: '16HS-6X3', supervisor: '16 HORAS', status: 'ATIVO', vaga: 'AV 01' },
+      { id: 'COL128', nome: 'CHARLES FERREIRA DOS SANTOS', funcao: 'OP', regime: '24HS-A', supervisor: 'OZIAS', status: 'ATIVO', vaga: 'COQUERIA' },
+      { id: 'COL086', nome: 'CLEVERSON GARCIA', funcao: 'MOT', regime: '24HS-B', supervisor: 'MATUSALEM', status: 'ATIVO', vaga: 'AP 01' },
+      { id: 'COL056', nome: 'CRISTIANO OLIVEIRA SILVA', funcao: 'OP', regime: 'ADM', supervisor: 'ASPIRADOR', status: 'ATIVO', vaga: 'ASPIRADOR 2' },
+      { id: 'COL131', nome: 'CRYSTHIAN MARCELINO SILVA', funcao: 'MOT', regime: '16HS-5X2', supervisor: '16 HORAS', status: 'ATIVO', vaga: 'AP 07' },
+      { id: 'COL117', nome: 'DAVID SILVEIRA VASCONSELOS', funcao: 'MOT', regime: '24HS-A', supervisor: 'OZIAS', status: 'ATIVO', vaga: 'AP 11' },
+      { id: 'COL059', nome: 'DEIVISON LUIS', funcao: 'OP', regime: 'ADM', supervisor: 'ASPIRADOR', status: 'ATIVO', vaga: 'ASPIRADOR 5' },
+      { id: 'COL055', nome: 'DENILSON DE LIMA', funcao: 'OP', regime: 'ADM', supervisor: 'ASPIRADOR', status: 'ATIVO', vaga: 'ASPIRADOR 1' },
+      { id: 'COL085', nome: 'DHENIS MARTINS', funcao: 'MOT', regime: '24HS-B', supervisor: 'MATUSALEM', status: 'ATIVO', vaga: 'HV 3' },
+      { id: 'COL069', nome: 'DIEGO CLAUDIO', funcao: 'MOT', regime: '24HS-C', supervisor: 'ISRAEL', status: 'ATIVO', vaga: 'HV 3' },
+      { id: 'COL089', nome: 'DOUGLAS ALVES DA SILVA', funcao: 'OP', regime: '24HS-B', supervisor: 'MATUSALEM', status: 'ATIVO', vaga: 'SEM VAGA ATRIBUÍDA' },
+      { id: 'COL039', nome: 'EBERTON RAFAEL DE ARAUJO', funcao: 'OP', regime: 'ADM', supervisor: 'JUNIOR PEREIRA', status: 'ATIVO', vaga: 'NÃO INFORMADA' },
+      { id: 'COL022', nome: 'EDMILSON MENESES DE BARROS', funcao: 'MOT', regime: 'ADM', supervisor: 'JUNIOR PEREIRA', status: 'ATIVO', vaga: 'NÃO INFORMADA' },
+      { id: 'COL047', nome: 'EDSON GONÇALVES', funcao: 'OP', regime: 'ADM', supervisor: 'ASPIRADOR', status: 'ATIVO', vaga: 'ASPIRADOR 4' },
+      { id: 'COL017', nome: 'EDSON MARTINS', funcao: 'MOT', regime: 'ADM', supervisor: 'JUNIOR PEREIRA', status: 'ATIVO', vaga: 'NÃO INFORMADA' },
+      { id: 'COL114', nome: 'EDSON SOARES GOMES', funcao: 'OP', regime: '24HS-D', supervisor: 'WELLISON', status: 'ATIVO', vaga: 'SEM VAGA ATRIBUÍDA' },
+      { id: 'COL108', nome: 'EDUARDO SILVA GABRIEL', funcao: 'OP', regime: '24HS-D', supervisor: 'WELLISON', status: 'ATIVO', vaga: 'AP 11' },
+      { id: 'COL009', nome: 'ELBERT GONÇALVES COSTA', funcao: 'OP', regime: 'ADM', supervisor: 'SEBASTIÃO', status: 'ATIVO', vaga: 'AV 4' },
+      { id: 'COL029', nome: 'ELIAS DA SILVA', funcao: 'OP', regime: 'ADM', supervisor: 'JUNIOR PEREIRA', status: 'ATIVO', vaga: 'NÃO INFORMADA' },
+      { id: 'COL018', nome: 'ELSON CARDOSO DA SILVA', funcao: 'MOT', regime: 'ADM', supervisor: 'JUNIOR PEREIRA', status: 'ATIVO', vaga: 'NÃO INFORMADA' },
+      { id: 'COL092', nome: 'ERICK HENRIQUE SANTOS', funcao: 'OP', regime: '24HS-B', supervisor: 'MATUSALEM', status: 'ATIVO', vaga: 'HV 3' },
+      { id: 'COL136', nome: 'ERISON', funcao: 'OP', regime: '16HS-5X2', supervisor: '16 HORAS', status: 'ATIVO', vaga: 'AP 07' },
+      { id: 'COL063', nome: 'ERNANDO GILBERT DE ANDRADE', funcao: 'OP', regime: 'ADM', supervisor: 'ASPIRADOR', status: 'ATIVO', vaga: 'ASPIRADOR 9' },
+      { id: 'COL058', nome: 'EVALDO JOSÉ DOS SANTOS', funcao: 'OP', regime: 'ADM', supervisor: 'ASPIRADOR', status: 'ATIVO', vaga: 'ASPIRADOR 4' },
+      { id: 'COL113', nome: 'EVERTON ANDRADE', funcao: 'OP', regime: '24HS-D', supervisor: 'WELLISON', status: 'ATIVO', vaga: 'AP 11' },
+      { id: 'COL099', nome: 'FABIO PEREIRA', funcao: 'MOT', regime: '24HS-D', supervisor: 'WELLISON', status: 'ATIVO', vaga: 'AP 08' },
+      { id: 'COL124', nome: 'FABRICIO FABIANO DA SILVA', funcao: 'OP', regime: '24HS-A', supervisor: 'OZIAS', status: 'ATIVO', vaga: 'AP 11' },
+      { id: 'COL130', nome: 'FELIPE MARTINS DE OLIVEIRA', funcao: 'OP', regime: '24HS-A', supervisor: 'OZIAS', status: 'ATIVO', vaga: 'HV 3' },
+      { id: 'COL151', nome: 'FERNANDO MARIA', funcao: 'OP', regime: '16HS-6X3', supervisor: '16 HORAS', status: 'ATIVO', vaga: 'AV 2 ALY5322' },
+      { id: 'COL125', nome: 'GABRIEL AFONSO DE SOUZA', funcao: 'OP', regime: '24HS-A', supervisor: 'OZIAS', status: 'ATIVO', vaga: 'HV 3' },
+      { id: 'COL037', nome: 'GABRIEL JUNIOR', funcao: 'OP', regime: 'ADM', supervisor: 'JUNIOR PEREIRA', status: 'ATIVO', vaga: 'NÃO INFORMADA' },
+      { id: 'COL079', nome: 'GABRIEL VICTOR SANTOS AMARAL', funcao: 'OP', regime: '24HS-C', supervisor: 'ISRAEL', status: 'ATIVO', vaga: 'AP 11' },
+      { id: 'COL106', nome: 'GEIDER MORAIS', funcao: 'OP', regime: '24HS-D', supervisor: 'WELLISON', status: 'ATIVO', vaga: 'AV 08' },
+      { id: 'COL021', nome: 'GENILSON FAUSTINO DO CARMO', funcao: 'MOT', regime: 'ADM', supervisor: 'JUNIOR PEREIRA', status: 'ATIVO', vaga: 'NÃO INFORMADA' },
+      { id: 'COL013', nome: 'GERALDO HILTON', funcao: 'OP', regime: 'ADM', supervisor: 'SEBASTIÃO', status: 'ATIVO', vaga: 'HV02' },
+      { id: 'COL053', nome: 'GERALDO SANTOS BOTELHO', funcao: 'OP', regime: 'ADM', supervisor: 'ASPIRADOR', status: 'ATIVO', vaga: 'ASPIRADOR TELHADO' },
+      { id: 'COL082', nome: 'GILIARDES REINALDO ALMEIDA', funcao: 'MOT', regime: '24HS-B', supervisor: 'MATUSALEM', status: 'ATIVO', vaga: 'AP 08' },
+      { id: 'COL098', nome: 'GILKIARLEY', funcao: 'MOT', regime: '24HS-D', supervisor: 'WELLISON', status: 'ATIVO', vaga: 'AP 01' },
+      { id: 'COL152', nome: 'GILSON DO CARMO ABREU', funcao: 'OP', regime: '16HS-6X3', supervisor: '16 HORAS', status: 'ATIVO', vaga: 'AV 01' },
+      { id: 'COL005', nome: 'GLEISSON RIBEIRO', funcao: 'MOT', regime: 'ADM', supervisor: 'SEBASTIÃO', status: 'ATIVO', vaga: 'SEM VAGA ATRIBUÍDA' },
+      { id: 'COL051', nome: 'GUSTAVO H MIRANDA DA SILVA', funcao: 'OP', regime: 'ADM', supervisor: 'ASPIRADOR', status: 'FÉRIAS - FEVEREIRO', vaga: 'FÉRIAS - FEVEREIRO' },
+      { id: 'COL064', nome: 'GUSTAVO HENRIQUE LIMA', funcao: 'OP', regime: 'ADM', supervisor: 'ASPIRADOR', status: 'ATIVO', vaga: 'ASPIRADOR TELHADO' },
+      { id: 'COL127', nome: 'HUDSON DA SILVA', funcao: 'OP', regime: '24HS-A', supervisor: 'OZIAS', status: 'ATIVO', vaga: 'AP 08' },
+      { id: 'COL107', nome: 'HUDSON RODRIGO CAMPOS', funcao: 'OP', regime: '24HS-D', supervisor: 'WELLISON', status: 'FÉRIAS - FEVEREIRO', vaga: 'FÉRIAS - FEVEREIRO' },
+      { id: 'COL077', nome: 'HUMBERTO MARQUES', funcao: 'OP', regime: '24HS-C', supervisor: 'ISRAEL', status: 'ATIVO', vaga: 'AP 08' },
+      { id: 'COL046', nome: 'ILES BERNARDES DE SENA', funcao: 'OP', regime: 'ADM', supervisor: 'ASPIRADOR', status: 'ATIVO', vaga: 'ASPIRADOR 3' },
+      { id: 'COL150', nome: 'ISAAC CRISTIAN SILVA ALVES', funcao: 'OP', regime: '16HS-6X3', supervisor: '16 HORAS', status: 'ATIVO', vaga: 'AV 2 ALY5322' },
+      { id: 'COL138', nome: 'JADIR ANDRADE', funcao: 'OP', regime: '16HS-5X2', supervisor: '16 HORAS', status: 'ATIVO', vaga: 'AV 07' },
+      { id: 'COL024', nome: 'JEAN SIDNEY', funcao: 'MOT', regime: 'ADM', supervisor: 'JUNIOR PEREIRA', status: 'ATIVO', vaga: 'NÃO INFORMADA' },
+      { id: 'COL134', nome: 'JEFERSON CARVALHO', funcao: 'MOT', regime: '16HS-5X2', supervisor: '16 HORAS', status: 'FÉRIAS - FEVEREIRO', vaga: 'FÉRIAS - FEVEREIRO' },
+      { id: 'COL094', nome: 'JEFERSON LIMA OLIVEIRA', funcao: 'OP', regime: '24HS-B', supervisor: 'MATUSALEM', status: 'ATIVO', vaga: 'AP 08' },
+      { id: 'COL043', nome: 'JENNESSI ASSUNÇÃO', funcao: 'MOT', regime: 'ADM', supervisor: 'ASPIRADOR', status: 'FÉRIAS - FEVEREIRO', vaga: 'FÉRIAS - FEVEREIRO' },
+      { id: 'COL148', nome: 'JOÃO AMBROSIO DE MENESES', funcao: 'OP', regime: '16HS-6X3', supervisor: '16 HORAS', status: 'ATIVO', vaga: 'AV 01' },
+      { id: 'COL083', nome: 'JOÃO BATISTA SOARES', funcao: 'MOT', regime: '24HS-B', supervisor: 'MATUSALEM', status: 'ATIVO', vaga: 'AV 08' },
+      { id: 'COL061', nome: 'JOÃO EVANGELISTA DOS REIS', funcao: 'OP', regime: 'ADM', supervisor: 'ASPIRADOR', status: 'ATIVO', vaga: 'ASPIRADOR 8' },
+      { id: 'COL065', nome: 'JOÃO FERREIRA SANTANA', funcao: 'MOT', regime: '24HS-C', supervisor: 'ISRAEL', status: 'ATIVO', vaga: 'AP 01' },
+      { id: 'COL025', nome: 'JOÃO MOREIRA DE BARROS', funcao: 'OP', regime: 'ADM', supervisor: 'JUNIOR PEREIRA', status: 'FÉRIAS - FEVEREIRO', vaga: 'FÉRIAS - FEVEREIRO' },
+      { id: 'COL123', nome: 'JOÃO PAULO DE CASTRO', funcao: 'OP', regime: '24HS-A', supervisor: 'OZIAS', status: 'ATIVO', vaga: 'COQUERIA' },
+      { id: 'COL080', nome: 'JOAO RICARDO', funcao: 'OP', regime: '24HS-C', supervisor: 'ISRAEL', status: 'ATIVO', vaga: 'NÃO INFORMADA' },
+      { id: 'COL031', nome: 'JOAQUIM FRANCISCO', funcao: 'OP', regime: 'ADM', supervisor: 'JUNIOR PEREIRA', status: 'ATIVO', vaga: 'NÃO INFORMADA' },
+      { id: 'COL093', nome: 'JOHNATAN SOUZA DE JESUS', funcao: 'OP', regime: '24HS-B', supervisor: 'MATUSALEM', status: 'ATIVO', vaga: 'AP 01' },
+      { id: 'COL109', nome: 'JOSE APARECIDO DA ROCHA', funcao: 'OP', regime: '24HS-D', supervisor: 'WELLISON', status: 'ATIVO', vaga: 'HV 3' },
+      { id: 'COL030', nome: 'JOSÉ APARECIDO DA SILVA', funcao: 'OP', regime: 'ADM', supervisor: 'JUNIOR PEREIRA', status: 'ATIVO', vaga: 'NÃO INFORMADA' },
+      { id: 'COL111', nome: 'JOSÉ CARLOS DIAS', funcao: 'OP', regime: '24HS-D', supervisor: 'WELLISON', status: 'ATIVO', vaga: 'AP 08' },
+      { id: 'COL072', nome: 'JOSE EUGENIO DE SOUZA', funcao: 'OP', regime: '24HS-C', supervisor: 'ISRAEL', status: 'ATIVO', vaga: 'AV 08' },
+      { id: 'COL144', nome: 'JOSE EUSTAQUIO DOMINGUES', funcao: 'MOT', regime: '16HS-6X3', supervisor: '16 HORAS', status: 'ATIVO', vaga: 'AV 2 ALY5322' },
+      { id: 'COL119', nome: 'JOSE GERALDO GOMES', funcao: 'MOT', regime: '24HS-A', supervisor: 'OZIAS', status: 'ATIVO', vaga: 'SEM VAGA ATRIBUÍDA' },
+      { id: 'COL001', nome: 'JOSÉ ROBERTO COELHO', funcao: 'MOT', regime: 'ADM', supervisor: 'SEBASTIÃO', status: 'ATIVO', vaga: 'AV 3' },
+      { id: 'COL100', nome: 'JOSE ROBERTO MIGUEL', funcao: 'MOT', regime: '24HS-D', supervisor: 'WELLISON', status: 'ATIVO', vaga: 'AV 08' },
+      { id: 'COL087', nome: 'JOSUÉ DO NASCIMENTO', funcao: 'OP', regime: '24HS-B', supervisor: 'MATUSALEM', status: 'ATIVO', vaga: 'AP 01' },
+      { id: 'COL133', nome: 'JOVIANO RIBEIRO', funcao: 'MOT', regime: '16HS-5X2', supervisor: '16 HORAS', status: 'ATIVO', vaga: 'AV 07' },
+      { id: 'COL081', nome: 'JUNIOR RODRIGUES DE SOUZA', funcao: 'MOT', regime: '24HS-B', supervisor: 'MATUSALEM', status: 'ATIVO', vaga: 'AP 01' },
+      { id: 'COL003', nome: 'KELVSLAINE', funcao: 'MOT', regime: 'ADM', supervisor: 'SEBASTIÃO', status: 'ATIVO', vaga: 'AV 07' },
+      { id: 'COL129', nome: 'KENEDY WISLEY', funcao: 'OP', regime: '24HS-A', supervisor: 'OZIAS', status: 'ATIVO', vaga: 'AP 11' },
+      { id: 'COL078', nome: 'KEVIN PAULO RIBEIRO', funcao: 'OP', regime: '24HS-C', supervisor: 'ISRAEL', status: 'ATIVO', vaga: 'COQUERIA' },
+      { id: 'COL091', nome: 'KLARCSON DIEGO A DE S NARCISO', funcao: 'OP', regime: '24HS-B', supervisor: 'MATUSALEM', status: 'ATIVO', vaga: 'AP 11' },
+      { id: 'COL011', nome: 'LEANDRO ANDRÉ', funcao: 'OP', regime: 'ADM', supervisor: 'SEBASTIÃO', status: 'ATIVO', vaga: 'AV 5' },
+      { id: 'COL146', nome: 'LEONARDO DE SOUZA CAMPOS', funcao: 'MOT', regime: '16HS-6X3', supervisor: '16 HORAS', status: 'ATIVO', vaga: 'AV 01' },
+      { id: 'COL027', nome: 'LUAN CALDEIRA', funcao: 'OP', regime: 'ADM', supervisor: 'JUNIOR PEREIRA', status: 'ATIVO', vaga: 'AP 07' },
+      { id: 'COL014', nome: 'LUCAS DA SILVA ROCHA', funcao: 'OP', regime: 'ADM', supervisor: 'SEBASTIÃO', status: 'ATIVO', vaga: 'CONJUGADO' },
+      { id: 'COL049', nome: 'LUCAS JACINTO', funcao: 'OP', regime: 'ADM', supervisor: 'ASPIRADOR', status: 'ATIVO', vaga: 'ASPIRADOR 7' },
+      { id: 'COL073', nome: 'LUCAS MARTINS SOUZA PAIVA', funcao: 'OP', regime: '24HS-C', supervisor: 'ISRAEL', status: 'ATIVO', vaga: 'NÃO INFORMADA' },
+      { id: 'COL145', nome: 'LUCAS PEREIRA DOS SANTOS', funcao: 'MOT', regime: '16HS-6X3', supervisor: '16 HORAS', status: 'ATIVO', vaga: 'AV 2 ALY5322' },
+      { id: 'COL034', nome: 'LUIZ GUILHERME', funcao: 'OP', regime: 'ADM', supervisor: 'JUNIOR PEREIRA', status: 'ATIVO', vaga: 'NÃO INFORMADA' },
+      { id: 'COL103', nome: 'MAGNO DA SILVA ROBERTO', funcao: 'MOT', regime: '24HS-D', supervisor: 'WELLISON', status: 'ATIVO', vaga: 'AP 12' },
+      { id: 'COL118', nome: 'MAIK PEREIRA DA SILVA', funcao: 'MOT', regime: '24HS-A', supervisor: 'OZIAS', status: 'ATIVO', vaga: 'HV 3' },
+      { id: 'COL141', nome: 'MAKSON WILLEN DO NASCIMENTO COURA', funcao: 'MOT', regime: '16HS-6X3', supervisor: '16 HORAS', status: 'ATIVO', vaga: 'AV 01' },
+      { id: 'COL041', nome: 'MARCOS ANTONIO SANTIAGO', funcao: 'MOT', regime: 'ADM', supervisor: 'ASPIRADOR', status: 'ATIVO', vaga: 'BROOK 02' },
+      { id: 'COL132', nome: 'MARCOS VINICIUS ALMEIDA', funcao: 'MOT', regime: '16HS-5X2', supervisor: '16 HORAS', status: 'ATIVO', vaga: 'AP 07' },
+      { id: 'COL015', nome: 'MARCOS VINICIUS DA SILVA FERREIRA', funcao: 'OP', regime: 'ADM', supervisor: 'SEBASTIÃO', status: 'ATIVO', vaga: 'HV02' },
+      { id: 'COL068', nome: 'MARCOS VINICIUS RODRIGUES', funcao: 'MOT', regime: '24HS-C', supervisor: 'ISRAEL', status: 'ATIVO', vaga: 'AP 11' },
+      { id: 'COL090', nome: 'MARLEY LISBOA VIEIRA', funcao: 'OP', regime: '24HS-B', supervisor: 'MATUSALEM', status: 'ATIVO', vaga: 'COQUERIA' },
+      { id: 'COL104', nome: 'MATEUS PEREIRA TAVARES GOMES', funcao: 'OP', regime: '24HS-D', supervisor: 'WELLISON', status: 'ATIVO', vaga: 'AP 01' },
+      { id: 'COL135', nome: 'MATHEUS DE OLIVEIRA', funcao: 'OP', regime: '16HS-5X2', supervisor: '16 HORAS', status: 'ATIVO', vaga: 'AP 07' },
+      { id: 'COL097', nome: 'MATHEUS HENRIQUE DE ANDRADE ALMEIDA', funcao: 'OP', regime: '24HS-B', supervisor: 'MATUSALEM', status: 'ATIVO', vaga: 'HV 3' },
+      { id: 'COL028', nome: 'MAXIMINIANO BARBOSA SILVA', funcao: 'OP', regime: 'ADM', supervisor: 'JUNIOR PEREIRA', status: 'ATIVO', vaga: 'NÃO INFORMADA' },
+      { id: 'COL026', nome: 'MESSIAS PATRICIO HONORATO', funcao: 'OP', regime: 'ADM', supervisor: 'JUNIOR PEREIRA', status: 'ATIVO', vaga: 'NÃO INFORMADA' },
+      { id: 'COL008', nome: 'NOEL DE FREITAS', funcao: 'OP', regime: 'ADM', supervisor: 'SEBASTIÃO', status: 'ATIVO', vaga: 'AV 3' },
+      { id: 'COL120', nome: 'PAULO BRAZ DE AQUINO', funcao: 'OP', regime: '24HS-A', supervisor: 'OZIAS', status: 'ATIVO', vaga: 'AP 01' },
+      { id: 'COL121', nome: 'PAULO CESAR BORGES EMBURANA', funcao: 'OP', regime: '24HS-A', supervisor: 'OZIAS', status: 'ATIVO', vaga: 'AP 08' },
+      { id: 'COL044', nome: 'PAULO GOMES DOS SANTOS', funcao: 'OP', regime: 'ADM', supervisor: 'ASPIRADOR', status: 'ATIVO', vaga: 'ASPIRADOR 1' },
+      { id: 'COL050', nome: 'PAULO LUCIANO MARTHINS', funcao: 'OP', regime: 'ADM', supervisor: 'ASPIRADOR', status: 'ATIVO', vaga: 'ASPIRADOR 8' },
+      { id: 'COL060', nome: 'PAULO VICTOR SOUZA FERREIRA', funcao: 'OP', regime: 'ADM', supervisor: 'ASPIRADOR', status: 'ATIVO', vaga: 'ASPIRADOR 7' },
+      { id: 'COL084', nome: 'PEDRO AUGUSTO DE SOUZA ALVES', funcao: 'MOT', regime: '24HS-B', supervisor: 'MATUSALEM', status: 'ATIVO', vaga: 'AP 11' },
+      { id: 'COL023', nome: 'RAUL OLIVEIRA MIRANDA', funcao: 'MOT', regime: 'ADM', supervisor: 'JUNIOR PEREIRA', status: 'ATIVO', vaga: 'NÃO INFORMADA' },
+      { id: 'COL074', nome: 'RAYLANDER', funcao: 'OP', regime: '24HS-C', supervisor: 'ISRAEL', status: 'ATIVO', vaga: 'AP 11' },
+      { id: 'COL052', nome: 'REDILSON BENTO', funcao: 'OP', regime: 'ADM', supervisor: 'ASPIRADOR', status: 'ATIVO', vaga: 'ASPIRADOR 6' },
+      { id: 'COL040', nome: 'REGINALDO', funcao: 'MOT', regime: 'ADM', supervisor: 'ASPIRADOR', status: 'ATIVO', vaga: 'BROOK 01' },
+      { id: 'COL007', nome: 'RENAN MICHEL', funcao: 'MOT', regime: 'ADM', supervisor: 'SEBASTIÃO', status: 'ATIVO', vaga: 'CONJUGADO' },
+      { id: 'COL147', nome: 'RENATO SILVA RAMOS', funcao: 'OP', regime: '16HS-6X3', supervisor: '16 HORAS', status: 'ATIVO', vaga: 'AV 01' },
+      { id: 'COL016', nome: 'RENATO TORRES', funcao: 'OP', regime: 'ADM', supervisor: 'SEBASTIÃO', status: 'ATIVO', vaga: 'CONJUGADO' },
+      { id: 'COL088', nome: 'RILDON DO CARMO', funcao: 'OP', regime: '24HS-B', supervisor: 'MATUSALEM', status: 'ATIVO', vaga: 'AP 08' },
+      { id: 'COL142', nome: 'ROGÉRIO AUGUSTO', funcao: 'MOT', regime: '16HS-6X3', supervisor: '16 HORAS', status: 'ATIVO', vaga: 'AV 01' },
+      { id: 'COL057', nome: 'ROGILDO MIGUEL DOS SANTOS', funcao: 'OP', regime: 'ADM', supervisor: 'ASPIRADOR', status: 'FÉRIAS - FEVEREIRO', vaga: 'FÉRIAS - FEVEREIRO' },
+      { id: 'COL122', nome: 'ROMULO DE SOUZA SILVA', funcao: 'OP', regime: '24HS-A', supervisor: 'OZIAS', status: 'ATIVO', vaga: 'AV 08' },
+      { id: 'COL110', nome: 'RONALD APARECIDO', funcao: 'OP', regime: '24HS-D', supervisor: 'WELLISON', status: 'ATIVO', vaga: 'AP 01' },
+      { id: 'COL035', nome: 'RONEI PETERSON MOREIRA', funcao: 'OP', regime: 'ADM', supervisor: 'JUNIOR PEREIRA', status: 'FÉRIAS - FEVEREIRO', vaga: 'FÉRIAS - FEVEREIRO' },
+      { id: 'COL006', nome: 'RUAN PEDRO', funcao: 'MOT', regime: 'ADM', supervisor: 'SEBASTIÃO', status: 'ATIVO', vaga: 'HV02' },
+      { id: 'COL038', nome: 'SANDRO ALCANTARA DE PAULA', funcao: 'OP', regime: 'ADM', supervisor: 'JUNIOR PEREIRA', status: 'FÉRIAS - FEVEREIRO', vaga: 'FÉRIAS - FEVEREIRO' },
+      { id: 'COL101', nome: 'SARLEY ALVES', funcao: 'MOT', regime: '24HS-D', supervisor: 'WELLISON', status: 'ATIVO', vaga: 'AP 11' },
+      { id: 'COL066', nome: 'SERGIO JOSE NEVES', funcao: 'MOT', regime: '24HS-C', supervisor: 'ISRAEL', status: 'ATIVO', vaga: 'AP 08' },
+      { id: 'COL004', nome: 'SILVANIL MATEUS', funcao: 'MOT', regime: 'ADM', supervisor: 'SEBASTIÃO', status: 'ATIVO', vaga: 'AV 6' },
+      { id: 'COL002', nome: 'THIAGO RAMOS', funcao: 'MOT', regime: 'ADM', supervisor: 'SEBASTIÃO', status: 'ATIVO', vaga: 'AV 4' },
+      { id: 'COL075', nome: 'TIAGO FONSECA', funcao: 'OP', regime: '24HS-C', supervisor: 'ISRAEL', status: 'ATIVO', vaga: 'HV 3' },
+      { id: 'COL062', nome: 'UDSON LUIS SANTOS ROSA', funcao: 'OP', regime: 'ADM', supervisor: 'ASPIRADOR', status: 'ATIVO', vaga: 'ASPIRADOR 9' },
+      { id: 'COL149', nome: 'VALDECI ROSA DO NASCIMENTO', funcao: 'OP', regime: '16HS-6X3', supervisor: '16 HORAS', status: 'ATIVO', vaga: 'AV 01' },
+      { id: 'COL045', nome: 'VALDIR DA SILVA', funcao: 'OP', regime: 'ADM', supervisor: 'ASPIRADOR', status: 'ATIVO', vaga: 'ASPIRADOR 2' },
+      { id: 'COL105', nome: 'VINICIUS JUNIOR', funcao: 'OP', regime: '24HS-D', supervisor: 'WELLISON', status: 'ATIVO', vaga: 'AP 08' },
+      { id: 'COL048', nome: 'VINICIUS VALENTIM RIBEIRO', funcao: 'OP', regime: 'ADM', supervisor: 'ASPIRADOR', status: 'ATIVO', vaga: 'ASPIRADOR 5' },
+      { id: 'COL067', nome: 'WALISSON LUCAS', funcao: 'MOT', regime: '24HS-C', supervisor: 'ISRAEL', status: 'ATIVO', vaga: 'AV 08' },
+      { id: 'COL116', nome: 'WALLACE DAS GRAÇAS', funcao: 'MOT', regime: '24HS-A', supervisor: 'OZIAS', status: 'ATIVO', vaga: 'AV 08' },
+      { id: 'COL137', nome: 'WALQUER ANTONIO LUCAS', funcao: 'OP', regime: '16HS-5X2', supervisor: '16 HORAS', status: 'ATIVO', vaga: 'COQUERIA' },
+      { id: 'COL020', nome: 'WANIO FERREIRA', funcao: 'MOT', regime: 'ADM', supervisor: 'JUNIOR PEREIRA', status: 'ATIVO', vaga: 'NÃO INFORMADA' },
+      { id: 'COL042', nome: 'WASHIGTON BONIFÁCIO', funcao: 'MOT', regime: 'ADM', supervisor: 'ASPIRADOR', status: 'ATIVO', vaga: 'BROOK 03' },
+      { id: 'COL010', nome: 'WASHIGTON BRUNO', funcao: 'OP', regime: 'ADM', supervisor: 'SEBASTIÃO', status: 'ATIVO', vaga: 'AV 6' },
+      { id: 'COL032', nome: 'WEDERSON COSTA DE SOUZA', funcao: 'OP', regime: 'ADM', supervisor: 'JUNIOR PEREIRA', status: 'FÉRIAS - FEVEREIRO', vaga: 'FÉRIAS - FEVEREIRO' },
+      { id: 'COL033', nome: 'WELITON WAGNER PEREIRA', funcao: 'OP', regime: 'ADM', supervisor: 'JUNIOR PEREIRA', status: 'ATIVO', vaga: 'NÃO INFORMADA' },
+      { id: 'COL_TEMP_001', nome: 'LEONARDO PROCÓPIO', funcao: 'MOT', regime: 'SEM REGISTRO', supervisor: 'SEM REGISTRO', status: 'ATIVO', vaga: 'AV 5' },
+      { id: 'COL_TEMP_002', nome: 'HERMES JORGE', funcao: 'MOT', regime: 'SEM REGISTRO', supervisor: 'SEM REGISTRO', status: 'ATIVO', vaga: 'HV01' },
+      { id: 'COL_TEMP_003', nome: 'MARCOS DINIS DA SILVA', funcao: 'OP', regime: 'SEM REGISTRO', supervisor: 'SEM REGISTRO', status: 'ATIVO', vaga: 'HV01' },
+      { id: 'COL_TEMP_004', nome: 'OSVALDO DE JESUS', funcao: 'OP', regime: 'SEM REGISTRO', supervisor: 'SEM REGISTRO', status: 'ATIVO', vaga: 'HV01' },
+      { id: 'COL_TEMP_005', nome: 'ADELSON DA SILVA CONCEIÇÃO', funcao: 'OP', regime: 'SEM REGISTRO', supervisor: 'SEM REGISTRO', status: 'ATIVO', vaga: 'NÃO INFORMADA' },
+      { id: 'COL_TEMP_006', nome: 'GESIEL OLIVEIRA', funcao: 'OP', regime: 'SEM REGISTRO', supervisor: 'SEM REGISTRO', status: 'ATIVO', vaga: 'ASPIRADOR 3' },
+      { id: 'COL_TEMP_007', nome: 'BONIEX SILVA NUNES', funcao: 'OP', regime: 'SEM REGISTRO', supervisor: 'SEM REGISTRO', status: 'ATIVO', vaga: 'ASPIRADOR 6' },
+      { id: 'COL_TEMP_008', nome: 'TIAGO SILVA SOARES', funcao: 'OP', regime: 'SEM REGISTRO', supervisor: 'SEM REGISTRO', status: 'ATIVO', vaga: 'BROOK 02' },
+      { id: 'COL_TEMP_009', nome: 'CRISTIANO DE ABREU', funcao: 'OP', regime: 'SEM REGISTRO', supervisor: 'SEM REGISTRO', status: 'ATIVO', vaga: 'COQUERIA' },
+      { id: 'COL_TEMP_010', nome: 'MARCELO LEANDRO', funcao: 'MOT', regime: 'SEM REGISTRO', supervisor: 'SEM REGISTRO', status: 'ATIVO', vaga: 'AP 12' },
+      { id: 'COL_TEMP_011', nome: 'WEULER ALVES ALVARENGA', funcao: 'OP', regime: 'SEM REGISTRO', supervisor: 'SEM REGISTRO', status: 'ATIVO', vaga: 'HV 3' },
+      { id: 'COL_TEMP_012', nome: 'MAX WELL SOUZA MACHADO', funcao: 'OP', regime: 'SEM REGISTRO', supervisor: 'SEM REGISTRO', status: 'ATIVO', vaga: 'HV 3' },
+      { id: 'COL_TEMP_013', nome: 'SANDRO CRUZ', funcao: 'OP', regime: 'SEM REGISTRO', supervisor: 'SEM REGISTRO', status: 'ATIVO', vaga: 'AV 08' },
+      { id: 'COL_TEMP_014', nome: 'EVALDO SOUZA ABREU', funcao: 'OP', regime: 'SEM REGISTRO', supervisor: 'SEM REGISTRO', status: 'ATIVO', vaga: 'AV 07' },
+    ];
 
-<!-- TOAST -->
-<div id="toast-container"></div>
+    const SUPERVISORES_INICIAL = [
+      { id: 'SUP_01', nome: 'MATUSALEM', regime_padrao: '24HS-B', ativo: true },
+      { id: 'SUP_02', nome: 'ISRAEL', regime_padrao: '24HS-C', ativo: true },
+      { id: 'SUP_03', nome: 'OZIAS', regime_padrao: '24HS-A', ativo: true },
+      { id: 'SUP_04', nome: 'WELLISON', regime_padrao: '24HS-D', ativo: true },
+      { id: 'SUP_05', nome: 'JUNIOR PEREIRA', regime_padrao: 'ADM', ativo: true },
+      { id: 'SUP_06', nome: 'SEBASTIÃO', regime_padrao: 'ADM', ativo: true },
+      { id: 'SUP_07', nome: 'ASPIRADOR', regime_padrao: 'ADM', ativo: true },
+      { id: 'SUP_08', nome: '16 HORAS', regime_padrao: '16HS', ativo: true },
+      { id: 'SUP_09', nome: 'SEM REGISTRO', regime_padrao: '', ativo: true },
+    ];
 
-<script>
-'use strict';
-// ================================================================
-//  DATA
-// ================================================================
-const COLABORADORES_INICIAL = [
-  {id:'COL095',nome:'ABNER ARAUJO DOS SANTOS',funcao:'OP',regime:'24HS-B',supervisor:'MATUSALEM',status:'ATIVO',vaga:'COQUERIA'},
-  {id:'COL070',nome:'ADÃO DOS SANTOS GODOI',funcao:'OP',regime:'24HS-C',supervisor:'ISRAEL',status:'ATIVO',vaga:'AP 01'},
-  {id:'COL019',nome:'ADAO GERALDO',funcao:'MOT',regime:'ADM',supervisor:'JUNIOR PEREIRA',status:'ATIVO',vaga:'NÃO INFORMADA'},
-  {id:'COL115',nome:'ADELSON ALVES DE SOUZA',funcao:'MOT',regime:'24HS-A',supervisor:'OZIAS',status:'ATIVO',vaga:'AP 08'},
-  {id:'COL112',nome:'ADENILSON TEXEIRA MENDES',funcao:'OP',regime:'24HS-D',supervisor:'WELLISON',status:'FÉRIAS - FEVEREIRO',vaga:'FÉRIAS - FEVEREIRO'},
-  {id:'COL140',nome:'ADILSON DAMASCENO',funcao:'OP',regime:'16HS-5X2',supervisor:'16 HORAS',status:'ATIVO',vaga:'AP 07'},
-  {id:'COL126',nome:'ADSON RENNAN',funcao:'OP',regime:'24HS-A',supervisor:'OZIAS',status:'ATIVO',vaga:'AP 01'},
-  {id:'COL071',nome:'ALDERINO ALVES QUEIROZ',funcao:'OP',regime:'24HS-C',supervisor:'ISRAEL',status:'ATIVO',vaga:'AP 08'},
-  {id:'COL012',nome:'ANTONIO CARLOS',funcao:'OP',regime:'ADM',supervisor:'SEBASTIÃO',status:'ATIVO',vaga:'BROOK 03'},
-  {id:'COL054',nome:'ARÃO',funcao:'OP',regime:'ADM',supervisor:'ASPIRADOR',status:'ATIVO',vaga:'BROOK 01'},
-  {id:'COL139',nome:'ARTHUR RODRIGUES OLIVEIRA',funcao:'OP',regime:'16HS-5X2',supervisor:'16 HORAS',status:'ATIVO',vaga:'NÃO INFORMADA'},
-  {id:'COL096',nome:'AUGUSTO SOUZA SERTAO',funcao:'OP',regime:'24HS-B',supervisor:'MATUSALEM',status:'ATIVO',vaga:'AP 11'},
-  {id:'COL076',nome:'BRUNO MATIAS DA SILVA',funcao:'OP',regime:'24HS-C',supervisor:'ISRAEL',status:'ATIVO',vaga:'AP 01'},
-  {id:'COL102',nome:'BRUNO RIBEIRO',funcao:'MOT',regime:'24HS-D',supervisor:'WELLISON',status:'ATIVO',vaga:'HV 3'},
-  {id:'COL036',nome:'CADMIEL MENESES DE OLIVEIRA',funcao:'OP',regime:'ADM',supervisor:'JUNIOR PEREIRA',status:'ATIVO',vaga:'NÃO INFORMADA'},
-  {id:'COL143',nome:'CESAR SILVA MACIEL',funcao:'MOT',regime:'16HS-6X3',supervisor:'16 HORAS',status:'ATIVO',vaga:'AV 01'},
-  {id:'COL128',nome:'CHARLES FERREIRA DOS SANTOS',funcao:'OP',regime:'24HS-A',supervisor:'OZIAS',status:'ATIVO',vaga:'COQUERIA'},
-  {id:'COL086',nome:'CLEVERSON GARCIA',funcao:'MOT',regime:'24HS-B',supervisor:'MATUSALEM',status:'ATIVO',vaga:'AP 01'},
-  {id:'COL056',nome:'CRISTIANO OLIVEIRA SILVA',funcao:'OP',regime:'ADM',supervisor:'ASPIRADOR',status:'ATIVO',vaga:'ASPIRADOR 2'},
-  {id:'COL131',nome:'CRYSTHIAN MARCELINO SILVA',funcao:'MOT',regime:'16HS-5X2',supervisor:'16 HORAS',status:'ATIVO',vaga:'AP 07'},
-  {id:'COL117',nome:'DAVID SILVEIRA VASCONSELOS',funcao:'MOT',regime:'24HS-A',supervisor:'OZIAS',status:'ATIVO',vaga:'AP 11'},
-  {id:'COL059',nome:'DEIVISON LUIS',funcao:'OP',regime:'ADM',supervisor:'ASPIRADOR',status:'ATIVO',vaga:'ASPIRADOR 5'},
-  {id:'COL055',nome:'DENILSON DE LIMA',funcao:'OP',regime:'ADM',supervisor:'ASPIRADOR',status:'ATIVO',vaga:'ASPIRADOR 1'},
-  {id:'COL085',nome:'DHENIS MARTINS',funcao:'MOT',regime:'24HS-B',supervisor:'MATUSALEM',status:'ATIVO',vaga:'HV 3'},
-  {id:'COL069',nome:'DIEGO CLAUDIO',funcao:'MOT',regime:'24HS-C',supervisor:'ISRAEL',status:'ATIVO',vaga:'HV 3'},
-  {id:'COL089',nome:'DOUGLAS ALVES DA SILVA',funcao:'OP',regime:'24HS-B',supervisor:'MATUSALEM',status:'ATIVO',vaga:'SEM VAGA ATRIBUÍDA'},
-  {id:'COL039',nome:'EBERTON RAFAEL DE ARAUJO',funcao:'OP',regime:'ADM',supervisor:'JUNIOR PEREIRA',status:'ATIVO',vaga:'NÃO INFORMADA'},
-  {id:'COL022',nome:'EDMILSON MENESES DE BARROS',funcao:'MOT',regime:'ADM',supervisor:'JUNIOR PEREIRA',status:'ATIVO',vaga:'NÃO INFORMADA'},
-  {id:'COL047',nome:'EDSON GONÇALVES',funcao:'OP',regime:'ADM',supervisor:'ASPIRADOR',status:'ATIVO',vaga:'ASPIRADOR 4'},
-  {id:'COL017',nome:'EDSON MARTINS',funcao:'MOT',regime:'ADM',supervisor:'JUNIOR PEREIRA',status:'ATIVO',vaga:'NÃO INFORMADA'},
-  {id:'COL114',nome:'EDSON SOARES GOMES',funcao:'OP',regime:'24HS-D',supervisor:'WELLISON',status:'ATIVO',vaga:'SEM VAGA ATRIBUÍDA'},
-  {id:'COL108',nome:'EDUARDO SILVA GABRIEL',funcao:'OP',regime:'24HS-D',supervisor:'WELLISON',status:'ATIVO',vaga:'AP 11'},
-  {id:'COL009',nome:'ELBERT GONÇALVES COSTA',funcao:'OP',regime:'ADM',supervisor:'SEBASTIÃO',status:'ATIVO',vaga:'AV 4'},
-  {id:'COL029',nome:'ELIAS DA SILVA',funcao:'OP',regime:'ADM',supervisor:'JUNIOR PEREIRA',status:'ATIVO',vaga:'NÃO INFORMADA'},
-  {id:'COL018',nome:'ELSON CARDOSO DA SILVA',funcao:'MOT',regime:'ADM',supervisor:'JUNIOR PEREIRA',status:'ATIVO',vaga:'NÃO INFORMADA'},
-  {id:'COL092',nome:'ERICK HENRIQUE SANTOS',funcao:'OP',regime:'24HS-B',supervisor:'MATUSALEM',status:'ATIVO',vaga:'HV 3'},
-  {id:'COL136',nome:'ERISON',funcao:'OP',regime:'16HS-5X2',supervisor:'16 HORAS',status:'ATIVO',vaga:'AP 07'},
-  {id:'COL063',nome:'ERNANDO GILBERT DE ANDRADE',funcao:'OP',regime:'ADM',supervisor:'ASPIRADOR',status:'ATIVO',vaga:'ASPIRADOR 9'},
-  {id:'COL058',nome:'EVALDO JOSÉ DOS SANTOS',funcao:'OP',regime:'ADM',supervisor:'ASPIRADOR',status:'ATIVO',vaga:'ASPIRADOR 4'},
-  {id:'COL113',nome:'EVERTON ANDRADE',funcao:'OP',regime:'24HS-D',supervisor:'WELLISON',status:'ATIVO',vaga:'AP 11'},
-  {id:'COL099',nome:'FABIO PEREIRA',funcao:'MOT',regime:'24HS-D',supervisor:'WELLISON',status:'ATIVO',vaga:'AP 08'},
-  {id:'COL124',nome:'FABRICIO FABIANO DA SILVA',funcao:'OP',regime:'24HS-A',supervisor:'OZIAS',status:'ATIVO',vaga:'AP 11'},
-  {id:'COL130',nome:'FELIPE MARTINS DE OLIVEIRA',funcao:'OP',regime:'24HS-A',supervisor:'OZIAS',status:'ATIVO',vaga:'HV 3'},
-  {id:'COL151',nome:'FERNANDO MARIA',funcao:'OP',regime:'16HS-6X3',supervisor:'16 HORAS',status:'ATIVO',vaga:'AV 2 ALY5322'},
-  {id:'COL125',nome:'GABRIEL AFONSO DE SOUZA',funcao:'OP',regime:'24HS-A',supervisor:'OZIAS',status:'ATIVO',vaga:'HV 3'},
-  {id:'COL037',nome:'GABRIEL JUNIOR',funcao:'OP',regime:'ADM',supervisor:'JUNIOR PEREIRA',status:'ATIVO',vaga:'NÃO INFORMADA'},
-  {id:'COL079',nome:'GABRIEL VICTOR SANTOS AMARAL',funcao:'OP',regime:'24HS-C',supervisor:'ISRAEL',status:'ATIVO',vaga:'AP 11'},
-  {id:'COL106',nome:'GEIDER MORAIS',funcao:'OP',regime:'24HS-D',supervisor:'WELLISON',status:'ATIVO',vaga:'AV 08'},
-  {id:'COL021',nome:'GENILSON FAUSTINO DO CARMO',funcao:'MOT',regime:'ADM',supervisor:'JUNIOR PEREIRA',status:'ATIVO',vaga:'NÃO INFORMADA'},
-  {id:'COL013',nome:'GERALDO HILTON',funcao:'OP',regime:'ADM',supervisor:'SEBASTIÃO',status:'ATIVO',vaga:'HV02'},
-  {id:'COL053',nome:'GERALDO SANTOS BOTELHO',funcao:'OP',regime:'ADM',supervisor:'ASPIRADOR',status:'ATIVO',vaga:'ASPIRADOR TELHADO'},
-  {id:'COL082',nome:'GILIARDES REINALDO ALMEIDA',funcao:'MOT',regime:'24HS-B',supervisor:'MATUSALEM',status:'ATIVO',vaga:'AP 08'},
-  {id:'COL098',nome:'GILKIARLEY',funcao:'MOT',regime:'24HS-D',supervisor:'WELLISON',status:'ATIVO',vaga:'AP 01'},
-  {id:'COL152',nome:'GILSON DO CARMO ABREU',funcao:'OP',regime:'16HS-6X3',supervisor:'16 HORAS',status:'ATIVO',vaga:'AV 01'},
-  {id:'COL005',nome:'GLEISSON RIBEIRO',funcao:'MOT',regime:'ADM',supervisor:'SEBASTIÃO',status:'ATIVO',vaga:'SEM VAGA ATRIBUÍDA'},
-  {id:'COL051',nome:'GUSTAVO H MIRANDA DA SILVA',funcao:'OP',regime:'ADM',supervisor:'ASPIRADOR',status:'FÉRIAS - FEVEREIRO',vaga:'FÉRIAS - FEVEREIRO'},
-  {id:'COL064',nome:'GUSTAVO HENRIQUE LIMA',funcao:'OP',regime:'ADM',supervisor:'ASPIRADOR',status:'ATIVO',vaga:'ASPIRADOR TELHADO'},
-  {id:'COL127',nome:'HUDSON DA SILVA',funcao:'OP',regime:'24HS-A',supervisor:'OZIAS',status:'ATIVO',vaga:'AP 08'},
-  {id:'COL107',nome:'HUDSON RODRIGO CAMPOS',funcao:'OP',regime:'24HS-D',supervisor:'WELLISON',status:'FÉRIAS - FEVEREIRO',vaga:'FÉRIAS - FEVEREIRO'},
-  {id:'COL077',nome:'HUMBERTO MARQUES',funcao:'OP',regime:'24HS-C',supervisor:'ISRAEL',status:'ATIVO',vaga:'AP 08'},
-  {id:'COL046',nome:'ILES BERNARDES DE SENA',funcao:'OP',regime:'ADM',supervisor:'ASPIRADOR',status:'ATIVO',vaga:'ASPIRADOR 3'},
-  {id:'COL150',nome:'ISAAC CRISTIAN SILVA ALVES',funcao:'OP',regime:'16HS-6X3',supervisor:'16 HORAS',status:'ATIVO',vaga:'AV 2 ALY5322'},
-  {id:'COL138',nome:'JADIR ANDRADE',funcao:'OP',regime:'16HS-5X2',supervisor:'16 HORAS',status:'ATIVO',vaga:'AV 07'},
-  {id:'COL024',nome:'JEAN SIDNEY',funcao:'MOT',regime:'ADM',supervisor:'JUNIOR PEREIRA',status:'ATIVO',vaga:'NÃO INFORMADA'},
-  {id:'COL134',nome:'JEFERSON CARVALHO',funcao:'MOT',regime:'16HS-5X2',supervisor:'16 HORAS',status:'FÉRIAS - FEVEREIRO',vaga:'FÉRIAS - FEVEREIRO'},
-  {id:'COL094',nome:'JEFERSON LIMA OLIVEIRA',funcao:'OP',regime:'24HS-B',supervisor:'MATUSALEM',status:'ATIVO',vaga:'AP 08'},
-  {id:'COL043',nome:'JENNESSI ASSUNÇÃO',funcao:'MOT',regime:'ADM',supervisor:'ASPIRADOR',status:'FÉRIAS - FEVEREIRO',vaga:'FÉRIAS - FEVEREIRO'},
-  {id:'COL148',nome:'JOÃO AMBROSIO DE MENESES',funcao:'OP',regime:'16HS-6X3',supervisor:'16 HORAS',status:'ATIVO',vaga:'AV 01'},
-  {id:'COL083',nome:'JOÃO BATISTA SOARES',funcao:'MOT',regime:'24HS-B',supervisor:'MATUSALEM',status:'ATIVO',vaga:'AV 08'},
-  {id:'COL061',nome:'JOÃO EVANGELISTA DOS REIS',funcao:'OP',regime:'ADM',supervisor:'ASPIRADOR',status:'ATIVO',vaga:'ASPIRADOR 8'},
-  {id:'COL065',nome:'JOÃO FERREIRA SANTANA',funcao:'MOT',regime:'24HS-C',supervisor:'ISRAEL',status:'ATIVO',vaga:'AP 01'},
-  {id:'COL025',nome:'JOÃO MOREIRA DE BARROS',funcao:'OP',regime:'ADM',supervisor:'JUNIOR PEREIRA',status:'FÉRIAS - FEVEREIRO',vaga:'FÉRIAS - FEVEREIRO'},
-  {id:'COL123',nome:'JOÃO PAULO DE CASTRO',funcao:'OP',regime:'24HS-A',supervisor:'OZIAS',status:'ATIVO',vaga:'COQUERIA'},
-  {id:'COL080',nome:'JOAO RICARDO',funcao:'OP',regime:'24HS-C',supervisor:'ISRAEL',status:'ATIVO',vaga:'NÃO INFORMADA'},
-  {id:'COL031',nome:'JOAQUIM FRANCISCO',funcao:'OP',regime:'ADM',supervisor:'JUNIOR PEREIRA',status:'ATIVO',vaga:'NÃO INFORMADA'},
-  {id:'COL093',nome:'JOHNATAN SOUZA DE JESUS',funcao:'OP',regime:'24HS-B',supervisor:'MATUSALEM',status:'ATIVO',vaga:'AP 01'},
-  {id:'COL109',nome:'JOSE APARECIDO DA ROCHA',funcao:'OP',regime:'24HS-D',supervisor:'WELLISON',status:'ATIVO',vaga:'HV 3'},
-  {id:'COL030',nome:'JOSÉ APARECIDO DA SILVA',funcao:'OP',regime:'ADM',supervisor:'JUNIOR PEREIRA',status:'ATIVO',vaga:'NÃO INFORMADA'},
-  {id:'COL111',nome:'JOSÉ CARLOS DIAS',funcao:'OP',regime:'24HS-D',supervisor:'WELLISON',status:'ATIVO',vaga:'AP 08'},
-  {id:'COL072',nome:'JOSE EUGENIO DE SOUZA',funcao:'OP',regime:'24HS-C',supervisor:'ISRAEL',status:'ATIVO',vaga:'AV 08'},
-  {id:'COL144',nome:'JOSE EUSTAQUIO DOMINGUES',funcao:'MOT',regime:'16HS-6X3',supervisor:'16 HORAS',status:'ATIVO',vaga:'AV 2 ALY5322'},
-  {id:'COL119',nome:'JOSE GERALDO GOMES',funcao:'MOT',regime:'24HS-A',supervisor:'OZIAS',status:'ATIVO',vaga:'SEM VAGA ATRIBUÍDA'},
-  {id:'COL001',nome:'JOSÉ ROBERTO COELHO',funcao:'MOT',regime:'ADM',supervisor:'SEBASTIÃO',status:'ATIVO',vaga:'AV 3'},
-  {id:'COL100',nome:'JOSE ROBERTO MIGUEL',funcao:'MOT',regime:'24HS-D',supervisor:'WELLISON',status:'ATIVO',vaga:'AV 08'},
-  {id:'COL087',nome:'JOSUÉ DO NASCIMENTO',funcao:'OP',regime:'24HS-B',supervisor:'MATUSALEM',status:'ATIVO',vaga:'AP 01'},
-  {id:'COL133',nome:'JOVIANO RIBEIRO',funcao:'MOT',regime:'16HS-5X2',supervisor:'16 HORAS',status:'ATIVO',vaga:'AV 07'},
-  {id:'COL081',nome:'JUNIOR RODRIGUES DE SOUZA',funcao:'MOT',regime:'24HS-B',supervisor:'MATUSALEM',status:'ATIVO',vaga:'AP 01'},
-  {id:'COL003',nome:'KELVSLAINE',funcao:'MOT',regime:'ADM',supervisor:'SEBASTIÃO',status:'ATIVO',vaga:'AV 07'},
-  {id:'COL129',nome:'KENEDY WISLEY',funcao:'OP',regime:'24HS-A',supervisor:'OZIAS',status:'ATIVO',vaga:'AP 11'},
-  {id:'COL078',nome:'KEVIN PAULO RIBEIRO',funcao:'OP',regime:'24HS-C',supervisor:'ISRAEL',status:'ATIVO',vaga:'COQUERIA'},
-  {id:'COL091',nome:'KLARCSON DIEGO A DE S NARCISO',funcao:'OP',regime:'24HS-B',supervisor:'MATUSALEM',status:'ATIVO',vaga:'AP 11'},
-  {id:'COL011',nome:'LEANDRO ANDRÉ',funcao:'OP',regime:'ADM',supervisor:'SEBASTIÃO',status:'ATIVO',vaga:'AV 5'},
-  {id:'COL146',nome:'LEONARDO DE SOUZA CAMPOS',funcao:'MOT',regime:'16HS-6X3',supervisor:'16 HORAS',status:'ATIVO',vaga:'AV 01'},
-  {id:'COL027',nome:'LUAN CALDEIRA',funcao:'OP',regime:'ADM',supervisor:'JUNIOR PEREIRA',status:'ATIVO',vaga:'AP 07'},
-  {id:'COL014',nome:'LUCAS DA SILVA ROCHA',funcao:'OP',regime:'ADM',supervisor:'SEBASTIÃO',status:'ATIVO',vaga:'CONJUGADO'},
-  {id:'COL049',nome:'LUCAS JACINTO',funcao:'OP',regime:'ADM',supervisor:'ASPIRADOR',status:'ATIVO',vaga:'ASPIRADOR 7'},
-  {id:'COL073',nome:'LUCAS MARTINS SOUZA PAIVA',funcao:'OP',regime:'24HS-C',supervisor:'ISRAEL',status:'ATIVO',vaga:'NÃO INFORMADA'},
-  {id:'COL145',nome:'LUCAS PEREIRA DOS SANTOS',funcao:'MOT',regime:'16HS-6X3',supervisor:'16 HORAS',status:'ATIVO',vaga:'AV 2 ALY5322'},
-  {id:'COL034',nome:'LUIZ GUILHERME',funcao:'OP',regime:'ADM',supervisor:'JUNIOR PEREIRA',status:'ATIVO',vaga:'NÃO INFORMADA'},
-  {id:'COL103',nome:'MAGNO DA SILVA ROBERTO',funcao:'MOT',regime:'24HS-D',supervisor:'WELLISON',status:'ATIVO',vaga:'AP 12'},
-  {id:'COL118',nome:'MAIK PEREIRA DA SILVA',funcao:'MOT',regime:'24HS-A',supervisor:'OZIAS',status:'ATIVO',vaga:'HV 3'},
-  {id:'COL141',nome:'MAKSON WILLEN DO NASCIMENTO COURA',funcao:'MOT',regime:'16HS-6X3',supervisor:'16 HORAS',status:'ATIVO',vaga:'AV 01'},
-  {id:'COL041',nome:'MARCOS ANTONIO SANTIAGO',funcao:'MOT',regime:'ADM',supervisor:'ASPIRADOR',status:'ATIVO',vaga:'BROOK 02'},
-  {id:'COL132',nome:'MARCOS VINICIUS ALMEIDA',funcao:'MOT',regime:'16HS-5X2',supervisor:'16 HORAS',status:'ATIVO',vaga:'AP 07'},
-  {id:'COL015',nome:'MARCOS VINICIUS DA SILVA FERREIRA',funcao:'OP',regime:'ADM',supervisor:'SEBASTIÃO',status:'ATIVO',vaga:'HV02'},
-  {id:'COL068',nome:'MARCOS VINICIUS RODRIGUES',funcao:'MOT',regime:'24HS-C',supervisor:'ISRAEL',status:'ATIVO',vaga:'AP 11'},
-  {id:'COL090',nome:'MARLEY LISBOA VIEIRA',funcao:'OP',regime:'24HS-B',supervisor:'MATUSALEM',status:'ATIVO',vaga:'COQUERIA'},
-  {id:'COL104',nome:'MATEUS PEREIRA TAVARES GOMES',funcao:'OP',regime:'24HS-D',supervisor:'WELLISON',status:'ATIVO',vaga:'AP 01'},
-  {id:'COL135',nome:'MATHEUS DE OLIVEIRA',funcao:'OP',regime:'16HS-5X2',supervisor:'16 HORAS',status:'ATIVO',vaga:'AP 07'},
-  {id:'COL097',nome:'MATHEUS HENRIQUE DE ANDRADE ALMEIDA',funcao:'OP',regime:'24HS-B',supervisor:'MATUSALEM',status:'ATIVO',vaga:'HV 3'},
-  {id:'COL028',nome:'MAXIMINIANO BARBOSA SILVA',funcao:'OP',regime:'ADM',supervisor:'JUNIOR PEREIRA',status:'ATIVO',vaga:'NÃO INFORMADA'},
-  {id:'COL026',nome:'MESSIAS PATRICIO HONORATO',funcao:'OP',regime:'ADM',supervisor:'JUNIOR PEREIRA',status:'ATIVO',vaga:'NÃO INFORMADA'},
-  {id:'COL008',nome:'NOEL DE FREITAS',funcao:'OP',regime:'ADM',supervisor:'SEBASTIÃO',status:'ATIVO',vaga:'AV 3'},
-  {id:'COL120',nome:'PAULO BRAZ DE AQUINO',funcao:'OP',regime:'24HS-A',supervisor:'OZIAS',status:'ATIVO',vaga:'AP 01'},
-  {id:'COL121',nome:'PAULO CESAR BORGES EMBURANA',funcao:'OP',regime:'24HS-A',supervisor:'OZIAS',status:'ATIVO',vaga:'AP 08'},
-  {id:'COL044',nome:'PAULO GOMES DOS SANTOS',funcao:'OP',regime:'ADM',supervisor:'ASPIRADOR',status:'ATIVO',vaga:'ASPIRADOR 1'},
-  {id:'COL050',nome:'PAULO LUCIANO MARTHINS',funcao:'OP',regime:'ADM',supervisor:'ASPIRADOR',status:'ATIVO',vaga:'ASPIRADOR 8'},
-  {id:'COL060',nome:'PAULO VICTOR SOUZA FERREIRA',funcao:'OP',regime:'ADM',supervisor:'ASPIRADOR',status:'ATIVO',vaga:'ASPIRADOR 7'},
-  {id:'COL084',nome:'PEDRO AUGUSTO DE SOUZA ALVES',funcao:'MOT',regime:'24HS-B',supervisor:'MATUSALEM',status:'ATIVO',vaga:'AP 11'},
-  {id:'COL023',nome:'RAUL OLIVEIRA MIRANDA',funcao:'MOT',regime:'ADM',supervisor:'JUNIOR PEREIRA',status:'ATIVO',vaga:'NÃO INFORMADA'},
-  {id:'COL074',nome:'RAYLANDER',funcao:'OP',regime:'24HS-C',supervisor:'ISRAEL',status:'ATIVO',vaga:'AP 11'},
-  {id:'COL052',nome:'REDILSON BENTO',funcao:'OP',regime:'ADM',supervisor:'ASPIRADOR',status:'ATIVO',vaga:'ASPIRADOR 6'},
-  {id:'COL040',nome:'REGINALDO',funcao:'MOT',regime:'ADM',supervisor:'ASPIRADOR',status:'ATIVO',vaga:'BROOK 01'},
-  {id:'COL007',nome:'RENAN MICHEL',funcao:'MOT',regime:'ADM',supervisor:'SEBASTIÃO',status:'ATIVO',vaga:'CONJUGADO'},
-  {id:'COL147',nome:'RENATO SILVA RAMOS',funcao:'OP',regime:'16HS-6X3',supervisor:'16 HORAS',status:'ATIVO',vaga:'AV 01'},
-  {id:'COL016',nome:'RENATO TORRES',funcao:'OP',regime:'ADM',supervisor:'SEBASTIÃO',status:'ATIVO',vaga:'CONJUGADO'},
-  {id:'COL088',nome:'RILDON DO CARMO',funcao:'OP',regime:'24HS-B',supervisor:'MATUSALEM',status:'ATIVO',vaga:'AP 08'},
-  {id:'COL142',nome:'ROGÉRIO AUGUSTO',funcao:'MOT',regime:'16HS-6X3',supervisor:'16 HORAS',status:'ATIVO',vaga:'AV 01'},
-  {id:'COL057',nome:'ROGILDO MIGUEL DOS SANTOS',funcao:'OP',regime:'ADM',supervisor:'ASPIRADOR',status:'FÉRIAS - FEVEREIRO',vaga:'FÉRIAS - FEVEREIRO'},
-  {id:'COL122',nome:'ROMULO DE SOUZA SILVA',funcao:'OP',regime:'24HS-A',supervisor:'OZIAS',status:'ATIVO',vaga:'AV 08'},
-  {id:'COL110',nome:'RONALD APARECIDO',funcao:'OP',regime:'24HS-D',supervisor:'WELLISON',status:'ATIVO',vaga:'AP 01'},
-  {id:'COL035',nome:'RONEI PETERSON MOREIRA',funcao:'OP',regime:'ADM',supervisor:'JUNIOR PEREIRA',status:'FÉRIAS - FEVEREIRO',vaga:'FÉRIAS - FEVEREIRO'},
-  {id:'COL006',nome:'RUAN PEDRO',funcao:'MOT',regime:'ADM',supervisor:'SEBASTIÃO',status:'ATIVO',vaga:'HV02'},
-  {id:'COL038',nome:'SANDRO ALCANTARA DE PAULA',funcao:'OP',regime:'ADM',supervisor:'JUNIOR PEREIRA',status:'FÉRIAS - FEVEREIRO',vaga:'FÉRIAS - FEVEREIRO'},
-  {id:'COL101',nome:'SARLEY ALVES',funcao:'MOT',regime:'24HS-D',supervisor:'WELLISON',status:'ATIVO',vaga:'AP 11'},
-  {id:'COL066',nome:'SERGIO JOSE NEVES',funcao:'MOT',regime:'24HS-C',supervisor:'ISRAEL',status:'ATIVO',vaga:'AP 08'},
-  {id:'COL004',nome:'SILVANIL MATEUS',funcao:'MOT',regime:'ADM',supervisor:'SEBASTIÃO',status:'ATIVO',vaga:'AV 6'},
-  {id:'COL002',nome:'THIAGO RAMOS',funcao:'MOT',regime:'ADM',supervisor:'SEBASTIÃO',status:'ATIVO',vaga:'AV 4'},
-  {id:'COL075',nome:'TIAGO FONSECA',funcao:'OP',regime:'24HS-C',supervisor:'ISRAEL',status:'ATIVO',vaga:'HV 3'},
-  {id:'COL062',nome:'UDSON LUIS SANTOS ROSA',funcao:'OP',regime:'ADM',supervisor:'ASPIRADOR',status:'ATIVO',vaga:'ASPIRADOR 9'},
-  {id:'COL149',nome:'VALDECI ROSA DO NASCIMENTO',funcao:'OP',regime:'16HS-6X3',supervisor:'16 HORAS',status:'ATIVO',vaga:'AV 01'},
-  {id:'COL045',nome:'VALDIR DA SILVA',funcao:'OP',regime:'ADM',supervisor:'ASPIRADOR',status:'ATIVO',vaga:'ASPIRADOR 2'},
-  {id:'COL105',nome:'VINICIUS JUNIOR',funcao:'OP',regime:'24HS-D',supervisor:'WELLISON',status:'ATIVO',vaga:'AP 08'},
-  {id:'COL048',nome:'VINICIUS VALENTIM RIBEIRO',funcao:'OP',regime:'ADM',supervisor:'ASPIRADOR',status:'ATIVO',vaga:'ASPIRADOR 5'},
-  {id:'COL067',nome:'WALISSON LUCAS',funcao:'MOT',regime:'24HS-C',supervisor:'ISRAEL',status:'ATIVO',vaga:'AV 08'},
-  {id:'COL116',nome:'WALLACE DAS GRAÇAS',funcao:'MOT',regime:'24HS-A',supervisor:'OZIAS',status:'ATIVO',vaga:'AV 08'},
-  {id:'COL137',nome:'WALQUER ANTONIO LUCAS',funcao:'OP',regime:'16HS-5X2',supervisor:'16 HORAS',status:'ATIVO',vaga:'COQUERIA'},
-  {id:'COL020',nome:'WANIO FERREIRA',funcao:'MOT',regime:'ADM',supervisor:'JUNIOR PEREIRA',status:'ATIVO',vaga:'NÃO INFORMADA'},
-  {id:'COL042',nome:'WASHIGTON BONIFÁCIO',funcao:'MOT',regime:'ADM',supervisor:'ASPIRADOR',status:'ATIVO',vaga:'BROOK 03'},
-  {id:'COL010',nome:'WASHIGTON BRUNO',funcao:'OP',regime:'ADM',supervisor:'SEBASTIÃO',status:'ATIVO',vaga:'AV 6'},
-  {id:'COL032',nome:'WEDERSON COSTA DE SOUZA',funcao:'OP',regime:'ADM',supervisor:'JUNIOR PEREIRA',status:'FÉRIAS - FEVEREIRO',vaga:'FÉRIAS - FEVEREIRO'},
-  {id:'COL033',nome:'WELITON WAGNER PEREIRA',funcao:'OP',regime:'ADM',supervisor:'JUNIOR PEREIRA',status:'ATIVO',vaga:'NÃO INFORMADA'},
-  {id:'COL_TEMP_001',nome:'LEONARDO PROCÓPIO',funcao:'MOT',regime:'SEM REGISTRO',supervisor:'SEM REGISTRO',status:'ATIVO',vaga:'AV 5'},
-  {id:'COL_TEMP_002',nome:'HERMES JORGE',funcao:'MOT',regime:'SEM REGISTRO',supervisor:'SEM REGISTRO',status:'ATIVO',vaga:'HV01'},
-  {id:'COL_TEMP_003',nome:'MARCOS DINIS DA SILVA',funcao:'OP',regime:'SEM REGISTRO',supervisor:'SEM REGISTRO',status:'ATIVO',vaga:'HV01'},
-  {id:'COL_TEMP_004',nome:'OSVALDO DE JESUS',funcao:'OP',regime:'SEM REGISTRO',supervisor:'SEM REGISTRO',status:'ATIVO',vaga:'HV01'},
-  {id:'COL_TEMP_005',nome:'ADELSON DA SILVA CONCEIÇÃO',funcao:'OP',regime:'SEM REGISTRO',supervisor:'SEM REGISTRO',status:'ATIVO',vaga:'NÃO INFORMADA'},
-  {id:'COL_TEMP_006',nome:'GESIEL OLIVEIRA',funcao:'OP',regime:'SEM REGISTRO',supervisor:'SEM REGISTRO',status:'ATIVO',vaga:'ASPIRADOR 3'},
-  {id:'COL_TEMP_007',nome:'BONIEX SILVA NUNES',funcao:'OP',regime:'SEM REGISTRO',supervisor:'SEM REGISTRO',status:'ATIVO',vaga:'ASPIRADOR 6'},
-  {id:'COL_TEMP_008',nome:'TIAGO SILVA SOARES',funcao:'OP',regime:'SEM REGISTRO',supervisor:'SEM REGISTRO',status:'ATIVO',vaga:'BROOK 02'},
-  {id:'COL_TEMP_009',nome:'CRISTIANO DE ABREU',funcao:'OP',regime:'SEM REGISTRO',supervisor:'SEM REGISTRO',status:'ATIVO',vaga:'COQUERIA'},
-  {id:'COL_TEMP_010',nome:'MARCELO LEANDRO',funcao:'MOT',regime:'SEM REGISTRO',supervisor:'SEM REGISTRO',status:'ATIVO',vaga:'AP 12'},
-  {id:'COL_TEMP_011',nome:'WEULER ALVES ALVARENGA',funcao:'OP',regime:'SEM REGISTRO',supervisor:'SEM REGISTRO',status:'ATIVO',vaga:'HV 3'},
-  {id:'COL_TEMP_012',nome:'MAX WELL SOUZA MACHADO',funcao:'OP',regime:'SEM REGISTRO',supervisor:'SEM REGISTRO',status:'ATIVO',vaga:'HV 3'},
-  {id:'COL_TEMP_013',nome:'SANDRO CRUZ',funcao:'OP',regime:'SEM REGISTRO',supervisor:'SEM REGISTRO',status:'ATIVO',vaga:'AV 08'},
-  {id:'COL_TEMP_014',nome:'EVALDO SOUZA ABREU',funcao:'OP',regime:'SEM REGISTRO',supervisor:'SEM REGISTRO',status:'ATIVO',vaga:'AV 07'},
-];
+    // ================================================================
+    //  STATE
+    // ================================================================
+    const state = {
+      colaboradores: JSON.parse(JSON.stringify(COLABORADORES_INICIAL)),
+      supervisores: JSON.parse(JSON.stringify(SUPERVISORES_INICIAL)),
+      movimentacoes: [],
+      filtros: { regime: '', funcao: '', status: '' },
+      activeView: 'kanban',
+      drawerColaborador: null,
+      pendingMove: null,
+      usuario: 'admin',
+      gasUrl: '' // set this to your GAS Web App URL
+    };
 
-const SUPERVISORES_INICIAL = [
-  {id:'SUP_01',nome:'MATUSALEM',regime_padrao:'24HS-B',ativo:true},
-  {id:'SUP_02',nome:'ISRAEL',regime_padrao:'24HS-C',ativo:true},
-  {id:'SUP_03',nome:'OZIAS',regime_padrao:'24HS-A',ativo:true},
-  {id:'SUP_04',nome:'WELLISON',regime_padrao:'24HS-D',ativo:true},
-  {id:'SUP_05',nome:'JUNIOR PEREIRA',regime_padrao:'ADM',ativo:true},
-  {id:'SUP_06',nome:'SEBASTIÃO',regime_padrao:'ADM',ativo:true},
-  {id:'SUP_07',nome:'ASPIRADOR',regime_padrao:'ADM',ativo:true},
-  {id:'SUP_08',nome:'16 HORAS',regime_padrao:'16HS',ativo:true},
-  {id:'SUP_09',nome:'SEM REGISTRO',regime_padrao:'',ativo:true},
-];
+    // ================================================================
+    //  HELPERS
+    // ================================================================
+    function regimeBadgeClass(regime) {
+      if (!regime) return 'badge-SEM';
+      if (regime.startsWith('24HS-A')) return 'badge-24A';
+      if (regime.startsWith('24HS-B')) return 'badge-24B';
+      if (regime.startsWith('24HS-C')) return 'badge-24C';
+      if (regime.startsWith('24HS-D')) return 'badge-24D';
+      if (regime.startsWith('ADM')) return 'badge-ADM';
+      if (regime.startsWith('16HS')) return 'badge-16HS';
+      return 'badge-SEM';
+    }
+    function isSemId(col) {
+      return col.id && col.id.startsWith('COL_TEMP_');
+    }
+    function isSemVaga(col) {
+      return !col.vaga || col.vaga === 'SEM VAGA ATRIBUÍDA' || col.vaga === 'NÃO INFORMADA';
+    }
+    function filtrarColaboradores() {
+      return state.colaboradores.filter(c => {
+        if (state.filtros.regime && c.regime !== state.filtros.regime) return false;
+        if (state.filtros.funcao && c.funcao !== state.filtros.funcao) return false;
+        if (state.filtros.status === 'FÉRIAS - FEVEREIRO' && c.status !== 'FÉRIAS - FEVEREIRO') return false;
+        if (state.filtros.status === 'SEM VAGA' && !isSemVaga(c)) return false;
+        if (state.filtros.status === 'SEM_ID' && !isSemId(c)) return false;
+        return true;
+      });
+    }
+    function toast(msg, type = 'success') {
+      const icons = {
+        success: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="2 8 6 12 14 4"/></svg>',
+        error: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 2l12 12M14 2L2 14"/></svg>',
+        info: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="7"/><path d="M8 5v4M8 11v1"/></svg>',
+      };
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.innerHTML = icons[type] + msg;
+      document.getElementById('toast-container').appendChild(el);
+      setTimeout(() => el.remove(), 3200);
+    }
+    function formatDate(iso) {
+      if (!iso) return '—';
+      try { return new Date(iso).toLocaleString('pt-BR'); } catch { return iso; }
+    }
+    function updateStats() {
+      document.getElementById('stat-total').textContent = state.colaboradores.length;
+      document.getElementById('stat-ativos').textContent = state.colaboradores.filter(c => c.status === 'ATIVO').length;
+      document.getElementById('stat-semid').textContent = state.colaboradores.filter(c => isSemId(c)).length;
+    }
 
-// ================================================================
-//  STATE
-// ================================================================
-const state = {
-  colaboradores: JSON.parse(JSON.stringify(COLABORADORES_INICIAL)),
-  supervisores:  JSON.parse(JSON.stringify(SUPERVISORES_INICIAL)),
-  movimentacoes: [],
-  filtros: { regime: '', funcao: '', status: '' },
-  activeView: 'kanban',
-  drawerColaborador: null,
-  pendingMove: null,
-  usuario: 'admin',
-  gasUrl: '' // set this to your GAS Web App URL
-};
+    // ================================================================
+    //  GAS API (para quando houver URL configurada)
+    // ================================================================
+    async function callGAS(action, params = {}) {
+      if (!state.gasUrl) return null;
+      try {
+        const resp = await fetch(state.gasUrl, {
+          method: 'POST',
+          body: JSON.stringify({ action, params })
+        });
+        const data = await resp.json();
+        if (!data.success) throw new Error(data.error);
+        return data.data;
+      } catch (e) {
+        console.warn('GAS call failed, using local data:', e);
+        return null;
+      }
+    }
 
-// ================================================================
-//  HELPERS
-// ================================================================
-function regimeBadgeClass(regime) {
-  if (!regime) return 'badge-SEM';
-  if (regime.startsWith('24HS-A')) return 'badge-24A';
-  if (regime.startsWith('24HS-B')) return 'badge-24B';
-  if (regime.startsWith('24HS-C')) return 'badge-24C';
-  if (regime.startsWith('24HS-D')) return 'badge-24D';
-  if (regime.startsWith('ADM'))    return 'badge-ADM';
-  if (regime.startsWith('16HS'))   return 'badge-16HS';
-  return 'badge-SEM';
-}
-function isSemId(col) {
-  return col.id && col.id.startsWith('COL_TEMP_');
-}
-function isSemVaga(col) {
-  return !col.vaga || col.vaga === 'SEM VAGA ATRIBUÍDA' || col.vaga === 'NÃO INFORMADA';
-}
-function filtrarColaboradores() {
-  return state.colaboradores.filter(c => {
-    if (state.filtros.regime && c.regime !== state.filtros.regime) return false;
-    if (state.filtros.funcao && c.funcao !== state.filtros.funcao) return false;
-    if (state.filtros.status === 'FÉRIAS - FEVEREIRO' && c.status !== 'FÉRIAS - FEVEREIRO') return false;
-    if (state.filtros.status === 'SEM VAGA' && !isSemVaga(c)) return false;
-    if (state.filtros.status === 'SEM_ID' && !isSemId(c)) return false;
-    return true;
-  });
-}
-function toast(msg, type = 'success') {
-  const icons = {
-    success: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="2 8 6 12 14 4"/></svg>',
-    error:   '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 2l12 12M14 2L2 14"/></svg>',
-    info:    '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="7"/><path d="M8 5v4M8 11v1"/></svg>',
-  };
-  const el = document.createElement('div');
-  el.className = `toast ${type}`;
-  el.innerHTML = icons[type] + msg;
-  document.getElementById('toast-container').appendChild(el);
-  setTimeout(() => el.remove(), 3200);
-}
-function formatDate(iso) {
-  if (!iso) return '—';
-  try { return new Date(iso).toLocaleString('pt-BR'); } catch { return iso; }
-}
-function updateStats() {
-  document.getElementById('stat-total').textContent = state.colaboradores.length;
-  document.getElementById('stat-ativos').textContent = state.colaboradores.filter(c => c.status === 'ATIVO').length;
-  document.getElementById('stat-semid').textContent = state.colaboradores.filter(c => isSemId(c)).length;
-}
+    // ================================================================
+    //  KANBAN
+    // ================================================================
+    let dragSrc = null;
+    let dragData = null;
+    let colDragSrc = null;
 
-// ================================================================
-//  GAS API (para quando houver URL configurada)
-// ================================================================
-async function callGAS(action, params = {}) {
-  if (!state.gasUrl) return null;
-  try {
-    const resp = await fetch(state.gasUrl, {
-      method: 'POST',
-      body: JSON.stringify({ action, params })
-    });
-    const data = await resp.json();
-    if (!data.success) throw new Error(data.error);
-    return data.data;
-  } catch (e) {
-    console.warn('GAS call failed, using local data:', e);
-    return null;
-  }
-}
+    function renderKanban() {
+      const container = document.getElementById('kanban-view');
+      const frag = document.createDocumentFragment();
+      const cols = filtrarColaboradores();
+      const supAtivos = state.supervisores.filter(s => s.ativo);
 
-// ================================================================
-//  KANBAN
-// ================================================================
-let dragSrc = null;
-let dragData = null;
+      supAtivos.forEach((sup, idx) => {
+        const membros = cols.filter(c => c.supervisor === sup.nome);
+        const colEl = document.createElement('div');
+        colEl.className = 'kanban-col';
+        colEl.dataset.supervisor = sup.nome;
+        colEl.dataset.supIdx = idx;
+        colEl.draggable = true;
 
-function renderKanban() {
-  const container = document.getElementById('kanban-view');
-  container.innerHTML = '';
-  const cols = filtrarColaboradores();
-  const supAtivos = state.supervisores.filter(s => s.ativo);
-
-  supAtivos.forEach(sup => {
-    const membros = cols.filter(c => c.supervisor === sup.nome);
-    const col = document.createElement('div');
-    col.className = 'kanban-col';
-    col.dataset.supervisor = sup.nome;
-
-    col.innerHTML = `
+        colEl.innerHTML = `
       <div class="col-header">
         <div class="col-title">
-          ${sup.nome}
+          ☰ ${sup.nome}
           <span class="col-count">${membros.length}</span>
         </div>
         <div class="col-regime">${sup.regime_padrao || 'Misto'}</div>
@@ -954,47 +2289,89 @@ function renderKanban() {
       <div class="col-body" data-supervisor="${sup.nome}"></div>
     `;
 
-    const body = col.querySelector('.col-body');
+        // Column drag (reorder supervisors)
+        colEl.addEventListener('dragstart', e => {
+          if (e.target.closest('.card')) return; // let card drag through
+          colDragSrc = idx;
+          colEl.classList.add('col-dragging');
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/col-drag', idx);
+        });
+        colEl.addEventListener('dragend', () => {
+          colEl.classList.remove('col-dragging');
+          colDragSrc = null;
+          container.querySelectorAll('.col-drag-over').forEach(c => c.classList.remove('col-drag-over'));
+        });
+        colEl.addEventListener('dragover', e => {
+          e.preventDefault();
+          if (colDragSrc !== null && colDragSrc !== idx) {
+            colEl.classList.add('col-drag-over');
+          }
+        });
+        colEl.addEventListener('dragleave', e => {
+          if (!colEl.contains(e.relatedTarget)) colEl.classList.remove('col-drag-over');
+        });
+        colEl.addEventListener('drop', e => {
+          colEl.classList.remove('col-drag-over');
+          if (colDragSrc !== null && colDragSrc !== idx) {
+            e.preventDefault();
+            e.stopPropagation();
+            // Reorder supervisors
+            const moved = state.supervisores.splice(colDragSrc, 1)[0];
+            state.supervisores.splice(idx, 0, moved);
+            colDragSrc = null;
+            renderKanban();
+            toast(`Coluna ${moved.nome} reordenada`, 'info');
+            return;
+          }
+        });
 
-    // Drag events on column body
-    body.addEventListener('dragover', e => {
-      e.preventDefault();
-      body.classList.add('drag-over');
-    });
-    body.addEventListener('dragleave', e => {
-      if (!body.contains(e.relatedTarget)) body.classList.remove('drag-over');
-    });
-    body.addEventListener('drop', e => {
-      e.preventDefault();
-      body.classList.remove('drag-over');
-      if (dragData && dragData.supervisor !== sup.nome) {
-        openMoveModal(dragData, sup.nome, 'drag');
-      }
-    });
+        const body = colEl.querySelector('.col-body');
 
-    if (membros.length === 0) {
-      body.innerHTML = '<div class="empty-col">Nenhum colaborador</div>';
-    } else {
-      membros.forEach(col => body.appendChild(makeCard(col)));
+        // Card drag events on column body
+        body.addEventListener('dragover', e => {
+          e.preventDefault();
+          if (dragData) body.classList.add('drag-over');
+        });
+        body.addEventListener('dragleave', e => {
+          if (!body.contains(e.relatedTarget)) body.classList.remove('drag-over');
+        });
+        body.addEventListener('drop', e => {
+          e.preventDefault();
+          body.classList.remove('drag-over');
+          if (dragData && dragData.supervisor !== sup.nome) {
+            openMoveModal(dragData, sup.nome, 'drag');
+          }
+        });
+
+        if (membros.length === 0) {
+          body.innerHTML = '<div class="empty-col">Nenhum colaborador</div>';
+        } else {
+          const bodyFrag = document.createDocumentFragment();
+          membros.forEach(c => bodyFrag.appendChild(makeCard(c)));
+          body.appendChild(bodyFrag);
+        }
+
+        frag.appendChild(colEl);
+      });
+
+      container.innerHTML = '';
+      container.appendChild(frag);
     }
 
-    container.appendChild(col);
-  });
-}
+    function makeCard(colaborador) {
+      const el = document.createElement('div');
+      el.className = 'card';
+      el.draggable = true;
+      el.dataset.id = colaborador.id;
 
-function makeCard(colaborador) {
-  const el = document.createElement('div');
-  el.className = 'card';
-  el.draggable = true;
-  el.dataset.id = colaborador.id;
+      const semId = isSemId(colaborador);
+      const badgeRegime = regimeBadgeClass(colaborador.regime);
+      const badgeFuncao = colaborador.funcao === 'MOT' ? 'badge-MOT' : 'badge-OP';
+      const vagaIcon = `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="10" height="7" rx="1"/><path d="M4 4V3a2 2 0 014 0v1"/></svg>`;
+      const alertHtml = semId ? '<div class="card-alert" title="Sem ID definitivo"></div>' : '';
 
-  const semId = isSemId(colaborador);
-  const badgeRegime = regimeBadgeClass(colaborador.regime);
-  const badgeFuncao = colaborador.funcao === 'MOT' ? 'badge-MOT' : 'badge-OP';
-  const vagaIcon = `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="10" height="7" rx="1"/><path d="M4 4V3a2 2 0 014 0v1"/></svg>`;
-  const alertHtml = semId ? '<div class="card-alert" title="Sem ID definitivo"></div>' : '';
-
-  el.innerHTML = `
+      el.innerHTML = `
     ${alertHtml}
     <div class="card-top">
       <div class="card-id">${colaborador.id}</div>
@@ -1008,37 +2385,37 @@ function makeCard(colaborador) {
     <div class="card-vaga">${vagaIcon} ${colaborador.vaga || 'Sem vaga'}</div>
   `;
 
-  el.addEventListener('dragstart', e => {
-    dragData = colaborador;
-    el.classList.add('dragging');
-    e.dataTransfer.effectAllowed = 'move';
-  });
-  el.addEventListener('dragend', () => {
-    el.classList.remove('dragging');
-    dragData = null;
-  });
-  el.addEventListener('click', () => openDrawer(colaborador));
+      el.addEventListener('dragstart', e => {
+        dragData = colaborador;
+        el.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      el.addEventListener('dragend', () => {
+        el.classList.remove('dragging');
+        dragData = null;
+      });
+      el.addEventListener('click', () => openDrawer(colaborador));
 
-  return el;
-}
+      return el;
+    }
 
-// ================================================================
-//  DRAWER
-// ================================================================
-function openDrawer(col) {
-  state.drawerColaborador = col;
-  document.getElementById('drawer-title').textContent = col.nome;
-  document.getElementById('drawer-id').textContent = col.id + (isSemId(col) ? ' ⚠ Sem ID definitivo' : '');
+    // ================================================================
+    //  DRAWER
+    // ================================================================
+    function openDrawer(col) {
+      state.drawerColaborador = col;
+      document.getElementById('drawer-title').textContent = col.nome;
+      document.getElementById('drawer-id').textContent = col.id + (isSemId(col) ? ' ⚠ Sem ID definitivo' : '');
 
-  const body = document.getElementById('drawer-body');
-  const movs = state.movimentacoes.filter(m => m.colaborador_id === col.id);
+      const body = document.getElementById('drawer-body');
+      const movs = state.movimentacoes.filter(m => m.colaborador_id === col.id);
 
-  const semIdAlert = isSemId(col) ? `<div class="alert-banner">
+      const semIdAlert = isSemId(col) ? `<div class="alert-banner">
     <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1L1 14h14z"/><path d="M8 6v4M8 11v1"/></svg>
     Colaborador sem ID definitivo — resolva em Configurações
   </div>` : '';
 
-  body.innerHTML = `
+      body.innerHTML = `
     ${semIdAlert}
     <div class="section-title">Dados Cadastrais</div>
     <div class="drawer-fields-grid">
@@ -1051,8 +2428,8 @@ function openDrawer(col) {
     <div class="section-title">Histórico de Movimentações</div>
     <div class="drawer-history">
       ${movs.length === 0
-        ? '<div style="color:var(--text-3);font-size:12px;text-align:center;padding:12px">Sem movimentações registradas</div>'
-        : movs.map(m => `
+          ? '<div style="color:var(--text-3);font-size:12px;text-align:center;padding:12px">Sem movimentações registradas</div>'
+          : movs.map(m => `
           <div class="drawer-mov-item">
             <div class="drawer-mov-date">${formatDate(m.created_at)}</div>
             <div class="drawer-mov-text">${m.supervisor_origem} → ${m.supervisor_destino} · ${m.regime_origem} → ${m.regime_destino}</div>
@@ -1061,28 +2438,28 @@ function openDrawer(col) {
     </div>
   `;
 
-  document.getElementById('drawer-overlay').classList.add('open');
-  document.getElementById('drawer').classList.add('open');
-}
+      document.getElementById('drawer-overlay').classList.add('open');
+      document.getElementById('drawer').classList.add('open');
+    }
 
-function closeDrawer() {
-  document.getElementById('drawer-overlay').classList.remove('open');
-  document.getElementById('drawer').classList.remove('open');
-  state.drawerColaborador = null;
-}
+    function closeDrawer() {
+      document.getElementById('drawer-overlay').classList.remove('open');
+      document.getElementById('drawer').classList.remove('open');
+      state.drawerColaborador = null;
+    }
 
-// ================================================================
-//  MODAL MOVER
-// ================================================================
-function openMoveModal(colaborador, supervisorDestino, source = 'btn') {
-  state.pendingMove = { colaborador, supervisorDestino, source };
-  const supOrigem = colaborador.supervisor;
+    // ================================================================
+    //  MODAL MOVER
+    // ================================================================
+    function openMoveModal(colaborador, supervisorDestino, source = 'btn') {
+      state.pendingMove = { colaborador, supervisorDestino, source };
+      const supOrigem = colaborador.supervisor;
 
-  document.getElementById('modal-title').textContent = 'Confirmar Movimentação';
-  document.getElementById('modal-subtitle').textContent = colaborador.nome;
+      document.getElementById('modal-title').textContent = 'Confirmar Movimentação';
+      document.getElementById('modal-subtitle').textContent = colaborador.nome;
 
-  const body = document.getElementById('modal-body');
-  body.innerHTML = `
+      const body = document.getElementById('modal-body');
+      body.innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <div class="modal-colname">${supOrigem}</div>
       <div class="move-arrow">
@@ -1123,88 +2500,88 @@ function openMoveModal(colaborador, supervisorDestino, source = 'btn') {
     </div>
   `;
 
-  document.getElementById('modal-overlay').classList.add('open');
-}
+      document.getElementById('modal-overlay').classList.add('open');
+    }
 
-function closeModal() {
-  document.getElementById('modal-overlay').classList.remove('open');
-  state.pendingMove = null;
-}
+    function closeModal() {
+      document.getElementById('modal-overlay').classList.remove('open');
+      state.pendingMove = null;
+    }
 
-function confirmMove() {
-  const { colaborador, supervisorDestino } = state.pendingMove;
-  const motivo   = document.getElementById('move-motivo').value;
-  const novoReg  = document.getElementById('move-regime').value || colaborador.regime;
-  const novaVaga = document.getElementById('move-vaga').value || colaborador.vaga;
-  const dataEf   = document.getElementById('move-data').value;
+    function confirmMove() {
+      const { colaborador, supervisorDestino } = state.pendingMove;
+      const motivo = document.getElementById('move-motivo').value;
+      const novoReg = document.getElementById('move-regime').value || colaborador.regime;
+      const novaVaga = document.getElementById('move-vaga').value || colaborador.vaga;
+      const dataEf = document.getElementById('move-data').value;
 
-  // Registra movimentação
-  const mov = {
-    id: 'MOV_' + Date.now(),
-    colaborador_id: colaborador.id,
-    colaborador_nome: colaborador.nome,
-    supervisor_origem: colaborador.supervisor,
-    supervisor_destino: supervisorDestino,
-    regime_origem: colaborador.regime,
-    regime_destino: novoReg,
-    vaga_origem: colaborador.vaga,
-    vaga_destino: novaVaga,
-    data_efetiva: dataEf,
-    motivo,
-    usuario_responsavel: state.usuario,
-    created_at: new Date().toISOString(),
-  };
-  state.movimentacoes.unshift(mov);
+      // Registra movimentação
+      const mov = {
+        id: 'MOV_' + Date.now(),
+        colaborador_id: colaborador.id,
+        colaborador_nome: colaborador.nome,
+        supervisor_origem: colaborador.supervisor,
+        supervisor_destino: supervisorDestino,
+        regime_origem: colaborador.regime,
+        regime_destino: novoReg,
+        vaga_origem: colaborador.vaga,
+        vaga_destino: novaVaga,
+        data_efetiva: dataEf,
+        motivo,
+        usuario_responsavel: state.usuario,
+        created_at: new Date().toISOString(),
+      };
+      state.movimentacoes.unshift(mov);
 
-  // Atualiza colaborador
-  const idx = state.colaboradores.findIndex(c => c.id === colaborador.id);
-  if (idx !== -1) {
-    state.colaboradores[idx].supervisor = supervisorDestino;
-    state.colaboradores[idx].regime     = novoReg;
-    state.colaboradores[idx].vaga       = novaVaga;
-  }
+      // Atualiza colaborador
+      const idx = state.colaboradores.findIndex(c => c.id === colaborador.id);
+      if (idx !== -1) {
+        state.colaboradores[idx].supervisor = supervisorDestino;
+        state.colaboradores[idx].regime = novoReg;
+        state.colaboradores[idx].vaga = novaVaga;
+      }
 
-  closeModal();
-  closeDrawer();
-  toast(`${colaborador.nome} movido para ${supervisorDestino}`);
-  updateStats();
-  renderKanban();
+      closeModal();
+      closeDrawer();
+      toast(`${colaborador.nome} movido para ${supervisorDestino}`);
+      updateStats();
+      renderKanban();
 
-  // Tentar sync com GAS
-  callGAS('mover_colaborador', {
-    colaborador_id: colaborador.id,
-    supervisor_destino: supervisorDestino,
-    regime_destino: novoReg,
-    vaga_destino: novaVaga,
-    motivo,
-    data_efetiva: dataEf,
-    usuario_responsavel: state.usuario,
-  });
-}
+      // Tentar sync com GAS
+      callGAS('mover_colaborador', {
+        colaborador_id: colaborador.id,
+        supervisor_destino: supervisorDestino,
+        regime_destino: novoReg,
+        vaga_destino: novaVaga,
+        motivo,
+        data_efetiva: dataEf,
+        usuario_responsavel: state.usuario,
+      });
+    }
 
-// ================================================================
-//  EDIT MODAL (inline)
-// ================================================================
-function openEditModal(col) {
-  state.pendingMove = null;
-  const body = document.getElementById('modal-body');
-  document.getElementById('modal-title').textContent = 'Editar Colaborador';
-  document.getElementById('modal-subtitle').textContent = col.id;
+    // ================================================================
+    //  EDIT MODAL (inline)
+    // ================================================================
+    function openEditModal(col) {
+      state.pendingMove = null;
+      const body = document.getElementById('modal-body');
+      document.getElementById('modal-title').textContent = 'Editar Colaborador';
+      document.getElementById('modal-subtitle').textContent = col.id;
 
-  const supOptions = state.supervisores.map(s => `<option ${s.nome === col.supervisor ? 'selected' : ''}>${s.nome}</option>`).join('');
+      const supOptions = state.supervisores.map(s => `<option ${s.nome === col.supervisor ? 'selected' : ''}>${s.nome}</option>`).join('');
 
-  body.innerHTML = `
+      body.innerHTML = `
     <div class="edit-modal-form">
       <div class="form-field"><label>Nome</label><input id="edit-nome" value="${col.nome}" style="padding:8px 12px;background:var(--bg-2);border:1px solid var(--border);border-radius:6px;color:var(--text-1);font-family:var(--font-display);font-size:13px;outline:none;width:100%"/></div>
       <div class="form-field"><label>Função</label>
         <select id="edit-funcao" style="padding:8px 12px;background:var(--bg-2);border:1px solid var(--border);border-radius:6px;color:var(--text-1);font-family:var(--font-display);font-size:13px;outline:none;width:100%;cursor:pointer">
-          <option ${col.funcao==='OP'?'selected':''}>OP</option>
-          <option ${col.funcao==='MOT'?'selected':''}>MOT</option>
+          <option ${col.funcao === 'OP' ? 'selected' : ''}>OP</option>
+          <option ${col.funcao === 'MOT' ? 'selected' : ''}>MOT</option>
         </select>
       </div>
       <div class="form-field"><label>Regime</label>
         <select id="edit-regime" style="padding:8px 12px;background:var(--bg-2);border:1px solid var(--border);border-radius:6px;color:var(--text-1);font-family:var(--font-display);font-size:13px;outline:none;width:100%;cursor:pointer">
-          ${['24HS-A','24HS-B','24HS-C','24HS-D','ADM','16HS-5X2','16HS-6X3','SEM REGISTRO'].map(r=>`<option ${r===col.regime?'selected':''}>${r}</option>`).join('')}
+          ${['24HS-A', '24HS-B', '24HS-C', '24HS-D', 'ADM', '16HS-5X2', '16HS-6X3', 'SEM REGISTRO'].map(r => `<option ${r === col.regime ? 'selected' : ''}>${r}</option>`).join('')}
         </select>
       </div>
       <div class="form-field"><label>Supervisor</label>
@@ -1215,61 +2592,61 @@ function openEditModal(col) {
       <div class="form-field" style="grid-column:1/-1"><label>Vaga / Placa</label><input id="edit-vaga" value="${col.vaga || ''}" style="padding:8px 12px;background:var(--bg-2);border:1px solid var(--border);border-radius:6px;color:var(--text-1);font-family:var(--font-display);font-size:13px;outline:none;width:100%"/></div>
       <div class="form-field" style="grid-column:1/-1"><label>Status</label>
         <select id="edit-status" style="padding:8px 12px;background:var(--bg-2);border:1px solid var(--border);border-radius:6px;color:var(--text-1);font-family:var(--font-display);font-size:13px;outline:none;width:100%;cursor:pointer">
-          ${['ATIVO','INATIVO','FÉRIAS - FEVEREIRO'].map(s=>`<option ${s===col.status?'selected':''}>${s}</option>`).join('')}
+          ${['ATIVO', 'INATIVO', 'FÉRIAS - FEVEREIRO'].map(s => `<option ${s === col.status ? 'selected' : ''}>${s}</option>`).join('')}
         </select>
       </div>
     </div>
   `;
 
-  document.getElementById('modal-confirm').onclick = () => {
-    const idx = state.colaboradores.findIndex(c => c.id === col.id);
-    if (idx !== -1) {
-      state.colaboradores[idx].nome       = document.getElementById('edit-nome').value.toUpperCase();
-      state.colaboradores[idx].funcao     = document.getElementById('edit-funcao').value;
-      state.colaboradores[idx].regime     = document.getElementById('edit-regime').value;
-      state.colaboradores[idx].supervisor = document.getElementById('edit-sup').value;
-      state.colaboradores[idx].vaga       = document.getElementById('edit-vaga').value;
-      state.colaboradores[idx].status     = document.getElementById('edit-status').value;
+      document.getElementById('modal-confirm').onclick = () => {
+        const idx = state.colaboradores.findIndex(c => c.id === col.id);
+        if (idx !== -1) {
+          state.colaboradores[idx].nome = document.getElementById('edit-nome').value.toUpperCase();
+          state.colaboradores[idx].funcao = document.getElementById('edit-funcao').value;
+          state.colaboradores[idx].regime = document.getElementById('edit-regime').value;
+          state.colaboradores[idx].supervisor = document.getElementById('edit-sup').value;
+          state.colaboradores[idx].vaga = document.getElementById('edit-vaga').value;
+          state.colaboradores[idx].status = document.getElementById('edit-status').value;
+        }
+        closeModal();
+        closeDrawer();
+        toast('Colaborador atualizado');
+        updateStats();
+        renderKanban();
+      };
+
+      document.getElementById('modal-overlay').classList.add('open');
     }
-    closeModal();
-    closeDrawer();
-    toast('Colaborador atualizado');
-    updateStats();
-    renderKanban();
-  };
 
-  document.getElementById('modal-overlay').classList.add('open');
-}
+    // ================================================================
+    //  SEARCH VIEW
+    // ================================================================
+    function renderSearch(q = '') {
+      const res = document.getElementById('search-results');
+      const q2 = q.toLowerCase().trim();
 
-// ================================================================
-//  SEARCH VIEW
-// ================================================================
-function renderSearch(q = '') {
-  const res = document.getElementById('search-results');
-  const q2  = q.toLowerCase().trim();
+      const matches = q2
+        ? state.colaboradores.filter(c =>
+          (c.id || '').toLowerCase().includes(q2) ||
+          (c.nome || '').toLowerCase().includes(q2) ||
+          (c.funcao || '').toLowerCase().includes(q2) ||
+          (c.regime || '').toLowerCase().includes(q2) ||
+          (c.supervisor || '').toLowerCase().includes(q2) ||
+          (c.vaga || '').toLowerCase().includes(q2)
+        )
+        : state.colaboradores;
 
-  const matches = q2
-    ? state.colaboradores.filter(c =>
-        (c.id||'').toLowerCase().includes(q2) ||
-        (c.nome||'').toLowerCase().includes(q2) ||
-        (c.funcao||'').toLowerCase().includes(q2) ||
-        (c.regime||'').toLowerCase().includes(q2) ||
-        (c.supervisor||'').toLowerCase().includes(q2) ||
-        (c.vaga||'').toLowerCase().includes(q2)
-      )
-    : state.colaboradores;
-
-  if (matches.length === 0) {
-    res.innerHTML = `<div class="search-empty">
+      if (matches.length === 0) {
+        res.innerHTML = `<div class="search-empty">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       Nenhum colaborador encontrado
     </div>`;
-    return;
-  }
+        return;
+      }
 
-  res.innerHTML = matches.map(c => {
-    const semId = isSemId(c);
-    return `
+      res.innerHTML = matches.map(c => {
+        const semId = isSemId(c);
+        return `
     <div class="search-card" data-id="${c.id}">
       <div class="search-card-header">
         <div style="flex:1">
@@ -1277,50 +2654,50 @@ function renderSearch(q = '') {
           <div class="search-card-name">${c.nome}</div>
         </div>
         <div class="card-badges">
-          <span class="badge ${c.funcao==='MOT'?'badge-MOT':'badge-OP'}">${c.funcao}</span>
+          <span class="badge ${c.funcao === 'MOT' ? 'badge-MOT' : 'badge-OP'}">${c.funcao}</span>
           <span class="badge ${regimeBadgeClass(c.regime)}">${c.regime}</span>
         </div>
       </div>
       <div class="search-card-sup">👤 ${c.supervisor} · 🔑 ${c.vaga || '—'}</div>
       ${c.status === 'FÉRIAS - FEVEREIRO' ? '<span class="badge badge-SEM" style="margin-top:6px">🏖 Férias</span>' : ''}
     </div>`;
-  }).join('');
+      }).join('');
 
-  res.querySelectorAll('.search-card').forEach(card => {
-    card.addEventListener('click', () => {
-      const col = state.colaboradores.find(c => c.id === card.dataset.id);
-      if (col) openDrawer(col);
-    });
-  });
-}
+      res.querySelectorAll('.search-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const col = state.colaboradores.find(c => c.id === card.dataset.id);
+          if (col) openDrawer(col);
+        });
+      });
+    }
 
-// ================================================================
-//  HISTORY VIEW
-// ================================================================
-function renderHistory() {
-  const tbody = document.getElementById('history-tbody');
-  const fCol  = (document.getElementById('hf-colaborador').value || '').toLowerCase();
-  const fSup  = (document.getElementById('hf-supervisor').value || '').toLowerCase();
-  const fMot  = (document.getElementById('hf-motivo').value || '').toLowerCase();
-  const fDi   = document.getElementById('hf-data-inicio').value;
-  const fDf   = document.getElementById('hf-data-fim').value;
+    // ================================================================
+    //  HISTORY VIEW
+    // ================================================================
+    function renderHistory() {
+      const tbody = document.getElementById('history-tbody');
+      const fCol = (document.getElementById('hf-colaborador').value || '').toLowerCase();
+      const fSup = (document.getElementById('hf-supervisor').value || '').toLowerCase();
+      const fMot = (document.getElementById('hf-motivo').value || '').toLowerCase();
+      const fDi = document.getElementById('hf-data-inicio').value;
+      const fDf = document.getElementById('hf-data-fim').value;
 
-  let movs = state.movimentacoes;
-  if (fCol) movs = movs.filter(m => m.colaborador_nome.toLowerCase().includes(fCol));
-  if (fSup) movs = movs.filter(m => m.supervisor_destino.toLowerCase().includes(fSup)||m.supervisor_origem.toLowerCase().includes(fSup));
-  if (fMot) movs = movs.filter(m => (m.motivo||'').toLowerCase().includes(fMot));
-  if (fDi)  movs = movs.filter(m => m.data_efetiva >= fDi);
-  if (fDf)  movs = movs.filter(m => m.data_efetiva <= fDf);
+      let movs = state.movimentacoes;
+      if (fCol) movs = movs.filter(m => m.colaborador_nome.toLowerCase().includes(fCol));
+      if (fSup) movs = movs.filter(m => m.supervisor_destino.toLowerCase().includes(fSup) || m.supervisor_origem.toLowerCase().includes(fSup));
+      if (fMot) movs = movs.filter(m => (m.motivo || '').toLowerCase().includes(fMot));
+      if (fDi) movs = movs.filter(m => m.data_efetiva >= fDi);
+      if (fDf) movs = movs.filter(m => m.data_efetiva <= fDf);
 
-  if (movs.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-3)">
+      if (movs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-3)">
       Nenhuma movimentação registrada ainda.<br>
       <span style="font-size:11px">Mova colaboradores no Kanban para criar registros aqui.</span>
     </td></tr>`;
-    return;
-  }
+        return;
+      }
 
-  tbody.innerHTML = movs.map(m => `
+      tbody.innerHTML = movs.map(m => `
     <tr>
       <td><span style="font-family:var(--font-mono)">${m.data_efetiva}</span></td>
       <td>
@@ -1329,40 +2706,40 @@ function renderHistory() {
       </td>
       <td><span style="color:var(--text-3)">${m.supervisor_origem}</span><span class="mov-arrow">→</span><span style="color:var(--green)">${m.supervisor_destino}</span></td>
       <td>${m.regime_origem !== m.regime_destino ? `<span class="badge ${regimeBadgeClass(m.regime_origem)}">${m.regime_origem}</span> → <span class="badge ${regimeBadgeClass(m.regime_destino)}">${m.regime_destino}</span>` : `<span class="badge ${regimeBadgeClass(m.regime_destino)}">${m.regime_destino}</span>`}</td>
-      <td style="font-family:var(--font-mono);font-size:11px">${m.vaga_destino||'—'}</td>
+      <td style="font-family:var(--font-mono);font-size:11px">${m.vaga_destino || '—'}</td>
       <td><span style="background:var(--bg-2);border:1px solid var(--border);border-radius:3px;padding:2px 7px;font-size:11px">${m.motivo}</span></td>
       <td style="color:var(--text-3)">${m.usuario_responsavel}</td>
     </tr>
   `).join('');
-}
+    }
 
-function exportCSV() {
-  const headers = ['Data','Colaborador','ID','Supervisor Origem','Supervisor Destino','Regime Origem','Regime Destino','Vaga Origem','Vaga Destino','Motivo','Usuário','Criado em'];
-  const rows = state.movimentacoes.map(m => [
-    m.data_efetiva, m.colaborador_nome, m.colaborador_id,
-    m.supervisor_origem, m.supervisor_destino,
-    m.regime_origem, m.regime_destino,
-    m.vaga_origem||'', m.vaga_destino||'',
-    m.motivo, m.usuario_responsavel, m.created_at
-  ]);
-  const csv = [headers, ...rows].map(r => r.map(v => `"${(v||'').replace(/"/g,'""')}"`).join(';')).join('\n');
-  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `SGE_Historico_${new Date().toISOString().split('T')[0]}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-  toast('CSV exportado com sucesso!');
-}
+    function exportCSV() {
+      const headers = ['Data', 'Colaborador', 'ID', 'Supervisor Origem', 'Supervisor Destino', 'Regime Origem', 'Regime Destino', 'Vaga Origem', 'Vaga Destino', 'Motivo', 'Usuário', 'Criado em'];
+      const rows = state.movimentacoes.map(m => [
+        m.data_efetiva, m.colaborador_nome, m.colaborador_id,
+        m.supervisor_origem, m.supervisor_destino,
+        m.regime_origem, m.regime_destino,
+        m.vaga_origem || '', m.vaga_destino || '',
+        m.motivo, m.usuario_responsavel, m.created_at
+      ]);
+      const csv = [headers, ...rows].map(r => r.map(v => `"${(v || '').replace(/"/g, '""')}"`).join(';')).join('\n');
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `SGE_Historico_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('CSV exportado com sucesso!');
+    }
 
-// ================================================================
-//  SETTINGS VIEW
-// ================================================================
-function renderSettings() {
-  // Supervisores grid
-  const grid = document.getElementById('settings-sups-grid');
-  grid.innerHTML = state.supervisores.map(s => `
+    // ================================================================
+    //  SETTINGS VIEW
+    // ================================================================
+    function renderSettings() {
+      // Supervisores grid
+      const grid = document.getElementById('settings-sups-grid');
+      grid.innerHTML = state.supervisores.map(s => `
     <div class="sup-card">
       <div class="sup-dot ${s.ativo ? 'active' : 'inactive'}"></div>
       <div style="flex:1">
@@ -1373,33 +2750,33 @@ function renderSettings() {
     </div>
   `).join('');
 
-  grid.querySelectorAll('.toggle-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const sup = state.supervisores.find(s => s.id === btn.dataset.supId);
-      if (sup) {
-        sup.ativo = !sup.ativo;
-        renderSettings();
-        renderKanban();
-        toast(`${sup.nome} ${sup.ativo ? 'ativado' : 'desativado'}`);
+      grid.querySelectorAll('.toggle-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const sup = state.supervisores.find(s => s.id === btn.dataset.supId);
+          if (sup) {
+            sup.ativo = !sup.ativo;
+            renderSettings();
+            renderKanban();
+            toast(`${sup.nome} ${sup.ativo ? 'ativado' : 'desativado'}`);
+          }
+        });
+      });
+
+      // Populate supervisor select in new colaborador form
+      const ncSup = document.getElementById('nc-supervisor');
+      ncSup.innerHTML = state.supervisores.map(s => `<option>${s.nome}</option>`).join('');
+
+      // SEM ID list
+      const semIds = state.colaboradores.filter(c => isSemId(c));
+      document.getElementById('semid-count').textContent = `(${semIds.length} pendentes)`;
+      const list = document.getElementById('sem-id-list');
+
+      if (semIds.length === 0) {
+        list.innerHTML = '<div style="color:var(--green);font-size:12px;text-align:center;padding:12px">✓ Todos os colaboradores têm ID definitivo</div>';
+        return;
       }
-    });
-  });
 
-  // Populate supervisor select in new colaborador form
-  const ncSup = document.getElementById('nc-supervisor');
-  ncSup.innerHTML = state.supervisores.map(s => `<option>${s.nome}</option>`).join('');
-
-  // SEM ID list
-  const semIds = state.colaboradores.filter(c => isSemId(c));
-  document.getElementById('semid-count').textContent = `(${semIds.length} pendentes)`;
-  const list = document.getElementById('sem-id-list');
-
-  if (semIds.length === 0) {
-    list.innerHTML = '<div style="color:var(--green);font-size:12px;text-align:center;padding:12px">✓ Todos os colaboradores têm ID definitivo</div>';
-    return;
-  }
-
-  list.innerHTML = semIds.map(c => `
+      list.innerHTML = semIds.map(c => `
     <div class="sem-id-item">
       <div style="flex:1">
         <div class="sem-id-name">${c.nome}</div>
@@ -1410,52 +2787,277 @@ function renderSettings() {
     </div>
   `).join('');
 
-  list.querySelectorAll('.sem-id-save').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const tempId = btn.dataset.tempId;
-      const input  = list.querySelector(`.sem-id-input[data-temp-id="${tempId}"]`);
-      const newId  = input.value.trim().toUpperCase();
-      if (!newId) { toast('Informe um ID válido', 'error'); return; }
-      if (state.colaboradores.some(c => c.id === newId)) { toast('ID já em uso', 'error'); return; }
-      const idx = state.colaboradores.findIndex(c => c.id === tempId);
-      if (idx !== -1) {
-        state.colaboradores[idx].id = newId;
-        toast(`ID atualizado: ${tempId} → ${newId}`);
-        updateStats();
-        renderSettings();
-        renderKanban();
+      list.querySelectorAll('.sem-id-save').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tempId = btn.dataset.tempId;
+          const input = list.querySelector(`.sem-id-input[data-temp-id="${tempId}"]`);
+          const newId = input.value.trim().toUpperCase();
+          if (!newId) { toast('Informe um ID válido', 'error'); return; }
+          if (state.colaboradores.some(c => c.id === newId)) { toast('ID já em uso', 'error'); return; }
+          const idx = state.colaboradores.findIndex(c => c.id === tempId);
+          if (idx !== -1) {
+            state.colaboradores[idx].id = newId;
+            toast(`ID atualizado: ${tempId} → ${newId}`);
+            updateStats();
+            renderSettings();
+            renderKanban();
+          }
+        });
+      });
+    }
+
+    // ================================================================
+    //  NAVIGATION
+    // ================================================================
+    function switchView(view) {
+      state.activeView = view;
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(`${view}-view`).classList.add('active');
+      document.querySelector(`[data-view="${view}"]`).classList.add('active');
+      document.getElementById('filterbar').style.display = view === 'kanban' ? 'flex' : 'none';
+      document.getElementById('kanban-wrap').style.display = view === 'kanban' ? 'flex' : 'none';
+
+      if (view === 'search') renderSearch(document.getElementById('search-input').value);
+      if (view === 'history') renderHistory();
+      if (view === 'settings') renderSettings();
+      if (view === 'viz') renderViz();
+      if (view === 'kanban') updateKanbanArrows();
+    }
+
+    // ================================================================
+    //  VISUALIZATION VIEW
+    // ================================================================
+    const vizState = { mode: 'table', sortCol: 'nome', sortAsc: true, groupBy: 'regime' };
+
+    function renderViz() {
+      renderVizToolbar();
+      if (vizState.mode === 'table') renderVizTable();
+      else renderVizGroups();
+    }
+
+    function renderVizToolbar() {
+      const tb = document.getElementById('viz-toolbar');
+      const modes = [
+        { id: 'table', label: 'Tabela', icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="14" height="14" rx="1"/><path d="M1 5h14M1 9h14M5 1v14M10 1v14"/></svg>' },
+        { id: 'group-regime', label: 'Por Regime', icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>' },
+        { id: 'group-funcao', label: 'Por Função', icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.31 2.69-6 6-6s6 2.69 6 6"/></svg>' },
+        { id: 'group-status', label: 'Por Status', icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M2 4h8M2 12h10"/></svg>' },
+        { id: 'group-supervisor', label: 'Por Supervisor', icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="5" r="2.5"/><circle cx="11" cy="5" r="2.5"/><path d="M1 14c0-2.21 1.79-4 4-4s4 1.79 4 4M7 14c0-2.21 1.79-4 4-4s4 1.79 4 4"/></svg>' },
+      ];
+      tb.innerHTML = modes.map(m => {
+        const active = vizState.mode === m.id || (vizState.mode === 'group' && ('group-' + vizState.groupBy) === m.id) ? 'active' : '';
+        const isActive = m.id === 'table' ? vizState.mode === 'table' && 'active' : (vizState.mode === 'group' && vizState.groupBy === m.id.replace('group-', '')) ? 'active' : '';
+        return `<button class="viz-btn ${isActive}" data-viz-mode="${m.id}">${m.icon} ${m.label}</button>`;
+      }).join('');
+
+      tb.querySelectorAll('.viz-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.vizMode;
+          if (id === 'table') {
+            vizState.mode = 'table';
+          } else {
+            vizState.mode = 'group';
+            vizState.groupBy = id.replace('group-', '');
+          }
+          renderViz();
+        });
+      });
+    }
+
+    function renderVizTable() {
+      const content = document.getElementById('viz-content');
+      const cols = filtrarColaboradores();
+      const sorted = [...cols].sort((a, b) => {
+        const va = (a[vizState.sortCol] || '').toString();
+        const vb = (b[vizState.sortCol] || '').toString();
+        const cmp = va.localeCompare(vb, 'pt-BR');
+        return vizState.sortAsc ? cmp : -cmp;
+      });
+
+      const headers = [
+        { key: 'id', label: 'ID' },
+        { key: 'nome', label: 'Nome' },
+        { key: 'funcao', label: 'Função' },
+        { key: 'regime', label: 'Regime' },
+        { key: 'supervisor', label: 'Supervisor' },
+        { key: 'status', label: 'Status' },
+        { key: 'vaga', label: 'Vaga' },
+      ];
+
+      const thHtml = headers.map(h => {
+        const isSorted = vizState.sortCol === h.key;
+        const arrow = isSorted ? (vizState.sortAsc ? '▲' : '▼') : '▲';
+        return `<th class="${isSorted ? 'sorted' : ''}" data-sort="${h.key}">${h.label} <span class="sort-arrow">${arrow}</span></th>`;
+      }).join('');
+
+      const frag = document.createDocumentFragment();
+      const table = document.createElement('table');
+      table.className = 'viz-table';
+      table.innerHTML = `<thead><tr>${thHtml}</tr></thead>`;
+      const tbody = document.createElement('tbody');
+
+      sorted.forEach(c => {
+        const tr = document.createElement('tr');
+        tr.dataset.id = c.id;
+        tr.innerHTML = `
+          <td class="id-cell">${c.id}</td>
+          <td class="name-cell">${c.nome}</td>
+          <td><span class="badge ${c.funcao === 'MOT' ? 'badge-MOT' : 'badge-OP'}">${c.funcao}</span></td>
+          <td><span class="badge ${regimeBadgeClass(c.regime)}">${c.regime}</span></td>
+          <td>${c.supervisor}</td>
+          <td>${c.status}</td>
+          <td>${c.vaga || '—'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      table.appendChild(tbody);
+      const wrap = document.createElement('div');
+      wrap.className = 'viz-table-wrap';
+      wrap.appendChild(table);
+
+      content.innerHTML = '';
+      content.appendChild(wrap);
+
+      // Sort click
+      table.querySelectorAll('th[data-sort]').forEach(th => {
+        th.addEventListener('click', () => {
+          const col = th.dataset.sort;
+          if (vizState.sortCol === col) vizState.sortAsc = !vizState.sortAsc;
+          else { vizState.sortCol = col; vizState.sortAsc = true; }
+          renderVizTable();
+        });
+      });
+
+      // Row click → open drawer
+      tbody.addEventListener('click', e => {
+        const tr = e.target.closest('tr');
+        if (!tr) return;
+        const col = state.colaboradores.find(c => c.id === tr.dataset.id);
+        if (col) openDrawer(col);
+      });
+    }
+
+    function renderVizGroups() {
+      const content = document.getElementById('viz-content');
+      const cols = filtrarColaboradores();
+      const groups = {};
+
+      cols.forEach(c => {
+        const key = c[vizState.groupBy] || 'Indefinido';
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(c);
+      });
+
+      const keys = Object.keys(groups).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+      // Expand/collapse all button
+      const toolbar = document.getElementById('viz-toolbar');
+      let expandAllBtn = toolbar.querySelector('.viz-expand-all');
+      if (!expandAllBtn) {
+        expandAllBtn = document.createElement('button');
+        expandAllBtn.className = 'viz-expand-all';
+        toolbar.appendChild(expandAllBtn);
       }
-    });
-  });
-}
 
-// ================================================================
-//  NAVIGATION
-// ================================================================
-function switchView(view) {
-  state.activeView = view;
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById(`${view}-view`).classList.add('active');
-  document.querySelector(`[data-view="${view}"]`).classList.add('active');
-  document.getElementById('filterbar').style.display = view === 'kanban' ? 'flex' : 'none';
+      const container = document.createElement('div');
+      container.className = 'viz-groups';
 
-  if (view === 'search') renderSearch(document.getElementById('search-input').value);
-  if (view === 'history') renderHistory();
-  if (view === 'settings') renderSettings();
-}
+      const chevronSvg = '<svg class="chevron-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 3l5 5-5 5"/></svg>';
 
-// ================================================================
-//  MOVE VIA DRAWER BTN
-// ================================================================
-function openMoveSelectorModal(col) {
-  const body = document.getElementById('modal-body');
-  document.getElementById('modal-title').textContent = 'Mover Colaborador';
-  document.getElementById('modal-subtitle').textContent = col.nome;
+      keys.forEach((key, i) => {
+        const members = groups[key];
+        const isOpen = i === 0; // first group starts expanded
+        const preview = members.slice(0, 5).map(c => c.nome.split(' ')[0]).join(', ') + (members.length > 5 ? '…' : '');
 
-  const supOptions = state.supervisores.filter(s => s.ativo && s.nome !== col.supervisor);
+        const section = document.createElement('div');
+        section.className = 'viz-group';
 
-  body.innerHTML = `
+        const header = document.createElement('div');
+        header.className = 'viz-group-header' + (isOpen ? ' expanded' : '');
+        header.dataset.groupKey = key;
+        header.innerHTML = `
+          ${chevronSvg}
+          <span class="group-label">${key}</span>
+          <span class="group-preview">${preview}</span>
+          <span class="group-count">${members.length}</span>
+        `;
+
+        const body = document.createElement('div');
+        body.className = 'viz-group-body' + (isOpen ? ' open' : '');
+        body.innerHTML = members.map(c => `
+          <div class="card" data-id="${c.id}" style="cursor:pointer">
+            <div class="card-top">
+              <div class="card-id">${c.id}</div>
+              <div class="card-name">${c.nome}</div>
+            </div>
+            <div class="card-badges">
+              <span class="badge ${c.funcao === 'MOT' ? 'badge-MOT' : 'badge-OP'}">${c.funcao}</span>
+              <span class="badge ${regimeBadgeClass(c.regime)}">${c.regime}</span>
+            </div>
+            <div class="card-vaga" style="font-size:10px;color:var(--text-3);margin-top:4px">${c.vaga || '—'}</div>
+          </div>
+        `).join('');
+
+        // Toggle on header click
+        header.addEventListener('click', () => {
+          const wasOpen = header.classList.contains('expanded');
+          header.classList.toggle('expanded');
+          body.classList.toggle('open');
+          updateExpandAllBtn();
+        });
+
+        section.appendChild(header);
+        section.appendChild(body);
+        container.appendChild(section);
+      });
+
+      content.innerHTML = '';
+      content.appendChild(container);
+
+      // Card click via delegation
+      container.addEventListener('click', e => {
+        if (e.target.closest('.viz-group-header')) return; // don't interfere with collapse
+        const card = e.target.closest('.card');
+        if (!card) return;
+        const col = state.colaboradores.find(c => c.id === card.dataset.id);
+        if (col) openDrawer(col);
+      });
+
+      // Expand/collapse all button logic
+      function updateExpandAllBtn() {
+        const allHeaders = container.querySelectorAll('.viz-group-header');
+        const expandedCount = container.querySelectorAll('.viz-group-header.expanded').length;
+        const allExpanded = expandedCount === allHeaders.length;
+        expandAllBtn.innerHTML = allExpanded
+          ? '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10l4-4 4 4"/></svg> Recolher Todos'
+          : '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg> Expandir Todos';
+        expandAllBtn.onclick = () => {
+          const shouldExpand = !allExpanded;
+          container.querySelectorAll('.viz-group-header').forEach(h => {
+            h.classList.toggle('expanded', shouldExpand);
+          });
+          container.querySelectorAll('.viz-group-body').forEach(b => {
+            b.classList.toggle('open', shouldExpand);
+          });
+          updateExpandAllBtn();
+        };
+      }
+      updateExpandAllBtn();
+    }
+
+    // ================================================================
+    //  MOVE VIA DRAWER BTN
+    // ================================================================
+    function openMoveSelectorModal(col) {
+      const body = document.getElementById('modal-body');
+      document.getElementById('modal-title').textContent = 'Mover Colaborador';
+      document.getElementById('modal-subtitle').textContent = col.nome;
+
+      const supOptions = state.supervisores.filter(s => s.ativo && s.nome !== col.supervisor);
+
+      body.innerHTML = `
     <div class="form-field">
       <label>Selecione o Supervisor de Destino</label>
       <select id="move-sup-dest" style="padding:8px 12px;background:var(--bg-2);border:1px solid var(--border);border-radius:6px;color:var(--text-1);font-family:var(--font-display);font-size:13px;outline:none;width:100%;cursor:pointer">
@@ -1464,132 +3066,154 @@ function openMoveSelectorModal(col) {
     </div>
   `;
 
-  document.getElementById('modal-confirm').onclick = () => {
-    const dest = document.getElementById('move-sup-dest').value;
-    closeModal();
-    openMoveModal(col, dest, 'btn');
-  };
+      document.getElementById('modal-confirm').onclick = () => {
+        const dest = document.getElementById('move-sup-dest').value;
+        closeModal();
+        openMoveModal(col, dest, 'btn');
+      };
 
-  document.getElementById('modal-overlay').classList.add('open');
-}
+      document.getElementById('modal-overlay').classList.add('open');
+    }
 
-// ================================================================
-//  INIT
-// ================================================================
-function init() {
-  updateStats();
-  renderKanban();
+    // ================================================================
+    //  INIT
+    // ================================================================
+    // ================================================================
+    //  KANBAN SCROLL ARROWS
+    // ================================================================
+    function updateKanbanArrows() {
+      const kv = document.getElementById('kanban-view');
+      const leftBtn = document.getElementById('kanban-arrow-left');
+      const rightBtn = document.getElementById('kanban-arrow-right');
+      if (!kv || !leftBtn || !rightBtn) return;
+      leftBtn.classList.toggle('hidden', kv.scrollLeft <= 10);
+      rightBtn.classList.toggle('hidden', kv.scrollLeft >= kv.scrollWidth - kv.clientWidth - 10);
+    }
 
-  // Nav
-  document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.addEventListener('click', () => switchView(btn.dataset.view));
-  });
-
-  // Filters
-  document.querySelectorAll('[data-filter-regime]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('[data-filter-regime]').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      state.filtros.regime = btn.dataset.filterRegime;
+    function init() {
+      updateStats();
       renderKanban();
-    });
-  });
-  document.querySelectorAll('[data-filter-funcao]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('[data-filter-funcao]').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      state.filtros.funcao = btn.dataset.filterFuncao;
-      renderKanban();
-    });
-  });
-  document.querySelectorAll('[data-filter-status]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('[data-filter-status]').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      state.filtros.status = btn.dataset.filterStatus;
-      renderKanban();
-    });
-  });
 
-  // Drawer
-  document.getElementById('drawer-overlay').addEventListener('click', closeDrawer);
-  document.getElementById('drawer-close').addEventListener('click', closeDrawer);
-  document.getElementById('drawer-move-btn').addEventListener('click', () => {
-    if (state.drawerColaborador) openMoveSelectorModal(state.drawerColaborador);
-  });
-  document.getElementById('drawer-edit-btn').addEventListener('click', () => {
-    if (state.drawerColaborador) openEditModal(state.drawerColaborador);
-  });
+      // Kanban scroll arrows
+      const kanbanView = document.getElementById('kanban-view');
+      kanbanView.addEventListener('scroll', updateKanbanArrows);
+      document.getElementById('kanban-arrow-left').addEventListener('click', () => {
+        kanbanView.scrollBy({ left: -300, behavior: 'smooth' });
+      });
+      document.getElementById('kanban-arrow-right').addEventListener('click', () => {
+        kanbanView.scrollBy({ left: 300, behavior: 'smooth' });
+      });
+      setTimeout(updateKanbanArrows, 100);
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchView(btn.dataset.view));
+      });
 
-  // Modal
-  document.getElementById('modal-cancel').addEventListener('click', closeModal);
-  document.getElementById('modal-confirm').addEventListener('click', () => {
-    if (state.pendingMove) confirmMove();
-  });
-  document.getElementById('modal-overlay').addEventListener('click', e => {
-    if (e.target === e.currentTarget) closeModal();
-  });
+      // Filters
+      document.querySelectorAll('[data-filter-regime]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('[data-filter-regime]').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          state.filtros.regime = btn.dataset.filterRegime;
+          renderKanban();
+        });
+      });
+      document.querySelectorAll('[data-filter-funcao]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('[data-filter-funcao]').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          state.filtros.funcao = btn.dataset.filterFuncao;
+          renderKanban();
+        });
+      });
+      document.querySelectorAll('[data-filter-status]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('[data-filter-status]').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          state.filtros.status = btn.dataset.filterStatus;
+          renderKanban();
+        });
+      });
 
-  // Refresh
-  document.getElementById('refresh-btn').addEventListener('click', () => {
-    renderKanban();
-    toast('Dados atualizados', 'info');
-  });
+      // Drawer
+      document.getElementById('drawer-overlay').addEventListener('click', closeDrawer);
+      document.getElementById('drawer-close').addEventListener('click', closeDrawer);
+      document.getElementById('drawer-move-btn').addEventListener('click', () => {
+        if (state.drawerColaborador) openMoveSelectorModal(state.drawerColaborador);
+      });
+      document.getElementById('drawer-edit-btn').addEventListener('click', () => {
+        if (state.drawerColaborador) openEditModal(state.drawerColaborador);
+      });
 
-  // Search
-  document.getElementById('search-input').addEventListener('input', e => {
-    renderSearch(e.target.value);
-  });
+      // Modal
+      document.getElementById('modal-cancel').addEventListener('click', closeModal);
+      document.getElementById('modal-confirm').addEventListener('click', () => {
+        if (state.pendingMove) confirmMove();
+      });
+      document.getElementById('modal-overlay').addEventListener('click', e => {
+        if (e.target === e.currentTarget) closeModal();
+      });
 
-  // History filters
-  ['hf-colaborador','hf-supervisor','hf-motivo','hf-data-inicio','hf-data-fim'].forEach(id => {
-    document.getElementById(id).addEventListener('input', renderHistory);
-  });
+      // Refresh
+      document.getElementById('refresh-btn').addEventListener('click', () => {
+        renderKanban();
+        toast('Dados atualizados', 'info');
+      });
 
-  // Export
-  document.getElementById('export-btn').addEventListener('click', exportCSV);
+      // Search
+      document.getElementById('search-input').addEventListener('input', e => {
+        renderSearch(e.target.value);
+      });
 
-  // Add supervisor
-  document.getElementById('add-sup-btn').addEventListener('click', () => {
-    const nome   = document.getElementById('new-sup-nome').value.trim().toUpperCase();
-    const regime = document.getElementById('new-sup-regime').value.trim().toUpperCase();
-    if (!nome) { toast('Informe o nome do supervisor', 'error'); return; }
-    if (state.supervisores.some(s => s.nome === nome)) { toast('Supervisor já existe', 'error'); return; }
-    const id = 'SUP_' + String(state.supervisores.length + 1).padStart(2, '0');
-    state.supervisores.push({ id, nome, regime_padrao: regime, ativo: true });
-    document.getElementById('new-sup-nome').value = '';
-    document.getElementById('new-sup-regime').value = '';
-    renderSettings();
-    renderKanban();
-    toast(`Supervisor ${nome} adicionado`);
-  });
+      // History filters
+      ['hf-colaborador', 'hf-supervisor', 'hf-motivo', 'hf-data-inicio', 'hf-data-fim'].forEach(id => {
+        document.getElementById(id).addEventListener('input', renderHistory);
+      });
 
-  // Create colaborador
-  document.getElementById('create-col-btn').addEventListener('click', () => {
-    const nome = document.getElementById('nc-nome').value.trim().toUpperCase();
-    const id   = document.getElementById('nc-id').value.trim().toUpperCase();
-    if (!nome) { toast('Nome obrigatório', 'error'); return; }
-    if (id && state.colaboradores.some(c => c.id === id)) { toast('ID já em uso', 'error'); return; }
+      // Export
+      document.getElementById('export-btn').addEventListener('click', exportCSV);
 
-    const newCol = {
-      id:         id || ('COL_TEMP_' + Date.now()),
-      nome,
-      funcao:     document.getElementById('nc-funcao').value,
-      regime:     document.getElementById('nc-regime').value,
-      supervisor: document.getElementById('nc-supervisor').value,
-      status:     'ATIVO',
-      vaga:       document.getElementById('nc-vaga').value || 'SEM VAGA ATRIBUÍDA',
-    };
-    state.colaboradores.push(newCol);
-    ['nc-nome','nc-id','nc-vaga'].forEach(i => document.getElementById(i).value = '');
-    updateStats();
-    renderKanban();
-    renderSettings();
-    toast(`${newCol.nome} cadastrado`);
-  });
-}
+      // Add supervisor
+      document.getElementById('add-sup-btn').addEventListener('click', () => {
+        const nome = document.getElementById('new-sup-nome').value.trim().toUpperCase();
+        const regime = document.getElementById('new-sup-regime').value.trim().toUpperCase();
+        if (!nome) { toast('Informe o nome do supervisor', 'error'); return; }
+        if (state.supervisores.some(s => s.nome === nome)) { toast('Supervisor já existe', 'error'); return; }
+        const id = 'SUP_' + String(state.supervisores.length + 1).padStart(2, '0');
+        state.supervisores.push({ id, nome, regime_padrao: regime, ativo: true });
+        document.getElementById('new-sup-nome').value = '';
+        document.getElementById('new-sup-regime').value = '';
+        renderSettings();
+        renderKanban();
+        toast(`Supervisor ${nome} adicionado`);
+      });
 
-document.addEventListener('DOMContentLoaded', init);
-</script>
+      // Create colaborador
+      document.getElementById('create-col-btn').addEventListener('click', () => {
+        const nome = document.getElementById('nc-nome').value.trim().toUpperCase();
+        const id = document.getElementById('nc-id').value.trim().toUpperCase();
+        if (!nome) { toast('Nome obrigatório', 'error'); return; }
+        if (id && state.colaboradores.some(c => c.id === id)) { toast('ID já em uso', 'error'); return; }
+
+        const newCol = {
+          id: id || ('COL_TEMP_' + Date.now()),
+          nome,
+          funcao: document.getElementById('nc-funcao').value,
+          regime: document.getElementById('nc-regime').value,
+          supervisor: document.getElementById('nc-supervisor').value,
+          status: 'ATIVO',
+          vaga: document.getElementById('nc-vaga').value || 'SEM VAGA ATRIBUÍDA',
+        };
+        state.colaboradores.push(newCol);
+        ['nc-nome', 'nc-id', 'nc-vaga'].forEach(i => document.getElementById(i).value = '');
+        updateStats();
+        renderKanban();
+        renderSettings();
+        toast(`${newCol.nome} cadastrado`);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
 </body>
+
 </html>
