@@ -230,4 +230,19 @@
     .stats-pill {
         display: none;
     }
+
+    /* Reduz a margem do bloco de usuário */
+    #topbar-user {
+        margin-right: 0 !important;
+        padding-right: 8px !important;
+    }
+
+    #topbar-user>div {
+        margin-right: 8px !important;
+    }
+
+    /* Esconde o "Bem-vindo(a)," no mobile para economizar espaço */
+    #topbar-user>div>span {
+        display: none;
+    }
 }
