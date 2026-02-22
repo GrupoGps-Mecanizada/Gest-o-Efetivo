@@ -194,3 +194,15 @@
     font-size: 10px;
     color: var(--text-3);
 }
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width: 480px) {
+    #drawer {
+        width: 100%;
+        border-left: none;
+    }
+
+    .drawer-fields-grid {
+        grid-template-columns: 1fr;
+    }
+}

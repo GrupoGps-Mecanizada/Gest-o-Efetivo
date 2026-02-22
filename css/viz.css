@@ -249,9 +249,15 @@
     color: var(--accent);
 }
 
-/* ===================== EDIT MODAL FORM ===================== */
 .edit-modal-form {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px
+}
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width: 480px) {
+    .edit-modal-form {
+        grid-template-columns: 1fr;
+    }
 }

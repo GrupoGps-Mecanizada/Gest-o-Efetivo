@@ -196,3 +196,38 @@
     width: 14px;
     height: 14px
 }
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width: 768px) {
+    #topbar {
+        padding: 0 12px;
+        gap: 8px;
+    }
+
+    .logo span {
+        display: none;
+    }
+
+    #nav.nav-modules {
+        margin-left: 8px;
+        flex: 1;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    #nav.nav-modules::-webkit-scrollbar {
+        display: none;
+    }
+
+    .module-title {
+        font-size: 13px;
+        padding: 8px 10px;
+        white-space: nowrap;
+    }
+
+    /* Esconde as contagens no mobile para economizar espaço */
+    .stats-pill {
+        display: none;
+    }
+}

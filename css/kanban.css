@@ -308,3 +308,22 @@
     outline: 2px dashed var(--accent);
     outline-offset: -2px;
 }
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width: 768px) {
+    .kanban-arrow {
+        display: none !important;
+        /* Em touch, o usuário rola com o dedo */
+    }
+
+    .kanban-col {
+        min-width: 85vw;
+        /* Ocupa a maior parte da tela, deixando um pedaço da próxima coluna visível */
+        max-width: 85vw;
+    }
+
+    #kanban-view {
+        padding: 12px;
+        gap: 10px;
+    }
+}

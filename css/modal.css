@@ -85,3 +85,15 @@
     justify-content: center;
     color: var(--text-3)
 }
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width: 480px) {
+    #modal {
+        max-width: 100%;
+        border-radius: 12px;
+    }
+
+    #modal-overlay {
+        padding: 12px;
+    }
+}
