@@ -15,7 +15,11 @@ SGE.equip = {
     const val = String(equipStr).trim().toUpperCase();
     const match = val.match(/^([A-Z]{2,3})(?:-(.+))?$/);
     if (!match) return null;
-    return { sigla: match[1], numero: match[2] || '' };
+
+    let num = match[2] || '';
+    if (/^\d$/.test(num)) num = '0' + num; // Auto-pad "8" to "08"
+
+    return { sigla: match[1], numero: num };
   },
 
   /**

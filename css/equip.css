@@ -92,11 +92,42 @@
     flex: 1;
     overflow-y: auto;
     padding: 16px 20px;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
-    align-content: start;
-    align-items: start;
+
+    /* Masonry Layout */
+    column-count: 4;
+    column-gap: 16px;
+    column-fill: balance;
+}
+
+@media (max-width: 1400px) {
+    .equip-grid {
+        column-count: 3;
+    }
+}
+
+@media (max-width: 1000px) {
+    .equip-grid {
+        column-count: 2;
+    }
+}
+
+@media (max-width: 650px) {
+    .equip-grid {
+        column-count: 1;
+    }
+}
+
+.equip-card {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: border-color .18s;
+
+    /* Prevent card from breaking across columns */
+    break-inside: avoid;
+    margin-bottom: 16px;
 }
 
 .equip-card {

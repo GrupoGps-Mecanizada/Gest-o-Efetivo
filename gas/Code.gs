@@ -834,7 +834,7 @@ function syncEquipamentosMaster() {
     'ASP-01': 'ADM', 'ASP-02': 'ADM', 'ASP-03': 'ADM', 'ASP-04': 'ADM', 'ASP-05': 'ADM',
     'ASP-06': 'ADM', 'ASP-07': 'ADM', 'ASP-08': 'ADM', 'ASP-09': 'ADM', 'ASP-10': 'ADM',
     'ASP-SP': 'ADM',
-    'MT-': '24HS', 'CJ-': 'ADM' // Special cases without numbers
+    'MT': '24HS', 'CJ': 'ADM' // Special cases without numbers
   };
 
   // Get existing equipment
