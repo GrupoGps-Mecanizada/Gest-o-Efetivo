@@ -40,11 +40,12 @@ const SCHEMA = {
     validation: {}
   },
   Equipamentos: {
-    headers: ['ID', 'Sigla', 'Número', 'Nome Completo', 'Ativo'],
-    colWidths: [100, 80, 80, 250, 80],
+    headers: ['ID', 'Sigla', 'Número', 'Nome Completo', 'Escala', 'Ativo'],
+    colWidths: [100, 80, 80, 250, 100, 80],
     validation: {
       1: { values: ['AP', 'AV', 'ASP', 'HV', 'BK', 'MT', 'CJ'] },
-      4: { values: ['TRUE', 'FALSE'] }
+      4: { values: ['24HS', '16H', 'ADM'] },
+      5: { values: ['TRUE', 'FALSE'] }
     }
   },
   Usuarios: {
@@ -789,6 +790,7 @@ function listarEquipamentos() {
     { col: 'Sigla', key: 'sigla' },
     { col: 'Número', key: 'numero' },
     { col: 'Nome Completo', key: 'nome_completo' },
+    { col: 'Escala', key: 'escala' },
     { col: 'Ativo', key: 'ativo', transform: (v) => v === true || v === 'TRUE' || v === 'true' },
   ]);
 }
@@ -803,6 +805,7 @@ function criarEquipamento(params) {
     params.sigla || '',
     params.numero || '',
     params.nome_completo || '',
+    params.escala || '24HS',
     params.ativo !== undefined ? String(params.ativo).toUpperCase() : 'TRUE'
   ]);
 
@@ -817,8 +820,11 @@ function editarEquipamento(params) {
   sheet.getRange(row, 2).setValue(params.sigla || '');
   sheet.getRange(row, 3).setValue(params.numero || '');
   sheet.getRange(row, 4).setValue(params.nome_completo || '');
+  if (params.escala !== undefined) {
+    sheet.getRange(row, 5).setValue(params.escala);
+  }
   if (params.ativo !== undefined) {
-    sheet.getRange(row, 5).setValue(String(params.ativo).toUpperCase());
+    sheet.getRange(row, 6).setValue(String(params.ativo).toUpperCase());
   }
 
   return { updated: true, id: params.id };

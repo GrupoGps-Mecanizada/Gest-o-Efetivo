@@ -33,18 +33,20 @@ SGE.equip = {
     const equipMap = {};
     const turnos = ['A', 'B', 'C', 'D', 'ADM', '16H', 'S/R'];
 
-    // 1. Initialize all equipments from backend master list
+    // 1. Initialize strictly from backend master list
     if (SGE.state.equipamentos && Array.isArray(SGE.state.equipamentos)) {
       SGE.state.equipamentos.forEach(eq => {
         const parsed = SGE.equip.parseEquip(eq.sigla + '-' + eq.numero);
         if (!parsed || !tipos[parsed.sigla]) return;
 
+        // Use strictly normalized keys to avoid duplicates
         const key = parsed.sigla + '-' + parsed.numero;
         equipMap[key] = {
           sigla: parsed.sigla,
           numero: parsed.numero,
           label: parsed.numero ? parsed.sigla + '-' + parsed.numero : parsed.sigla,
           tipo: tipos[parsed.sigla],
+          escala: eq.escala || '24HS', // default payload to 24HS if newly migrated
           turnos: {}
         };
         turnos.forEach(t => { equipMap[key].turnos[t] = []; });
@@ -57,16 +59,8 @@ SGE.equip = {
       if (!parsed || !tipos[parsed.sigla]) return;
 
       const key = parsed.sigla + '-' + parsed.numero;
-      if (!equipMap[key]) {
-        equipMap[key] = {
-          sigla: parsed.sigla,
-          numero: parsed.numero,
-          label: parsed.numero ? parsed.sigla + '-' + parsed.numero : parsed.sigla,
-          tipo: tipos[parsed.sigla],
-          turnos: {}
-        };
-        turnos.forEach(t => { equipMap[key].turnos[t] = []; });
-      }
+      // Do not auto-inject equipment from collaborators if it wasn't recognized on the official equipment database above
+      if (!equipMap[key]) return;
 
       const turno = SGE.equip.getTurno(c.regime);
       if (!equipMap[key].turnos[turno]) equipMap[key].turnos[turno] = [];
@@ -97,6 +91,10 @@ SGE.equip = {
     // Sort: by sigla then numero
     entries.sort((a, b) => {
       if (a.sigla !== b.sigla) return a.sigla.localeCompare(b.sigla);
+      // Clean up string comparison for natural numeric sorting if possible
+      const numA = parseInt(a.numero) || 0;
+      const numB = parseInt(b.numero) || 0;
+      if (numA !== numB) return numA - numB;
       return (a.numero || '').localeCompare(b.numero || '');
     });
 
@@ -118,7 +116,7 @@ SGE.equip = {
         <div class="filter-sep"></div>
         <span style="font-size:10px;color:var(--text-3);font-weight:600;letter-spacing:.5px">TURNO</span>
         <button class="equip-turno-btn ${state.filtroTurno === 'TODOS' ? 'active' : ''}" data-turno="TODOS">Todos</button>
-        ${turnos.map(t => `
+        ${turnos.filter(t => t !== 'S/R').map(t => `
           <button class="equip-turno-btn ${state.filtroTurno === t ? 'active' : ''}" data-turno="${t}">${t}</button>
         `).join('')}
       </div>
@@ -131,7 +129,7 @@ SGE.equip = {
             <h3>Nenhum equipamento encontrado</h3>
             <p>Normalize os equipamentos primeiro para visualizá-los aqui.</p>
           </div>
-        ` : entries.map(eq => SGE.equip.renderCard(eq, state.filtroTurno, turnos)).join('')}
+        ` : entries.map(eq => SGE.equip.renderCard(eq, state.filtroTurno)).join('')}
       </div>
       <div class="equip-action-bar">
         <button class="equip-action-btn" id="equip-normalize-btn">
@@ -151,36 +149,28 @@ SGE.equip = {
   /**
    * Render a single equipment card
    */
-  renderCard(eq, filtroTurno, turnos) {
-    const totalMembers = turnos.reduce((s, t) => s + (eq.turnos[t] || []).length, 0);
+  renderCard(eq, filtroTurno) {
+    // Collect specific turn members to calculate valid slots total (bypassing S/R members that dropped here accidentally)
+    let totalValidMembers = 0;
+    Object.keys(eq.turnos).forEach(t => { if (t !== 'S/R') totalValidMembers += eq.turnos[t].length; });
 
-    // Default 24H shifts
-    const turnoPadrao24 = ['A', 'B', 'C', 'D'];
-
-    // Decide which turnos to render for this specific equipment
+    // Decide which turnos to render STRICTLY based on configured Escala property
     let turnosOfThisEquip = [];
 
-    // Check what is currently populated in this equipment
-    const has24 = turnoPadrao24.some(t => (eq.turnos[t] || []).length > 0);
-    const hasADM = (eq.turnos['ADM'] || []).length > 0;
-    const has16H = (eq.turnos['16H'] || []).length > 0;
+    // "Escala" determines the structural skeleton. Values: '24HS', 'ADM', '16H'.
+    if (eq.escala === '24HS' || eq.escala === '24H') turnosOfThisEquip = ['A', 'B', 'C', 'D'];
+    else if (eq.escala === 'ADM') turnosOfThisEquip = ['ADM'];
+    else if (eq.escala === '16H' || eq.escala === '16HS') turnosOfThisEquip = ['16H'];
+    else turnosOfThisEquip = ['A', 'B', 'C', 'D']; // safe default
 
-    // Rule 1: If it has anyone in 24H shifts (or if it's completely empty), we show A, B, C, D so it can be populated
-    if (has24 || totalMembers === 0) {
-      turnosOfThisEquip = [...turnoPadrao24];
-    }
-    // Rule 2: If it has ADM, show ADM
-    if (hasADM) turnosOfThisEquip.push('ADM');
-    // Rule 3: If it has 16H, show 16H
-    if (has16H) turnosOfThisEquip.push('16H');
-
-    // Rule 4: If a specific filter is set, only show that filter (if it applies to this equip)
+    // If a specific UI filter is set ("A", "ADM"), only show that specific shift-drawer, if this equip even covers it
     if (filtroTurno !== 'TODOS') {
       turnosOfThisEquip = turnosOfThisEquip.filter(t => t === filtroTurno);
     }
 
-    // Never show S/R in the card body directly.
-    turnosOfThisEquip = turnosOfThisEquip.filter(t => t !== 'S/R');
+    // Hide the equipment altogether if it doesn't have the user's selected shift inside its skeleton
+    if (filtroTurno !== 'TODOS' && turnosOfThisEquip.length === 0) return '';
+
 
     const turnoRows = turnosOfThisEquip.map(t => {
       const members = eq.turnos[t] || [];
