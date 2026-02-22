@@ -197,41 +197,161 @@
     height: 14px
 }
 
+/* Mobile Menu Button */
+.mobile-menu-btn {
+    display: none;
+    background: transparent;
+    border: none;
+    color: var(--text-2);
+    cursor: pointer;
+    padding: 6px;
+    margin-left: auto;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.mobile-menu-btn:hover {
+    background: var(--bg-2);
+    color: var(--text-1);
+}
+
+.mobile-menu-btn svg {
+    width: 22px;
+    height: 22px;
+}
+
 /* ===================== RESPONSIVE ===================== */
 @media (max-width: 768px) {
     #topbar {
-        padding: 0 12px;
+        padding: 0 16px;
         gap: 8px;
+        position: relative;
     }
 
     .logo span {
         display: none;
     }
 
-    #nav.nav-modules {
-        margin-left: 8px;
-        flex: 1;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
+    .mobile-menu-btn {
+        display: flex;
     }
 
-    #nav.nav-modules::-webkit-scrollbar {
+    .submenu-arrow {
+        display: block !important;
+        margin-left: auto;
+    }
+
+    /* Transform NAV into a vertical dropdown */
+    #nav.nav-modules {
+        position: absolute;
+        top: 56px;
+        /* topbar height */
+        left: 0;
+        right: 0;
+        background: var(--bg-1);
+        flex-direction: column;
+        height: auto;
+        padding: 0;
+        border-bottom: 1px solid var(--border);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        margin-left: 0;
         display: none;
+        /* hidden by default */
+        z-index: 99;
+    }
+
+    #nav.nav-modules.mobile-open {
+        display: flex;
+        animation: slideDown 0.2s ease-out;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .nav-module {
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+        height: auto;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .nav-module:last-child {
+        border-bottom: none;
     }
 
     .module-title {
-        font-size: 13px;
-        padding: 8px 10px;
-        white-space: nowrap;
+        width: 100%;
+        border-radius: 0;
+        padding: 16px 20px;
+        font-size: 14px;
+        justify-content: flex-start;
     }
 
-    /* Esconde as contagens no mobile para economizar espaço */
+    /* Prevent hover state from triggering the dropdown automatically on mobile */
+    .nav-module:hover .nav-sub-menu {
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(10px);
+        display: none;
+    }
+
+    /* Submenu becomes a static accordion item */
+    .nav-sub-menu {
+        position: static;
+        box-shadow: none;
+        border: none;
+        border-radius: 0;
+        background: var(--bg-2);
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        width: 100%;
+        padding: 0;
+        display: none;
+    }
+
+    /* Only show submenu if this module has 'expanded' class */
+    .nav-module.expanded .nav-sub-menu {
+        display: flex;
+        border-top: 1px solid var(--border);
+    }
+
+    .nav-module.expanded .submenu-arrow {
+        transform: rotate(180deg);
+    }
+
+    /* Nav buttons inside submenu */
+    .nav-btn {
+        padding: 14px 20px 14px 30px;
+        border-radius: 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .nav-btn:last-child {
+        border-bottom: none;
+    }
+
+    /* Mobile optimization for stats and user */
     .stats-pill {
         display: none;
     }
 
-    /* Reduz a margem do bloco de usuário */
+    #topbar-right {
+        margin-left: 0;
+    }
+
     #topbar-user {
         margin-right: 0 !important;
         padding-right: 8px !important;
@@ -241,7 +361,6 @@
         margin-right: 8px !important;
     }
 
-    /* Esconde o "Bem-vindo(a)," no mobile para economizar espaço */
     #topbar-user>div>span {
         display: none;
     }

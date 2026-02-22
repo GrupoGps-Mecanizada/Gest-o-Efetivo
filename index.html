@@ -105,8 +105,14 @@
         </div>
 
         <!-- Módulo: Operação -->
-        <div class="nav-module">
-          <div class="module-title">Operação</div>
+        <div class="nav-module has-submenu">
+          <div class="module-title">
+            Operação
+            <svg class="submenu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              style="width:14px;height:14px;transition:transform 0.2s; display:none;">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </div>
           <div class="nav-sub-menu">
             <button class="nav-btn active" data-view="kanban">
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -183,6 +189,13 @@
         </div>
 
       </div>
+
+      <!-- Hamburger Button (Mobile Only) -->
+      <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Abrir Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
 
       <div id="topbar-right">
         <!-- Injected by auth.js -->

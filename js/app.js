@@ -140,9 +140,39 @@ SGE.app = {
     },
 
     setupNavigation() {
-        document.querySelectorAll('#nav [data-view]').forEach(btn => {
+        // Desktop / Normal view switching
+        document.querySelectorAll('#nav [data-view], #nav .nav-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 SGE.navigation.switchView(btn.dataset.view);
+
+                // Auto-close mobile menu when a navigation item is clicked
+                const nav = document.getElementById('nav');
+                if (nav && nav.classList.contains('mobile-open')) {
+                    nav.classList.remove('mobile-open');
+                }
+            });
+        });
+
+        // Hamburger Menu Toggle (Mobile)
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', () => {
+                const nav = document.getElementById('nav');
+                if (nav) nav.classList.toggle('mobile-open');
+            });
+        }
+
+        // Accordion for Mobile Submenus
+        document.querySelectorAll('.nav-module.has-submenu .module-title').forEach(title => {
+            title.addEventListener('click', (e) => {
+                // Ignore if clicked on a direct link
+                if (e.target.closest('[data-view]')) return;
+
+                // Only act as accordion on mobile screens
+                if (window.innerWidth <= 768) {
+                    const module = title.closest('.nav-module');
+                    if (module) module.classList.toggle('expanded');
+                }
             });
         });
     },
