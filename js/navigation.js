@@ -13,10 +13,18 @@ SGE.navigation = {
     switchView(viewName) {
         SGE.state.activeView = viewName;
 
-        // Update nav buttons
-        document.querySelectorAll('#nav .nav-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.view === viewName);
+        // Clear active states globally
+        document.querySelectorAll('#nav [data-view], #nav .nav-module').forEach(el => {
+            el.classList.remove('active');
         });
+
+        // Update active nav button and its parent module (Nested Tabs Support)
+        const activeBtn = document.querySelector(`#nav [data-view="${viewName}"]`);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+            const parentModule = activeBtn.closest('.nav-module');
+            if (parentModule) parentModule.classList.add('active');
+        }
 
         // Show/hide views
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -47,8 +55,11 @@ SGE.navigation = {
             case 'history':
                 SGE.history.render();
                 break;
-            case 'viz':
-                SGE.viz.render();
+            case 'tabela':
+                SGE.viz.renderTable();
+                break;
+            case 'grupo':
+                SGE.viz.renderGroups();
                 break;
             case 'equip':
                 SGE.equip.render();

@@ -96,8 +96,15 @@
 
       <div id="nav" class="nav-modules">
 
-        <!-- Módulo: Logística & Operação -->
+        <!-- Módulo: Dashboard -->
         <div class="nav-module active">
+          <button class="module-title" data-view="viz">
+            Dashboard
+          </button>
+        </div>
+
+        <!-- Módulo: Operação -->
+        <div class="nav-module">
           <div class="module-title">Operação</div>
           <div class="nav-sub-menu">
             <button class="nav-btn active" data-view="kanban">
@@ -108,6 +115,22 @@
               </svg>
               Kanban
             </button>
+            <button class="nav-btn" data-view="tabela">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="1" y="2" width="14" height="12" rx="2" />
+                <path d="M1 6h14M5 2v12M11 2v12" />
+              </svg>
+              Tabela
+            </button>
+            <button class="nav-btn" data-view="grupo">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="4" cy="4" r="2" />
+                <circle cx="12" cy="4" r="2" />
+                <circle cx="8" cy="11" r="2" />
+                <path d="M4 6v2a2 2 0 002 2h4a2 2 0 002-2V6" />
+              </svg>
+              Grupo
+            </button>
             <button class="nav-btn" data-view="equip">
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
                 <rect x="1" y="1" width="6" height="6" rx="1" />
@@ -117,43 +140,6 @@
               </svg>
               Equipamentos
             </button>
-          </div>
-        </div>
-
-        <!-- Módulo: Inteligência -->
-        <div class="nav-module">
-          <div class="module-title">Inteligência</div>
-          <div class="nav-sub-menu">
-            <button class="nav-btn" data-view="search">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                <circle cx="7" cy="7" r="5" />
-                <path d="M15 15l-4-4" />
-              </svg>
-              Pesquisa
-            </button>
-            <button class="nav-btn" data-view="history">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                <circle cx="8" cy="8" r="6" />
-                <path d="M8 4v4l3 2" />
-              </svg>
-              Histórico
-            </button>
-            <button class="nav-btn" data-view="viz">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                <rect x="1" y="8" width="3" height="6" rx="1" />
-                <rect x="5" y="4" width="3" height="10" rx="1" />
-                <rect x="9" y="6" width="3" height="8" rx="1" />
-                <rect x="13" y="2" width="3" height="12" rx="1" />
-              </svg>
-              Dashboard
-            </button>
-          </div>
-        </div>
-
-        <!-- Módulo: Gestão de Pessoas -->
-        <div class="nav-module">
-          <div class="module-title">Pessoas</div>
-          <div class="nav-sub-menu">
             <button class="nav-btn" data-view="ferias">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
                 style="width:14px;height:14px" stroke-linecap="round" stroke-linejoin="round">
@@ -161,7 +147,7 @@
                 <path
                   d="M12 4v1M17.66 6.34l-.7.7M20 12h-1M17.66 17.66l-.7-.7M12 20v-1M6.34 17.66l.7-.7M4 12h1M6.34 6.34l.7.7" />
               </svg>
-              Férias
+              Gestão de Férias
             </button>
             <button class="nav-btn" data-view="treinamentos">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
@@ -174,19 +160,25 @@
           </div>
         </div>
 
+        <!-- Módulo: Pesquisa -->
+        <div class="nav-module">
+          <button class="module-title" data-view="search">
+            Pesquisa
+          </button>
+        </div>
+
+        <!-- Módulo: Histórico -->
+        <div class="nav-module">
+          <button class="module-title" data-view="history">
+            Histórico
+          </button>
+        </div>
+
         <!-- Módulo: Admin -->
         <div class="nav-module">
-          <div class="module-title">Sistema</div>
-          <div class="nav-sub-menu">
-            <button class="nav-btn" data-view="settings">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                <circle cx="8" cy="8" r="2" />
-                <path
-                  d="M8 1v2M8 13v2M1 8h2M13 8h2M2.93 2.93l1.41 1.41M11.66 11.66l1.41 1.41M13.07 2.93l-1.41 1.41M4.34 11.66l-1.41 1.41" />
-              </svg>
-              Configurações
-            </button>
-          </div>
+          <button class="module-title" data-view="settings">
+            Configurações
+          </button>
         </div>
 
       </div>
@@ -274,10 +266,29 @@
         </div>
       </div>
 
-      <!-- VISUALIZATION VIEW -->
+      <!-- VISUALIZATION VIEW (DASHBOARD) -->
       <div id="viz-view" class="view">
-        <div id="viz-toolbar" class="viz-toolbar"></div>
-        <div id="viz-content"></div>
+        <div class="no-data-message" style="width:100%;padding-top:80px;text-align:center">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+            style="width:48px;height:48px;color:var(--text-3);margin-bottom:16px;">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="3" y1="9" x2="21" y2="9"></line>
+            <line x1="9" y1="21" x2="9" y2="9"></line>
+          </svg>
+          <h3 style="color:var(--text-2);margin:0">Dashboard em Construção</h3>
+          <p style="color:var(--text-3);font-size:13px;margin-top:8px">O painel de indicadores será carregado aqui em
+            breve.</p>
+        </div>
+      </div>
+
+      <!-- TABELA VIEW -->
+      <div id="tabela-view" class="view">
+        <div id="tabela-content"></div>
+      </div>
+
+      <!-- GRUPO VIEW -->
+      <div id="grupo-view" class="view">
+        <div id="grupo-content"></div>
       </div>
 
       <!-- EQUIPMENT VIEW -->

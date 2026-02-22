@@ -112,10 +112,7 @@ SGE.app = {
         // Update stats after data load
         SGE.helpers.updateStats();
 
-        // Render initial view
-        SGE.kanban.render();
-
-        // Setup event listeners
+        // Setup event listeners before switching view so everything is ready
         SGE.app.setupNavigation();
         SGE.app.setupDrawer();
         SGE.app.setupModal();
@@ -123,6 +120,9 @@ SGE.app = {
         SGE.app.setupHistory();
         SGE.app.setupKanbanArrows();
         SGE.app.setupRefresh();
+
+        // Render initial view (Dashboard/Viz)
+        SGE.navigation.switchView('viz');
 
         // Fade out loading screen and show app
         await new Promise(r => setTimeout(r, 300));
@@ -140,7 +140,7 @@ SGE.app = {
     },
 
     setupNavigation() {
-        document.querySelectorAll('#nav .nav-btn').forEach(btn => {
+        document.querySelectorAll('#nav [data-view]').forEach(btn => {
             btn.addEventListener('click', () => {
                 SGE.navigation.switchView(btn.dataset.view);
             });

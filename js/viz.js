@@ -16,46 +16,29 @@ SGE.viz = {
     }
   },
 
-  renderToolbar() {
-    const toolbar = document.getElementById('viz-toolbar');
+  renderGroupToolbar() {
+    const toolbar = document.getElementById('grupo-toolbar');
     if (!toolbar) return;
     const v = SGE.state.viz;
 
     toolbar.innerHTML = `
-      <button class="viz-btn ${v.mode === 'table' ? 'active' : ''}" data-mode="table">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="14" height="14" rx="1"/><path d="M1 5h14M1 9h14M5 1v14"/></svg>
-        Tabela
+      <span class="filter-label" style="margin-right:8px; font-weight:600">Agrupar por:</span>
+      <button class="viz-btn ${v.groupBy === 'regime' ? 'active' : ''}" data-group="regime">Regime</button>
+      <button class="viz-btn ${v.groupBy === 'funcao' ? 'active' : ''}" data-group="funcao">Função</button>
+      <button class="viz-btn ${v.groupBy === 'status' ? 'active' : ''}" data-group="status">Status</button>
+      <button class="viz-btn ${v.groupBy === 'supervisor' ? 'active' : ''}" data-group="supervisor">Supervisor</button>
+      <div style="flex:1"></div>
+      <button class="viz-expand-all" id="viz-expand-all">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:11px;height:11px"><path d="M5 3l6 5-6 5"/></svg>
+        Expandir Todos
       </button>
-      <button class="viz-btn ${v.mode === 'group' ? 'active' : ''}" data-mode="group">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="14" height="4" rx="1"/><rect x="1" y="7" width="14" height="4" rx="1"/><rect x="1" y="13" width="6" height="2" rx="1"/></svg>
-        Agrupado
-      </button>
-      <div class="filter-sep"></div>
-      ${v.mode === 'group' ? `
-        <button class="viz-btn ${v.groupBy === 'regime' ? 'active' : ''}" data-group="regime">Regime</button>
-        <button class="viz-btn ${v.groupBy === 'funcao' ? 'active' : ''}" data-group="funcao">Função</button>
-        <button class="viz-btn ${v.groupBy === 'status' ? 'active' : ''}" data-group="status">Status</button>
-        <button class="viz-btn ${v.groupBy === 'supervisor' ? 'active' : ''}" data-group="supervisor">Supervisor</button>
-        <button class="viz-expand-all" id="viz-expand-all">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:11px;height:11px"><path d="M5 3l6 5-6 5"/></svg>
-          Expandir Todos
-        </button>
-      ` : ''}
     `;
-
-    // Mode toggle
-    toolbar.querySelectorAll('.viz-btn[data-mode]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        SGE.state.viz.mode = btn.dataset.mode;
-        SGE.viz.render();
-      });
-    });
 
     // Group toggle
     toolbar.querySelectorAll('.viz-btn[data-group]').forEach(btn => {
       btn.addEventListener('click', () => {
         SGE.state.viz.groupBy = btn.dataset.group;
-        SGE.viz.render();
+        SGE.viz.renderGroups();
       });
     });
 
@@ -63,7 +46,7 @@ SGE.viz = {
     const expandAllBtn = document.getElementById('viz-expand-all');
     if (expandAllBtn) {
       expandAllBtn.addEventListener('click', () => {
-        const content = document.getElementById('viz-content');
+        const content = document.getElementById('grupo-content');
         const headers = content.querySelectorAll('.viz-group-header');
         const allExpanded = [...headers].every(h => h.classList.contains('expanded'));
 
@@ -86,7 +69,7 @@ SGE.viz = {
   },
 
   renderTable() {
-    const content = document.getElementById('viz-content');
+    const content = document.getElementById('tabela-content');
     if (!content) return;
     const v = SGE.state.viz;
     const h = SGE.helpers;
@@ -160,7 +143,8 @@ SGE.viz = {
   },
 
   renderGroups() {
-    const content = document.getElementById('viz-content');
+    SGE.viz.renderGroupToolbar();
+    const content = document.getElementById('grupo-content');
     if (!content) return;
     const h = SGE.helpers;
     const v = SGE.state.viz;
