@@ -9,6 +9,53 @@ window.SGE = window.SGE || {};
 SGE.app = {
     async init() {
         const loadingScreen = document.getElementById('loading-screen');
+        const loginScreen = document.getElementById('login-screen');
+
+        // Check auth status
+        if (SGE.auth.init()) {
+            // Already logged in
+            if (loginScreen) loginScreen.classList.add('hidden');
+            SGE.app.boot();
+        } else {
+            // Needs login
+            if (loadingScreen) loadingScreen.classList.add('hide');
+            if (loginScreen) loginScreen.classList.remove('hidden');
+            SGE.app.setupLoginForm();
+        }
+    },
+
+    setupLoginForm() {
+        const form = document.getElementById('login-form');
+        const errEl = document.getElementById('login-error');
+        const submitBtn = document.getElementById('login-submit');
+
+        if (!form) return;
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errEl.textContent = '';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Autenticando...';
+
+            const user = document.getElementById('login-user').value;
+            const pass = document.getElementById('login-pass').value;
+
+            const res = await SGE.auth.login(user, pass);
+
+            if (res.success) {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('loading-screen').classList.remove('hide');
+                SGE.app.boot();
+            } else {
+                errEl.textContent = res.error;
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Entrar';
+            }
+        });
+    },
+
+    async boot() {
+        const loadingScreen = document.getElementById('loading-screen');
         const statusEl = document.getElementById('loading-status');
         const topbar = document.getElementById('topbar');
         const main = document.getElementById('main');
@@ -23,40 +70,40 @@ SGE.app = {
             if (statusEl) statusEl.innerHTML = msg + '<span class="loading-dots"></span>';
         };
 
-        // Load data from API with progress updates
-        setStatus('Conectando ao banco de dados');
+        // 1. Try to load from Cache first for instant boot
+        let usedCache = false;
+        try {
+            const cachedParams = localStorage.getItem('SGE_CACHE');
+            if (cachedParams) {
+                const parsed = JSON.parse(cachedParams);
+                if (parsed.colaboradores) SGE.state.colaboradores = parsed.colaboradores;
+                if (parsed.supervisores) SGE.state.supervisores = parsed.supervisores;
+                if (parsed.movimentacoes) SGE.state.movimentacoes = parsed.movimentacoes;
+                if (parsed.equipamentos) SGE.state.equipamentos = parsed.equipamentos;
 
-        if (SGE.CONFIG.gasUrl) {
-            setStatus('Carregando colaboradores');
-            const colabData = await SGE.api.callGAS('listar_colaboradores');
-            if (colabData && Array.isArray(colabData)) {
-                SGE.state.colaboradores = colabData;
+                SGE.state.dataLoaded = true;
+                usedCache = true;
+                setStatus('Carregando offline (instanciado do cache)...');
+
+                // Trigger background sync
+                setTimeout(() => { SGE.api.syncBackground(); }, 1000);
             }
+        } catch (e) {
+            console.warn('Cache load failed:', e);
+        }
 
-            setStatus('Carregando supervisores');
-            const supData = await SGE.api.callGAS('listar_supervisores');
-            if (supData && Array.isArray(supData)) {
-                SGE.state.supervisores = supData;
+        // 2. If no cache, do the slow network load blocking the screen
+        if (!usedCache) {
+            setStatus('Conectando ao banco de dados...');
+            if (SGE.CONFIG.gasUrl) {
+                setStatus('Baixando dados pela primeira vez... Isso pode levar alguns segundos.');
+                await SGE.api.loadData();
+                setStatus('Montando interface');
+            } else {
+                setStatus('Sem URL configurada — modo offline');
+                SGE.state.dataLoaded = true;
+                await new Promise(r => setTimeout(r, 600));
             }
-
-            setStatus('Carregando movimentações');
-            const movData = await SGE.api.callGAS('listar_movimentacoes');
-            if (movData && Array.isArray(movData)) {
-                SGE.state.movimentacoes = movData;
-            }
-
-            setStatus('Carregando equipamentos');
-            const equipData = await SGE.api.callGAS('listar_equipamentos');
-            if (equipData && Array.isArray(equipData)) {
-                SGE.state.equipamentos = equipData;
-            }
-
-            SGE.state.dataLoaded = true;
-            setStatus('Montando interface');
-        } else {
-            setStatus('Sem URL configurada — modo offline');
-            SGE.state.dataLoaded = true;
-            await new Promise(r => setTimeout(r, 600));
         }
 
         // Build dynamic filter chips
@@ -86,7 +133,7 @@ SGE.app = {
         if (main) main.style.opacity = '1';
         if (filterbar) filterbar.style.opacity = '1';
 
-        if (loadingScreen) {
+        if (loadingScreen && loadingScreen.parentNode) {
             loadingScreen.classList.add('hide');
             setTimeout(() => loadingScreen.remove(), 700);
         }
@@ -113,9 +160,11 @@ SGE.app = {
             const col = SGE.state.drawerColaborador;
 
             if (action === 'move') {
+                if (!SGE.auth.hasRole('GESTAO')) return;
                 SGE.drawer.close();
                 SGE.modal.openMoveSelector(col);
             } else if (action === 'edit') {
+                if (!SGE.auth.hasRole('GESTAO')) return;
                 SGE.drawer.close();
                 SGE.modal.openEdit(col);
             }

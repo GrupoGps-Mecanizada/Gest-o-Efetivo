@@ -10,6 +10,7 @@
   <!-- CSS Modules -->
   <link rel="stylesheet" href="css/variables.css" />
   <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/auth.css" />
   <link rel="stylesheet" href="css/topbar.css" />
   <link rel="stylesheet" href="css/filterbar.css" />
   <link rel="stylesheet" href="css/kanban.css" />
@@ -24,33 +25,72 @@
 </head>
 
 <body>
+  <!-- ==================== LOGIN SCREEN ==================== -->
+  <div id="login-screen">
+    <div class="login-box">
+      <img src="img/logo.png" alt="Grupo GPS" class="login-logo" onerror="this.src=''; this.alt='GRUPO GPS';" />
+      <h2 class="login-title">Gestão de Efetivo</h2>
+      <form id="login-form">
+        <div class="login-input-group">
+          <label>Usuário</label>
+          <input type="text" id="login-user" required autocomplete="username" />
+        </div>
+        <div class="login-input-group">
+          <label>Senha</label>
+          <input type="password" id="login-pass" required autocomplete="current-password" />
+        </div>
+        <button type="submit" class="login-btn" id="login-submit">Entrar</button>
+      </form>
+      <div class="login-error" id="login-error"></div>
+    </div>
+    <div class="login-footer">
+      Desenvolvido por Warlison Abreu
+    </div>
+  </div>
+
   <div id="app">
 
     <!-- ==================== LOADING SCREEN ==================== -->
-    <div id="loading-screen">
+    <div id="loading-screen" style="background:#f4f7fa; color:#0f3868">
       <div class="loading-content">
-        <div class="loading-logo-ring">
-          <div class="loading-logo">👥</div>
-          <svg class="loading-ring" viewBox="0 0 80 80">
-            <circle cx="40" cy="40" r="36" />
+        <div style="margin-bottom:24px;">
+          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#0f3868" stroke-width="2"
+            class="loading-spinner">
+            <path
+              d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83">
+            </path>
           </svg>
         </div>
-        <div class="loading-title">SGE</div>
-        <div class="loading-subtitle">Sistema de Gestão de Efetivo</div>
-        <div class="loading-progress">
-          <div class="loading-bar">
-            <div class="loading-bar-fill"></div>
-          </div>
-          <div class="loading-status" id="loading-status">Conectando ao banco de dados<span class="loading-dots"></span>
-          </div>
+        <h1 style="color:#0f3868; font-weight:800; letter-spacing:1px; margin-bottom:8px">SGE</h1>
+        <div class="loading-subtitle" style="color:#555; font-weight:500;">SISTEMA PARA GESTÃO DE EFETIVO</div>
+        <div class="loading-bar-container" style="background:rgba(15, 56, 104, 0.1)">
+          <div class="loading-bar" style="background:#0f3868"></div>
         </div>
+        <div id="loading-status" style="color:#666; font-size:13px; font-weight:500">Inicializando...</div>
       </div>
     </div>
+
+    <!-- Injecting simple CSS for the new loading spinner -->
+    <style>
+      .loading-spinner {
+        animation: spin 2s linear infinite;
+        opacity: 0.8;
+      }
+
+      @keyframes spin {
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      #loading-screen {
+        z-index: 9999;
+      }
+    </style>
 
     <!-- ==================== TOPBAR ==================== -->
     <div id="topbar">
       <div class="logo">
-        <div class="logo-icon">👥</div>
         SGE <span>Gestão de Efetivo</span>
       </div>
 
@@ -106,6 +146,11 @@
       </div>
 
       <div id="topbar-right">
+        <!-- Injected by auth.js -->
+        <div id="topbar-user"
+          style="display:flex; align-items:center; border-right:1px solid var(--border); padding-right:12px; margin-right:4px;">
+        </div>
+
         <div class="stats-pill">Total: <strong id="stat-total">—</strong></div>
         <div class="stats-pill">Ativos: <strong id="stat-ativos">—</strong></div>
         <div class="stats-pill">Sem ID: <strong id="stat-semid">—</strong></div>
@@ -225,6 +270,10 @@
           Editar
         </button>
       </div>
+      <div
+        style="text-align:center; padding: 12px; font-size: 10px; color: var(--text-3); border-top: 1px solid var(--border);">
+        Desenvolvido por Warlison Abreu
+      </div>
     </div>
 
     <!-- ==================== MODAL ==================== -->
@@ -246,6 +295,7 @@
   <script src="js/config.js"></script>
   <script src="js/state.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/helpers.js"></script>
   <script src="js/kanban.js"></script>
   <script src="js/drawer.js"></script>

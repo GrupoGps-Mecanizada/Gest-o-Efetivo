@@ -152,10 +152,37 @@ SGE.equip = {
    * Render a single equipment card
    */
   renderCard(eq, filtroTurno, turnos) {
-    const turnosToShow = filtroTurno === 'TODOS' ? turnos : [filtroTurno];
-    const totalMembers = turnosToShow.reduce((s, t) => s + (eq.turnos[t] || []).length, 0);
+    const totalMembers = turnos.reduce((s, t) => s + (eq.turnos[t] || []).length, 0);
 
-    const turnoRows = turnosToShow.map(t => {
+    // Default 24H shifts
+    const turnoPadrao24 = ['A', 'B', 'C', 'D'];
+
+    // Decide which turnos to render for this specific equipment
+    let turnosOfThisEquip = [];
+
+    // Check what is currently populated in this equipment
+    const has24 = turnoPadrao24.some(t => (eq.turnos[t] || []).length > 0);
+    const hasADM = (eq.turnos['ADM'] || []).length > 0;
+    const has16H = (eq.turnos['16H'] || []).length > 0;
+
+    // Rule 1: If it has anyone in 24H shifts (or if it's completely empty), we show A, B, C, D so it can be populated
+    if (has24 || totalMembers === 0) {
+      turnosOfThisEquip = [...turnoPadrao24];
+    }
+    // Rule 2: If it has ADM, show ADM
+    if (hasADM) turnosOfThisEquip.push('ADM');
+    // Rule 3: If it has 16H, show 16H
+    if (has16H) turnosOfThisEquip.push('16H');
+
+    // Rule 4: If a specific filter is set, only show that filter (if it applies to this equip)
+    if (filtroTurno !== 'TODOS') {
+      turnosOfThisEquip = turnosOfThisEquip.filter(t => t === filtroTurno);
+    }
+
+    // Never show S/R in the card body directly.
+    turnosOfThisEquip = turnosOfThisEquip.filter(t => t !== 'S/R');
+
+    const turnoRows = turnosOfThisEquip.map(t => {
       const members = eq.turnos[t] || [];
       return `
         <div class="equip-turno-row">

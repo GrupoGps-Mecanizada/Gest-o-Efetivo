@@ -35,7 +35,10 @@ SGE.kanban = {
             colEl.className = 'kanban-col';
             colEl.dataset.supervisor = sup.nome;
             colEl.dataset.supIdx = idx;
-            colEl.draggable = true;
+
+            if (SGE.auth.hasRole('GESTAO')) {
+                colEl.draggable = true;
+            }
 
             colEl.innerHTML = `
         <div class="col-header">
@@ -49,12 +52,16 @@ SGE.kanban = {
       `;
 
             // Column drag (reorder supervisors)
-            SGE.kanban._setupColumnDrag(colEl, idx, container);
+            if (SGE.auth.hasRole('GESTAO')) {
+                SGE.kanban._setupColumnDrag(colEl, idx, container);
+            }
 
             const body = colEl.querySelector('.col-body');
 
             // Card drag events on column body
-            SGE.kanban._setupColumnDrop(body, sup);
+            if (SGE.auth.hasRole('GESTAO')) {
+                SGE.kanban._setupColumnDrop(body, sup);
+            }
 
             if (membros.length === 0) {
                 body.innerHTML = '<div class="empty-col">Nenhum colaborador</div>';
@@ -77,7 +84,9 @@ SGE.kanban = {
     makeCard(colaborador) {
         const el = document.createElement('div');
         el.className = 'card';
-        el.draggable = true;
+        if (SGE.auth.hasRole('GESTAO')) {
+            el.draggable = true;
+        }
         el.dataset.id = colaborador.id;
 
         const h = SGE.helpers;
@@ -101,15 +110,18 @@ SGE.kanban = {
       <div class="card-vaga">${h.equipamentoIconSvg()} ${colaborador.equipamento || 'Sem equipamento'}</div>
     `;
 
-        el.addEventListener('dragstart', e => {
-            SGE.state.drag.cardData = colaborador;
-            el.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
-        });
-        el.addEventListener('dragend', () => {
-            el.classList.remove('dragging');
-            SGE.state.drag.cardData = null;
-        });
+        if (SGE.auth.hasRole('GESTAO')) {
+            el.addEventListener('dragstart', e => {
+                SGE.state.drag.cardData = colaborador;
+                el.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            el.addEventListener('dragend', () => {
+                el.classList.remove('dragging');
+                SGE.state.drag.cardData = null;
+            });
+        }
+
         el.addEventListener('click', () => SGE.drawer.open(colaborador));
 
         return el;

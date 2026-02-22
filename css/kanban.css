@@ -150,6 +150,7 @@
     transition: all .18s ease;
     position: relative;
     user-select: none;
+    flex-shrink: 0;
 }
 
 .card:hover {

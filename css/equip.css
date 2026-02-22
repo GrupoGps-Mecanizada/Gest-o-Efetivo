@@ -93,9 +93,10 @@
     overflow-y: auto;
     padding: 16px 20px;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
     align-content: start;
+    align-items: start;
 }
 
 .equip-card {
@@ -105,6 +106,7 @@
     overflow: hidden;
     box-shadow: var(--shadow);
     transition: border-color .18s;
+    height: max-content;
 }
 
 .equip-card:hover {
@@ -142,9 +144,8 @@
     font-size: 10px;
     color: var(--text-3);
     margin-top: 1px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    /* allow it to fully display without truncating */
+    display: block;
 }
 
 .equip-card-count {
@@ -167,7 +168,7 @@
     display: flex;
     align-items: flex-start;
     gap: 8px;
-    padding: 5px 4px;
+    padding: 6px 4px;
     border-bottom: 1px solid var(--bg-2);
 }
 
@@ -183,19 +184,19 @@
     width: 32px;
     text-align: center;
     flex-shrink: 0;
-    padding-top: 3px;
+    padding-top: 4px;
     letter-spacing: .5px;
 }
 
 .equip-turno-members {
     flex: 1;
     display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .equip-member {
-    padding: 2px 8px;
+    padding: 4px 8px;
     border-radius: 4px;
     background: var(--bg-2);
     border: 1px solid var(--border);
@@ -203,10 +204,9 @@
     color: var(--text-1);
     cursor: pointer;
     transition: all .15s;
-    white-space: nowrap;
-    max-width: 160px;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    width: 100%;
 }
 
 .equip-member:hover {

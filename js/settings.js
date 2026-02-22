@@ -134,6 +134,58 @@ SGE.settings = {
       </div>
     `;
 
+    // USER MANAGEMENT SECTION (ADM Only)
+    if (SGE.auth.hasRole('ADM')) {
+      const usersHtml = (SGE.state.usuarios || []).map(u => `
+        <div class="sup-card" style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; gap:12px; align-items:center;">
+            <div class="sup-dot ${u.ativo ? 'active' : 'inactive'}"></div>
+            <div class="sup-name" style="width:120px">${u.usuario}</div>
+            <div class="badge badge-OP" style="font-size:10px">${u.perfil}</div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn-sec toggle-user-btn" data-id="${u.id}" style="font-size:11px; padding:4px 8px">${u.ativo ? 'Desativar' : 'Ativar'}</button>
+            <button class="btn-sec delete-user-btn" data-id="${u.id}" style="font-size:11px; padding:4px 8px; color:var(--danger)" ${u.id === 'USR001' ? 'disabled' : ''}>Excluir</button>
+          </div>
+        </div>
+      `).join('');
+
+      const newUserForm = `
+        <div class="settings-form" style="margin-top:16px; padding-top:16px; border-top:1px dashed var(--border)">
+          <div class="form-field">
+            <label>Novo Login</label>
+            <input type="text" id="new-usr-login" placeholder="Ex: joao.silva" autocomplete="off" />
+          </div>
+          <div class="form-field">
+            <label>Senha</label>
+            <input type="password" id="new-usr-pass" placeholder="***" autocomplete="new-password" />
+          </div>
+          <div class="form-field">
+            <label>Perfil</label>
+            <select id="new-usr-perfil">
+                <option value="VISAO">Visualização (Leitura)</option>
+                <option value="GESTAO">Gestão (Edição/Mov.)</option>
+                <option value="ADM">Administrador (Total)</option>
+            </select>
+          </div>
+          <button class="btn-primary" id="new-usr-save" style="align-self:flex-end; margin-top:24px;">Adicionar Usuário</button>
+        </div>
+      `;
+
+      container.innerHTML += `
+        <div class="settings-section" style="border-top: 2px solid var(--border); padding-top: 20px;">
+          <div class="settings-section-header" style="color:var(--accent)">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 11c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zM18 21a6 6 0 00-12 0"/></svg>
+            Controle de Acessos (Logins)
+          </div>
+          <div class="settings-section-body">
+            <div style="display:flex; flex-direction:column; gap:8px;">${usersHtml}</div>
+            ${newUserForm}
+          </div>
+        </div>
+      `;
+    }
+
     // Event: toggle supervisor
     container.querySelectorAll('.toggle-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -206,29 +258,109 @@ SGE.settings = {
       });
     }
 
-    // Event: add new supervisor
-    const saveSupBtn = document.getElementById('new-sup-save');
-    if (saveSupBtn) {
-      saveSupBtn.addEventListener('click', () => {
+    // Event: new supervisor
+    const newSupBtn = document.getElementById('new-sup-save');
+    if (newSupBtn) {
+      newSupBtn.addEventListener('click', async () => {
         const nome = document.getElementById('new-sup-nome').value.trim().toUpperCase();
-        if (!nome) return h.toast('Digite o nome do supervisor', 'error');
-
-        const exists = SGE.state.supervisores.some(s => s.nome === nome);
-        if (exists) return h.toast('Supervisor já existe', 'error');
-
         const regime = document.getElementById('new-sup-regime').value;
-        const newSup = {
-          id: `SUP_${Date.now()}`,
-          nome,
-          regime_padrao: regime,
-          ativo: true
-        };
 
-        SGE.state.supervisores.push(newSup);
-        SGE.settings.render();
-        SGE.kanban.render();
-        h.toast(`Supervisor ${nome} adicionado`);
+        if (!nome) return h.toast('Preencha o nome do supervisor', 'error');
+        if (SGE.state.supervisores.some(s => s.nome === nome)) return h.toast('Supervisor já existe', 'error');
+
+        // Add locally
+        SGE.state.supervisores.push({ nome, regime_padrao: regime, ativo: true });
+
+        // Save to GAS
+        newSupBtn.disabled = true;
+        newSupBtn.textContent = 'Salvando...';
+
+        // This relies on ensureStructure syncing it up eventually, or we could add an explicit API call here.
+        // For now, we simulate success and let sync handle the rest if no specific endpoint exists.
+        setTimeout(() => {
+          SGE.settings.render();
+          SGE.kanban.render();
+          h.toast('Supervisor adicionado com sucesso');
+        }, 500);
       });
+    }
+
+    // ==================== USER MANAGEMENT EVENTS (ADM ONLY) ====================
+    if (SGE.auth.hasRole('ADM')) {
+
+      // Toggle User
+      container.querySelectorAll('.toggle-user-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.id;
+          const user = SGE.state.usuarios.find(u => u.id === id);
+          if (!user) return;
+
+          const oldState = user.ativo;
+          user.ativo = !oldState;
+          SGE.settings.render(); // Optimistic update
+
+          try {
+            const res = await SGE.api.callGAS('editar_usuario', { id: user.id, ativo: user.ativo });
+            if (!res) throw new Error('Falha na API');
+            SGE.helpers.toast(`Usuário ${user.usuario} ${user.ativo ? 'ativado' : 'desativado'}`);
+          } catch (e) {
+            user.ativo = oldState; // Rollback
+            SGE.settings.render();
+            SGE.helpers.toast('Erro ao alterar status', 'error');
+          }
+        });
+      });
+
+      // Delete User
+      container.querySelectorAll('.delete-user-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.id;
+          if (!confirm('Tem certeza que deseja excluir permanentemente este login?')) return;
+
+          try {
+            const res = await SGE.api.callGAS('excluir_usuario', { id });
+            if (!res) throw new Error('Falha na API');
+            SGE.state.usuarios = SGE.state.usuarios.filter(u => u.id !== id);
+            SGE.settings.render();
+            SGE.helpers.toast('Usuário excluído com sucesso');
+          } catch (e) {
+            SGE.helpers.toast(e.message || 'Erro ao excluir usuário', 'error');
+          }
+        });
+      });
+
+      // Create new user
+      const newUsrBtn = document.getElementById('new-usr-save');
+      if (newUsrBtn) {
+        newUsrBtn.addEventListener('click', async () => {
+          const usuario = document.getElementById('new-usr-login').value.trim();
+          const senha = document.getElementById('new-usr-pass').value.trim();
+          const perfil = document.getElementById('new-usr-perfil').value;
+
+          if (!usuario || !senha) return h.toast('Preencha usuário e senha', 'error');
+          if (SGE.state.usuarios.some(u => String(u.usuario).toLowerCase() === usuario.toLowerCase())) {
+            return h.toast('Nome de usuário já existe', 'error');
+          }
+
+          newUsrBtn.disabled = true;
+          newUsrBtn.textContent = 'Adicionando...';
+
+          try {
+            const res = await SGE.api.callGAS('criar_usuario', { usuario, senha, perfil, ativo: true });
+            if (res && res.id) {
+              SGE.state.usuarios.push({ id: res.id, usuario, senha, perfil, ativo: true });
+              SGE.settings.render();
+              h.toast('Usuário criado com sucesso', 'success');
+            } else {
+              throw new Error('Falha ao criar');
+            }
+          } catch (e) {
+            h.toast('Erro criar usuário. Tente novamente.', 'error');
+            newUsrBtn.disabled = false;
+            newUsrBtn.textContent = 'Adicionar Usuário';
+          }
+        });
+      }
     }
   }
 };

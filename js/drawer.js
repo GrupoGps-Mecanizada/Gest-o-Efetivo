@@ -49,6 +49,9 @@ SGE.drawer = {
               <span class="drawer-mov-motivo">${m.motivo}</span>
             </div>`).join('')}
       </div>
+      <div style="margin-top:24px; padding-top:12px; border-top:1px dashed var(--border); font-size:11px; color:var(--text-3); text-align:center;">
+        Última Atualização: ${col.ultima_edicao ? h.formatDate(col.ultima_edicao) : 'Desconhecida'} por <strong>${col.editado_por || 'Sistema'}</strong>
+      </div>
     `;
 
     document.getElementById('drawer-overlay').classList.add('open');

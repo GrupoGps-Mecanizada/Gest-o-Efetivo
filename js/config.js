@@ -9,7 +9,7 @@ window.SGE = window.SGE || {};
 SGE.CONFIG = {
   // Google Apps Script Web App URL
   // Set this to your deployed GAS URL to enable data sync
-  gasUrl: 'https://script.google.com/macros/s/AKfycbznwnNnV0_9neC4s46ao9ZRI_FWJvfKpEeXsDjkzRySz_smE9jSLwOhnTDeEVy9B-uK/exec',
+  gasUrl: 'https://script.google.com/macros/s/AKfycbyXKShD5dZEsX86aYRe59uqJxq5gfumvwLlTWuzeOXtxAnKmyENMMYUwIaM1Ek_Py9R/exec',
 
   // Default user identifier
   usuario: 'admin',

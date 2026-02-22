@@ -18,8 +18,8 @@
 
 const SCHEMA = {
   Colaboradores: {
-    headers: ['ID', 'Nome', 'Função', 'Regime', 'Supervisor', 'Equipamento', 'Status', 'Telefone', 'Mat. Usiminas', 'Mat. GPS'],
-    colWidths: [100, 280, 80, 120, 160, 180, 100, 140, 130, 130],
+    headers: ['ID', 'Nome', 'Função', 'Regime', 'Supervisor', 'Equipamento', 'Status', 'Telefone', 'Mat. Usiminas', 'Mat. GPS', 'Última Edição', 'Editado Por'],
+    colWidths: [100, 280, 80, 120, 160, 180, 100, 140, 130, 130, 140, 140],
     validation: {
       2: { values: ['OP', 'MOT'] },                    // Função
       3: { values: ['24HS-A', '24HS-B', '24HS-C', '24HS-D', 'ADM', '16HS-5X2', '16HS-6X3', 'SEM REGISTRO'] }, // Regime
@@ -480,6 +480,8 @@ function listarColaboradores() {
     { col: 'Telefone', key: 'telefone' },
     { col: 'Mat. Usiminas', key: 'matricula_usiminas' },
     { col: 'Mat. GPS', key: 'matricula_gps' },
+    { col: 'Última Edição', key: 'ultima_edicao' },
+    { col: 'Editado Por', key: 'editado_por' },
   ]);
 }
 
@@ -495,7 +497,9 @@ function criarColaborador(params) {
     params.status || 'ATIVO',
     params.telefone || '',
     params.matricula_usiminas || '',
-    params.matricula_gps || ''
+    params.matricula_gps || '',
+    new Date().toISOString(),
+    params._user || 'admin'
   ]);
   return { created: true, id: params.id };
 }
@@ -505,7 +509,7 @@ function editarColaborador(params) {
   const row = findRowByColumn(sheet, 0, params.id);
   if (row < 0) throw new Error(`Colaborador ${params.id} não encontrado`);
 
-  const range = sheet.getRange(row, 1, 1, 10);
+  const range = sheet.getRange(row, 1, 1, 12);
   range.setValues([[
     params.id,
     params.nome || '',
@@ -516,7 +520,9 @@ function editarColaborador(params) {
     params.status || '',
     params.telefone || '',
     params.matricula_usiminas || '',
-    params.matricula_gps || ''
+    params.matricula_gps || '',
+    new Date().toISOString(),
+    params._user || 'admin'
   ]]);
 
   return { updated: true, id: params.id };
@@ -601,11 +607,10 @@ function moverColaborador(params) {
     params.supervisor_origem || '',
     params.supervisor_destino || '',
     params.regime_origem || '',
-    params.regime_destino || '',
     params.motivo || '',
     params.observacao || '',
     params.created_at || new Date().toISOString(),
-    params.usuario || 'admin'
+    params._user || 'admin'
   ]);
 
   // 2. Update the collaborator's supervisor and regime in the main sheet
@@ -614,6 +619,8 @@ function moverColaborador(params) {
   if (row >= 0) {
     colSheet.getRange(row, 4).setValue(params.regime_destino);   // Column D = Regime
     colSheet.getRange(row, 5).setValue(params.supervisor_destino); // Column E = Supervisor
+    colSheet.getRange(row, 11).setValue(new Date().toISOString()); // Column K = Última Edição
+    colSheet.getRange(row, 12).setValue(params._user || 'admin');  // Column L = Editado Por
   }
 
   return { moved: true, colaborador_id: params.colaborador_id };
