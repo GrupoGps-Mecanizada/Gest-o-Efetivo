@@ -80,52 +80,94 @@ let _structureVerified = false;
 function ensureStructure() {
   if (_structureVerified) return;
 
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-
-  Object.keys(SCHEMA).forEach(tabName => {
-    const def = SCHEMA[tabName];
-    let sheet = ss.getSheetByName(tabName);
-
-    if (!sheet) {
-      // Create the tab from scratch
-      sheet = ss.insertSheet(tabName);
-      setupSheetFromSchema(sheet, def);
-      Logger.log(`✅ Created tab: ${tabName}`);
-    } else {
-      // Validate and repair existing tab
-      repairSheet(sheet, def);
-    }
-
-    // Auto-normalize if Equipamentos is completely new/empty
-    if (tabName === 'Equipamentos' && sheet.getLastRow() <= 1) {
-      try { normalizeEquipamentos(); } catch (e) { Logger.log(e); }
-    }
-
-    // Auto-create default admin if Usuarios is completely new
-    if (tabName === 'Usuarios' && sheet.getLastRow() <= 1) {
-      sheet.appendRow(['USR001', 'admin', '123', 'ADM', 'TRUE']);
-      Logger.log('✅ Default admin user created.');
-    }
-  });
-
-  // Auto-sync supervisors from collaborator data
-  syncSupervisoresFromColaboradores(ss);
-
-  // Enforce base equipment list
-  syncEquipamentosMaster();
-
-  // Remove the default "Sheet1" if it's empty and our tabs exist
-  const defaultSheet = ss.getSheetByName('Sheet1') || ss.getSheetByName('Página1') || ss.getSheetByName('Planilha1');
-  if (defaultSheet) {
-    try {
-      const data = defaultSheet.getDataRange().getValues();
-      if (data.length <= 1 && data[0].join('').trim() === '') {
-        if (ss.getSheets().length > 1) ss.deleteSheet(defaultSheet);
-      }
-    } catch (e) { /* ignore */ }
+  const lock = LockService.getScriptLock();
+  try {
+    // Wait up to 10 seconds for other concurrent requests (Promise.all in JS) to finish setup
+    lock.waitLock(10000);
+  } catch (e) {
+    Logger.log('Could not obtain lock, continuing anyway: ' + e);
   }
 
-  _structureVerified = true;
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+    Object.keys(SCHEMA).forEach(tabName => {
+      const def = SCHEMA[tabName];
+      let sheet = ss.getSheetByName(tabName);
+
+      if (!sheet) {
+        sheet = ss.insertSheet(tabName);
+        setupSheetFromSchema(sheet, def);
+      } else {
+        repairSheet(sheet, def);
+      }
+
+      if (tabName === 'Equipamentos') {
+        fixCorruptedEquipamentos(sheet);
+      }
+
+      if (tabName === 'Usuarios' && sheet.getLastRow() <= 1) {
+        sheet.appendRow(['USR001', 'admin', '123', 'ADM', 'TRUE']);
+      }
+    });
+
+    syncSupervisoresFromColaboradores(ss);
+    syncEquipamentosMaster(ss);
+
+    const defaultSheet = ss.getSheetByName('Sheet1') || ss.getSheetByName('Página1') || ss.getSheetByName('Planilha1');
+    if (defaultSheet) {
+      try {
+        const data = defaultSheet.getDataRange().getValues();
+        if (data.length <= 1 && data[0].join('').trim() === '') {
+          if (ss.getSheets().length > 1) ss.deleteSheet(defaultSheet);
+        }
+      } catch (e) { }
+    }
+
+    _structureVerified = true;
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function fixCorruptedEquipamentos(sheet) {
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return;
+  const headers = data[0];
+  const escalaCol = headers.indexOf('Escala');
+  const ativoCol = headers.indexOf('Ativo');
+
+  if (escalaCol >= 0 && ativoCol >= 0) {
+    let needsFix = false;
+    for (let i = 1; i < data.length; i++) {
+       const val = String(data[i][escalaCol]).toUpperCase();
+       if (val === 'TRUE' || val === 'FALSE') {
+          needsFix = true;
+          // Shift it back
+          sheet.getRange(i + 1, ativoCol + 1).setValue(val);
+          sheet.getRange(i + 1, escalaCol + 1).setValue('24HS');
+       } else if (!data[i][escalaCol]) {
+          sheet.getRange(i + 1, escalaCol + 1).setValue('24HS');
+       }
+    }
+  }
+
+  // Deduplicate equipments (Keep only the first valid one)
+  const newData = sheet.getDataRange().getValues();
+  const seenKeys = new Set();
+  const siglaIdx = headers.indexOf('Sigla');
+  const numIdx = headers.indexOf('Número');
+  
+  // Go backwards so we can delete rows without messing up indexes
+  for (let i = newData.length - 1; i >= 1; i--) {
+    const key = String(newData[i][siglaIdx] || '') + '-' + String(newData[i][numIdx] || '');
+    if (!key || key === '-') continue;
+    if (seenKeys.has(key)) {
+      sheet.deleteRow(i + 1);
+    } else {
+      seenKeys.add(key);
+    }
+  }
 }
 
 /**
@@ -629,6 +671,65 @@ function moverColaborador(params) {
 
 // ===================== EQUIPAMENTOS =====================
 
+function fixCorruptedEquipamentos(sheet) {
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return;
+  const headers = data[0];
+  const escalaCol = headers.indexOf('Escala');
+  const ativoCol = headers.indexOf('Ativo');
+
+  // Fix column mismatch
+  if (escalaCol >= 0 && ativoCol >= 0) {
+    let needsFix = false;
+    for (let i = 1; i < data.length; i++) {
+       const val = String(data[i][escalaCol]).toUpperCase();
+       // If "TRUE" or "FALSE" wrongly landed in the Escala column because of the old appendRow bug
+       if (val === 'TRUE' || val === 'FALSE') {
+          needsFix = true;
+          sheet.getRange(i + 1, ativoCol + 1).setValue(val);
+          sheet.getRange(i + 1, escalaCol + 1).setValue('24HS'); // Default fallback
+       } else if (!data[i][escalaCol]) {
+          sheet.getRange(i + 1, escalaCol + 1).setValue('24HS'); // Fill empty scales
+       }
+       // If "Ativo" is empty or weird
+       const ativoVal = String(data[i][ativoCol]).toUpperCase();
+       if (ativoVal !== 'TRUE' && ativoVal !== 'FALSE') {
+          sheet.getRange(i + 1, ativoCol + 1).setValue('TRUE');
+       }
+    }
+  }
+
+  // Deduplicate equipments (Keep only the OLDEST valid one)
+  const newData = sheet.getDataRange().getValues();
+  const seenKeys = new Set();
+  const siglaIdx = headers.indexOf('Sigla');
+  const numIdx = headers.indexOf('Número');
+  const rowsToDelete = [];
+  
+  // Go FORWARDS to log duplicates (so we keep the oldest record in the Set)
+  for (let i = 1; i < newData.length; i++) {
+    const s = String(newData[i][siglaIdx] || '').trim();
+    let n = String(newData[i][numIdx] || '').trim();
+    
+    // Google Sheets strips leading zeros from numbers. Re-pad single digits (1 -> 01)
+    if (/^\d$/.test(n)) n = '0' + n;
+    
+    const key = s + '-' + n;
+    if (!key || key === '-') continue;
+    
+    if (seenKeys.has(key)) {
+      rowsToDelete.push(i + 1);
+    } else {
+      seenKeys.add(key);
+    }
+  }
+
+  // Delete backwards to not mess up rows indexes
+  for (let i = rowsToDelete.length - 1; i >= 0; i--) {
+    sheet.deleteRow(rowsToDelete[i]);
+  }
+}
+
 /**
  * Normalize a raw equipment name to standard abbreviation format.
  * e.g. "ASPIRADOR 5" → "ASP-05", "AP 01" → "AP-01", "COQUERIA" → "MT"
@@ -714,71 +815,68 @@ function normalizeEquipamentos() {
 }
 
 /**
- * Auto-populate the Equipamentos master table from collaborator data.
+ * Auto-populate the Equipamentos master table on first run ONLY with the hardcoded base list.
+ * It will NOT scan collaborators anymore. Any new equipments must be added manually.
  */
 function syncEquipamentosMaster() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const colSheet = ss.getSheetByName('Colaboradores');
   const eqSheet = ss.getSheetByName('Equipamentos');
-  if (!colSheet || !eqSheet) return;
+  if (!eqSheet) return;
 
-  const colData = colSheet.getDataRange().getValues();
-  const colHeaders = colData[0];
-  const equipCol = colHeaders.indexOf('Equipamento');
-  if (equipCol < 0) return;
-
-  // Base predefined equipment list as requested
-  const baseEquipments = [
-    'AP-01', 'AP-02', 'AP-03', 'AP-04', 'AP-05', 'AP-06', 'AP-07', 'AP-08', 'AP-09', 'AP-10', 'AP-11', 'AP-12',
-    'AV-01', 'AV-02', 'AV-03', 'AV-04', 'AV-05', 'AV-06', 'AV-07', 'AV-08',
-    'BK-01', 'BK-02', 'BK-03', 'BK-04',
-    'HV-01', 'HV-02', 'HV-03',
-    'ASP-01', 'ASP-02', 'ASP-03', 'ASP-04', 'ASP-05', 'ASP-06', 'ASP-07', 'ASP-08', 'ASP-09', 'ASP-10', 'ASP-SP',
-    'MT', 'CJ'
-  ];
-
-  // Collect unique equipment from collaborators
-  const equipSet = new Set(baseEquipments);
-  for (let i = 1; i < colData.length; i++) {
-    const val = String(colData[i][equipCol] || '').trim();
-    if (!val) continue;
-    // Skip specials
-    let isSpecial = false;
-    for (const sp of EQUIP_SPECIALS) {
-      if (val.includes(sp)) { isSpecial = true; break; }
-    }
-    if (isSpecial || val === 'SEM VAGA ATRIBUÍDA' || val === 'NÃO INFORMADA') continue;
-    equipSet.add(val);
-  }
+  // Rigid Map requested by user (Sigla-Numero: Escala)
+  const baseEquipments = {
+    'AP-01': '24HS', 'AP-02': 'ADM', 'AP-03': 'ADM', 'AP-04': 'ADM', 'AP-05': 'ADM', 'AP-06': 'ADM',
+    'AP-07': '16H', 'AP-08': '24HS', 'AP-09': 'ADM', 'AP-10': 'ADM', 'AP-11': 'ADM', 'AP-12': 'ADM',
+    'AV-01': '16H', 'AV-02': '16H', 'AV-03': 'ADM', 'AV-04': 'ADM', 'AV-05': 'ADM', 'AV-06': 'ADM',
+    'AV-07': '16H', 'AV-08': '24HS',
+    'BK-01': 'ADM', 'BK-02': 'ADM', 'BK-03': 'ADM', 'BK-04': 'ADM',
+    'HV-01': 'ADM', 'HV-02': 'ADM', 'HV-03': '24HS',
+    'ASP-01': 'ADM', 'ASP-02': 'ADM', 'ASP-03': 'ADM', 'ASP-04': 'ADM', 'ASP-05': 'ADM',
+    'ASP-06': 'ADM', 'ASP-07': 'ADM', 'ASP-08': 'ADM', 'ASP-09': 'ADM', 'ASP-10': 'ADM',
+    'ASP-SP': 'ADM',
+    'MT-': '24HS', 'CJ-': 'ADM' // Special cases without numbers
+  };
 
   // Get existing equipment
   const eqData = eqSheet.getDataRange().getValues();
   const eqHeaders = eqData[0] || [];
   const siglaIdx = eqHeaders.indexOf('Sigla');
   const numIdx = eqHeaders.indexOf('Número');
+  
+  if (siglaIdx < 0) return;
+
   const existingKeys = new Set();
+  
   for (let i = 1; i < eqData.length; i++) {
-    existingKeys.add(String(eqData[i][siglaIdx] || '') + '-' + String(eqData[i][numIdx] || ''));
+    const s = String(eqData[i][siglaIdx] || '').trim();
+    let n = String(eqData[i][numIdx] || '').trim();
+    
+    // Auto-pad single digits so "1" becomes "01" (handles manual entries from Google Sheets)
+    if (/^\d$/.test(n)) n = '0' + n;
+    
+    existingKeys.add(s + '-' + n);
   }
 
-  // Add missing equipment
-  let idCounter = eqData.length;
-  equipSet.forEach(eq => {
-    // Parse sigla and number from normalized format (e.g. "AP-01")
-    const match = eq.match(/^([A-Z]{2,3})(?:-(.+))?$/);
-    if (!match) return;
+  // Add missing base equipment
+  let idCounter = Math.max(eqData.length, 1);
+  Object.keys(baseEquipments).forEach(eqKeyRaw => {
+    const escala = baseEquipments[eqKeyRaw];
+    
+    const eqKey = eqKeyRaw.endsWith('-') ? eqKeyRaw.slice(0, -1) : eqKeyRaw;
+    
+    const match = eqKey.match(/^([A-Z]{2,3})(?:-(.+))?$/);
+    const sigla = match ? match[1] : eqKey; // Default to full string if no match
+    const numero = match && match[2] ? match[2] : '';
 
-    const sigla = match[1];
-    const numero = match[2] || '';
-    const key = sigla + '-' + numero;
+    const checkKey = sigla + '-' + numero;
 
-    if (existingKeys.has(key)) return;
+    if (existingKeys.has(checkKey)) return; // Already in sheet
 
     // Build full name
     const nomeMap = { AP: 'ALTA PRESSÃO', AV: 'AUTO VÁCUO', ASP: 'ASPIRADOR INDUSTRIAL', HV: 'HIPER VÁCUO', BK: 'CAMINHÃO BROOK', MT: 'MOTO BOMBA', CJ: 'CONJUGADO' };
-    const nomeCompleto = nomeMap[sigla] ? (nomeMap[sigla] + (numero ? ' - ' + numero : '')) : eq;
+    const nomeCompleto = nomeMap[sigla] ? (nomeMap[sigla] + (numero ? ' - ' + numero : '')) : eqKey;
 
-    eqSheet.appendRow([`EQ${String(idCounter).padStart(3, '0')}`, sigla, numero, nomeCompleto, 'TRUE']);
+    eqSheet.appendRow([`EQ${String(idCounter).padStart(3, '0')}`, sigla, numero, nomeCompleto, escala, 'TRUE']);
     idCounter++;
   });
 }

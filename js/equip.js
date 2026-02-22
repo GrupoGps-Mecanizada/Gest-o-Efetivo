@@ -53,19 +53,39 @@ SGE.equip = {
       });
     }
 
+    // Virtual equipment to host all unallocated collaborators
+    equipMap['UNALLOCATED'] = {
+      sigla: 'UNALLOCATED',
+      numero: '',
+      label: 'S/R',
+      tipo: { nome: 'Sem Equipamento Definido', cor: '#94a3b8' },
+      escala: '24HS', // Render all turnos to catch everyone
+      turnos: { 'A': [], 'B': [], 'C': [], 'D': [], 'ADM': [], '16H': [], 'S/R': [] },
+      isVirtual: true
+    };
+
     // 2. Populate with active collaborators
     SGE.state.colaboradores.forEach(c => {
       const parsed = SGE.equip.parseEquip(c.equipamento);
-      if (!parsed || !tipos[parsed.sigla]) return;
+      const turno = SGE.equip.getTurno(c.regime);
+
+      if (!parsed || !tipos[parsed.sigla] || !equipMap[parsed.sigla + '-' + parsed.numero]) {
+        // Did not match any official map? Send to unallocated
+        equipMap['UNALLOCATED'].turnos[turno].push(c);
+        return;
+      }
 
       const key = parsed.sigla + '-' + parsed.numero;
-      // Do not auto-inject equipment from collaborators if it wasn't recognized on the official equipment database above
-      if (!equipMap[key]) return;
-
-      const turno = SGE.equip.getTurno(c.regime);
       if (!equipMap[key].turnos[turno]) equipMap[key].turnos[turno] = [];
       equipMap[key].turnos[turno].push(c);
     });
+
+    // Cleanup: If nobody is unallocated, block the virtual card from rendering
+    let hasUnallocated = false;
+    Object.values(equipMap['UNALLOCATED'].turnos).forEach(arr => {
+      if (arr.length > 0) hasUnallocated = true;
+    });
+    if (!hasUnallocated) delete equipMap['UNALLOCATED'];
 
     return equipMap;
   },
@@ -88,8 +108,11 @@ SGE.equip = {
       entries = entries.filter(e => e.sigla === state.filtroTipo);
     }
 
-    // Sort: by sigla then numero
+    // Sort: by sigla then numero (Push UNALLOCATED to the bottom)
     entries.sort((a, b) => {
+      if (a.isVirtual && !b.isVirtual) return 1;
+      if (!a.isVirtual && b.isVirtual) return -1;
+
       if (a.sigla !== b.sigla) return a.sigla.localeCompare(b.sigla);
       // Clean up string comparison for natural numeric sorting if possible
       const numA = parseInt(a.numero) || 0;
@@ -158,25 +181,37 @@ SGE.equip = {
     let turnosOfThisEquip = [];
 
     // "Escala" determines the structural skeleton. Values: '24HS', 'ADM', '16H'.
-    if (eq.escala === '24HS' || eq.escala === '24H') turnosOfThisEquip = ['A', 'B', 'C', 'D'];
-    else if (eq.escala === 'ADM') turnosOfThisEquip = ['ADM'];
-    else if (eq.escala === '16H' || eq.escala === '16HS') turnosOfThisEquip = ['16H'];
-    else turnosOfThisEquip = ['A', 'B', 'C', 'D']; // safe default
+    if (eq.isVirtual) {
+      // Show every shift drawer that physically has a lost member inside
+      turnosOfThisEquip = ['A', 'B', 'C', 'D', 'ADM', '16H', 'S/R'];
+    } else if (eq.escala === '24HS' || eq.escala === '24H') {
+      turnosOfThisEquip = ['A', 'B', 'C', 'D'];
+    } else if (eq.escala === 'ADM') {
+      turnosOfThisEquip = ['ADM'];
+    } else if (eq.escala === '16H' || eq.escala === '16HS') {
+      turnosOfThisEquip = ['16H'];
+    } else {
+      turnosOfThisEquip = ['A', 'B', 'C', 'D']; // safe default
+    }
 
     // If a specific UI filter is set ("A", "ADM"), only show that specific shift-drawer, if this equip even covers it
-    if (filtroTurno !== 'TODOS') {
+    if (filtroTurno !== 'TODOS' && !eq.isVirtual) {
       turnosOfThisEquip = turnosOfThisEquip.filter(t => t === filtroTurno);
+    }
+
+    // For virtual, only show the drawers that actually have people inside
+    if (eq.isVirtual) {
+      turnosOfThisEquip = turnosOfThisEquip.filter(t => eq.turnos[t] && eq.turnos[t].length > 0);
     }
 
     // Hide the equipment altogether if it doesn't have the user's selected shift inside its skeleton
     if (filtroTurno !== 'TODOS' && turnosOfThisEquip.length === 0) return '';
 
-
     const turnoRows = turnosOfThisEquip.map(t => {
       const members = eq.turnos[t] || [];
       return `
         <div class="equip-turno-row">
-          <div class="equip-turno-label">${t}</div>
+          <div class="equip-turno-label" ${t === 'S/R' ? 'style="background:var(--danger);color:white;border-color:var(--danger)"' : ''}>${t}</div>
           <div class="equip-turno-members">
             ${members.length === 0
           ? '<span class="equip-empty-turno">—</span>'
@@ -198,7 +233,7 @@ SGE.equip = {
             <div class="equip-card-sigla">${eq.label}</div>
             <div class="equip-card-nome">${eq.tipo.nome}${eq.numero ? ' - ' + eq.numero : ''}</div>
           </div>
-          <div class="equip-card-count">${totalMembers}</div>
+          <div class="equip-card-count">${totalValidMembers}</div>
         </div>
         <div class="equip-card-body">
           ${turnoRows}
