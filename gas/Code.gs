@@ -55,6 +55,13 @@ const SCHEMA = {
       3: { values: ['ADM', 'GESTAO', 'VISAO'] },
       4: { values: ['TRUE', 'FALSE'] }
     }
+  },
+  Etilometria: {
+    headers: ['ID', 'Data/Hora', 'Operador', 'Aparelho', 'Local', 'Colaborador', 'CPF/Mat', 'Função', 'Resultado', 'Status', 'Observações', 'Assinatura', 'Teste Synced'],
+    colWidths: [150, 150, 150, 100, 150, 250, 120, 150, 100, 100, 200, 300, 100],
+    validation: {
+      9: { values: ['NEGATIVO', 'ATENÇÃO', 'POSITIVO'] }
+    }
   }
 };
 
@@ -371,6 +378,9 @@ function doPost(e) {
       case 'atualizar_id':
         result = atualizarId(params);
         break;
+      case 'salvar_etilometria':
+        result = salvarEtilometria(params);
+        break;
       default:
         return jsonResponse({ success: false, error: `Ação desconhecida: ${action}` });
     }
@@ -431,6 +441,9 @@ function doGet(e) {
         break;
       case 'excluir_equipamento':
         result = excluirEquipamento(params);
+        break;
+      case 'pesquisar_etilometria':
+        result = pesquisarEtilometria(e.parameter.query || '');
         break;
       case 'status':
         result = { ok: true, tabs: Object.keys(SCHEMA), timestamp: new Date().toISOString() };
@@ -588,6 +601,72 @@ function atualizarId(params) {
   }
 
   return { updated: true, old_id: params.temp_id, new_id: params.novo_id };
+}
+
+// ===================== ETILOMETRIA =====================
+function salvarEtilometria(params) {
+  const sheet = getSheet('Etilometria');
+  
+  // Se veio pela porta Etilometria App via `no-cors` a action pode não vir pronta
+  // Mas a API.js do Etilometria deve ser atualizada para mandar `{ action: "salvar_etilometria", params: {...} }`
+  
+  sheet.appendRow([
+    params.id || `ETL-${new Date().getTime()}`,
+    new Date().toISOString(),
+    params.operador || '',
+    params.numeroSerie || '',
+    params.local || '',
+    params.nomeTestado || '',
+    params.cpfMatricula || '',
+    params.postoFuncao || '',
+    params.resultado || '',
+    params.status || '',
+    params.observacoes || '',
+    params.assinatura || '',  // Base64 string
+    'TRUE'
+  ]);
+  
+  return { saved: true, id: params.id };
+}
+
+function pesquisarEtilometria(query) {
+  const sheet = getSheet('Etilometria');
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return [];
+
+  const headers = data[0];
+  const qLower = String(query).toLowerCase();
+  
+  const results = [];
+  
+  // Reverse search to get newest first (Limit 20 to avoid heavy payloads with Base64)
+  for(let i = data.length - 1; i >= 1; i--) {
+       const row = data[i];
+       const name = String(row[headers.indexOf('Colaborador')] || '').toLowerCase();
+       const cpf = String(row[headers.indexOf('CPF/Mat')] || '').toLowerCase();
+       const func = String(row[headers.indexOf('Função')] || '').toLowerCase();
+       const dataStr = String(row[headers.indexOf('Data/Hora')] || '');
+       
+       if(name.includes(qLower) || cpf.includes(qLower) || func.includes(qLower) || dataStr.includes(qLower)) {
+           results.push({
+               id: row[headers.indexOf('ID')],
+               data_hora: row[headers.indexOf('Data/Hora')],
+               operador: row[headers.indexOf('Operador')],
+               aparelho: row[headers.indexOf('Aparelho')],
+               local: row[headers.indexOf('Local')],
+               colaborador: row[headers.indexOf('Colaborador')],
+               cpf_mat: row[headers.indexOf('CPF/Mat')],
+               funcao: row[headers.indexOf('Função')],
+               resultado: row[headers.indexOf('Resultado')],
+               status: row[headers.indexOf('Status')],
+               assinatura: row[headers.indexOf('Assinatura')]
+           });
+           
+           if(results.length >= 20) break; // Hard limit for Dashboard performace
+       }
+  }
+  
+  return results;
 }
 
 // ===================== SUPERVISORES =====================
