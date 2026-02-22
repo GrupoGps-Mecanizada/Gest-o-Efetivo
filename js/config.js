@@ -9,7 +9,7 @@ window.SGE = window.SGE || {};
 SGE.CONFIG = {
   // Google Apps Script Web App URL
   // Set this to your deployed GAS URL to enable data sync
-  gasUrl: 'https://script.google.com/macros/s/AKfycbx9JTYcTPxGR0b08GtUmrMUKurUccti9hWEyJfCPStFNQYWqtGtU4u951rCBwF3CQ1E/exec',
+  gasUrl: 'https://script.google.com/macros/s/AKfycbwc20esx9hktFyYqR90p_8WZyIVOrRw9JPxyFYEsTwEMJm7IHkro9poI_VDZJl1QM3N/exec',
 
   // Default user identifier
   usuario: 'admin',
@@ -59,5 +59,18 @@ SGE.CONFIG = {
     '16HS-5X2': '16H',
     '16HS-6X3': '16H',
     'SEM REGISTRO': 'S/R'
-  }
+  },
+
+  // Fixed visual sort order for Kanban columns (Supervisores / Groups)
+  ordemKanban: [
+    'JUNIOR PEREIRA',
+    'SEBASTIÃO',
+    'ASPIRADOR',
+    'OZIAS',
+    'MATUSALEM',
+    'ISRAEL',
+    'WELLISON',
+    '16 HORAS',
+    'SEM REGISTRO'
+  ]
 };

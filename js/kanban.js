@@ -16,6 +16,17 @@ SGE.kanban = {
         const cols = SGE.helpers.filtrarColaboradores();
         const supAtivos = SGE.state.supervisores.filter(s => s.ativo);
 
+        // Sort supervisors explicitly by the configuration array
+        const order = SGE.CONFIG.ordemKanban || [];
+        supAtivos.sort((a, b) => {
+            const idxA = order.indexOf(a.nome);
+            const idxB = order.indexOf(b.nome);
+            if (idxA === -1 && idxB === -1) return a.nome.localeCompare(b.nome);
+            if (idxA === -1) return 1; // Unrecognized to bottom
+            if (idxB === -1) return -1;
+            return idxA - idxB;
+        });
+
         if (supAtivos.length === 0 && SGE.state.colaboradores.length === 0) {
             container.innerHTML = `
         <div class="no-data-message" style="width:100%;padding-top:80px">

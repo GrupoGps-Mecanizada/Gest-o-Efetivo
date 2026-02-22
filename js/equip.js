@@ -13,7 +13,7 @@ SGE.equip = {
   parseEquip(equipStr) {
     if (!equipStr) return null;
     const val = String(equipStr).trim().toUpperCase();
-    const match = val.match(/^([A-Z]{2,3})(?:-(.+))?$/);
+    const match = val.match(/^([A-Z]{2,3})(?:-(.*))?$/);
     if (!match) return null;
 
     let num = match[2] || '';
@@ -131,6 +131,21 @@ SGE.equip = {
       return sum + Object.values(e.turnos).reduce((s, arr) => s + arr.length, 0);
     }, 0);
 
+    // Group into explicit columns based on 'sigla'
+    const order = Object.keys(tipos);
+    order.push('UNALLOCATED');
+
+    const columnsHtml = order.map(sigla => {
+      const groupEntries = entries.filter(e => e.sigla === sigla);
+      if (groupEntries.length === 0) return '';
+
+      return `
+            <div class="equip-column">
+                ${groupEntries.map(eq => SGE.equip.renderCard(eq, state.filtroTurno)).join('')}
+            </div>
+        `;
+    }).join('');
+
     view.innerHTML = `
       <div class="equip-toolbar" id="equip-toolbar">
         <button class="equip-type-btn ${state.filtroTipo === 'TODOS' ? 'active' : ''}" data-tipo="TODOS">TODOS</button>
@@ -147,16 +162,16 @@ SGE.equip = {
           <button class="equip-turno-btn ${state.filtroTurno === t ? 'active' : ''}" data-turno="${t}">${t}</button>
         `).join('')}
       </div>
-      <div class="equip-grid" id="equip-grid">
+      <div class="equip-columns-container" id="equip-grid">
         ${entries.length === 0 ? `
-          <div class="no-data-message" style="grid-column:1/-1">
+          <div class="no-data-message" style="width:100%">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <rect x="2" y="3" width="20" height="18" rx="2"/><path d="M2 9h20M9 3v18"/>
             </svg>
             <h3>Nenhum equipamento encontrado</h3>
             <p>Normalize os equipamentos primeiro para visualizá-los aqui.</p>
           </div>
-        ` : entries.map(eq => SGE.equip.renderCard(eq, state.filtroTurno)).join('')}
+        ` : columnsHtml}
       </div>
       <div class="equip-action-bar">
         <button class="equip-action-btn" id="equip-normalize-btn">
@@ -221,7 +236,8 @@ SGE.equip = {
           ? '<span class="equip-empty-turno">—</span>'
           : members.map(c => `
                 <span class="equip-member" data-id="${c.id}" title="${c.nome} (${c.funcao})">
-                  <span class="equip-member-funcao">${c.funcao}</span>${SGE.equip.abbreviateName(c.nome)}
+                  <span>${SGE.equip.abbreviateName(c.nome)}</span>
+                  <span class="equip-member-funcao">${c.funcao}</span>
                 </span>
               `).join('')}
           </div>
@@ -247,13 +263,13 @@ SGE.equip = {
   },
 
   /**
-   * Abbreviate a name to first + last name
+   * Abbreviate a name to FIRST LAST
    */
   abbreviateName(nome) {
     if (!nome) return '—';
     const parts = nome.split(' ');
-    if (parts.length <= 2) return nome;
-    return parts[0] + ' ' + parts[parts.length - 1].substring(0, 3) + '.';
+    if (parts.length === 1) return nome;
+    return parts[0] + ' ' + parts[parts.length - 1]; // First and Last name
   },
 
   /**
