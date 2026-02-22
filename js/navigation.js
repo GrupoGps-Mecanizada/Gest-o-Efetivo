@@ -43,6 +43,9 @@ SGE.navigation = {
 
         // Render the active view
         switch (viewName) {
+            case 'viz':
+                if (SGE.dashboard) SGE.dashboard.render();
+                break;
             case 'kanban':
                 SGE.kanban.render();
                 setTimeout(() => SGE.kanban.updateArrows(), 100);
