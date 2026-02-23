@@ -48,10 +48,13 @@
 }
 
 /* Table (Excel) view */
-#viz-content {
+#viz-content,
+#tabela-content,
+#grupo-content {
     flex: 1;
     overflow: auto;
     padding: 12px 20px 20px;
+    min-height: 0;
 }
 
 .viz-table-wrap {
