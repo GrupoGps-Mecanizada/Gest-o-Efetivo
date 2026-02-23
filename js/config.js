@@ -21,7 +21,7 @@ SGE.CONFIG = {
   funcoes: ['OP', 'MOT'],
 
   // Available statuses
-  statuses: ['ATIVO', 'INATIVO', 'FÉRIAS'],
+  statuses: ['ATIVO', 'INATIVO', 'FÉRIAS', 'AFASTADO', 'DESLIGADO', 'EM AVISO', 'EM CONTRATAÇÃO'],
 
   // Movement reasons
   motivos: [

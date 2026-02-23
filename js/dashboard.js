@@ -211,7 +211,7 @@ SGE.dashboard = {
         // ----------------------------------------------------
         // 1. Distribuição por Status (Doughnut)
         // ----------------------------------------------------
-        const statusMap = { 'ATIVO': 0, 'FÉRIAS': 0, 'AFASTADO': 0, 'FALTA': 0, 'SEM_ID': 0, 'OUTROS': 0 };
+        const statusMap = { 'ATIVO': 0, 'FÉRIAS': 0, 'AFASTADO': 0, 'DESLIGADO': 0, 'EM AVISO': 0, 'EM CONTRATAÇÃO': 0, 'FALTA': 0, 'SEM_ID': 0, 'OUTROS': 0 };
         data.forEach(c => {
             const s = c.status?.toUpperCase() || '';
             if (statusMap[s] !== undefined) statusMap[s]++;
@@ -227,7 +227,17 @@ SGE.dashboard = {
                 labels: Object.keys(statusMap),
                 datasets: [{
                     data: Object.values(statusMap),
-                    backgroundColor: [this.colors.success, this.colors.warning, this.colors.amber, this.colors.rose, this.colors.danger, this.colors.slate],
+                    backgroundColor: [
+                        this.colors.success,  // ATIVO
+                        this.colors.warning,  // FÉRIAS
+                        this.colors.amber,    // AFASTADO
+                        this.colors.purple,   // DESLIGADO
+                        this.colors.indigo,   // EM AVISO
+                        this.colors.teal,     // EM CONTRATAÇÃO
+                        this.colors.rose,     // FALTA
+                        this.colors.danger,   // SEM_ID
+                        this.colors.slate     // OUTROS
+                    ],
                     borderWidth: 2,
                     borderColor: '#ffffff',
                     hoverOffset: 4
