@@ -380,6 +380,9 @@ function doPost(e) {
       case 'editar_colaborador':
         result = editarColaborador(params);
         break;
+      case 'atualizar_lote_colaboradores':
+        result = atualizarLoteColaboradores(params);
+        break;
       case 'atualizar_id':
         result = atualizarId(params);
         break;
@@ -428,6 +431,9 @@ function doGet(e) {
         break;
       case 'editar_colaborador':
         result = editarColaborador(params);
+        break;
+      case 'atualizar_lote_colaboradores':
+        result = atualizarLoteColaboradores(params);
         break;
       case 'atualizar_id':
         result = atualizarId(params);
@@ -612,6 +618,60 @@ function atualizarId(params) {
   }
 
   return { updated: true, old_id: params.temp_id, new_id: params.novo_id };
+}
+
+function atualizarLoteColaboradores(params) {
+  const { atualizacoes, _user } = params;
+  if (!atualizacoes || !Array.isArray(atualizacoes)) throw new Error('O parâmetro atualizacoes é obrigatório e deve ser um array.');
+
+  const sheet = getSheet('Colaboradores');
+  const dataRange = sheet.getDataRange();
+  const data = dataRange.getValues();
+  if (data.length <= 1) return { updated: 0, requested: atualizacoes.length };
+
+  const headers = data[0];
+  const colId = headers.indexOf('ID');
+
+  let updateCount = 0;
+  let hasChanges = false;
+
+  // Build a map for fast lookup of updates
+  const updateMap = new Map();
+  atualizacoes.forEach(upd => {
+    if (upd.id) updateMap.set(String(upd.id).trim(), upd);
+  });
+
+  // Loop through all data rows and apply updates
+  for (let i = 1; i < data.length; i++) {
+    const rowId = String(data[i][colId] || '').trim();
+    if (updateMap.has(rowId)) {
+      const upd = updateMap.get(rowId);
+      
+      // Update each field if provided
+      if (upd.nome !== undefined) data[i][headers.indexOf('Nome')] = upd.nome;
+      if (upd.funcao !== undefined) data[i][headers.indexOf('Função')] = upd.funcao;
+      if (upd.regime !== undefined) data[i][headers.indexOf('Regime')] = upd.regime;
+      if (upd.supervisor !== undefined) data[i][headers.indexOf('Supervisor')] = upd.supervisor;
+      if (upd.equipamento !== undefined) data[i][headers.indexOf('Equipamento')] = upd.equipamento;
+      if (upd.status !== undefined) data[i][headers.indexOf('Status')] = upd.status;
+      if (upd.telefone !== undefined) data[i][headers.indexOf('Telefone')] = upd.telefone;
+      if (upd.matricula_usiminas !== undefined) data[i][headers.indexOf('Mat. Usiminas')] = upd.matricula_usiminas;
+      if (upd.matricula_gps !== undefined) data[i][headers.indexOf('Mat. GPS')] = upd.matricula_gps;
+      
+      data[i][headers.indexOf('Última Edição')] = new Date().toISOString();
+      data[i][headers.indexOf('Editado Por')] = _user || 'admin';
+      
+      updateCount++;
+      hasChanges = true;
+    }
+  }
+
+  // Write all back at once (O(1) API call, blazing fast)
+  if (hasChanges) {
+    dataRange.setValues(data);
+  }
+
+  return { updated: updateCount, requested: atualizacoes.length };
 }
 
 // ===================== ETILOMETRIA =====================

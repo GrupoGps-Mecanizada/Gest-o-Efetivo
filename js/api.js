@@ -7,6 +7,37 @@
 window.SGE = window.SGE || {};
 
 SGE.api = {
+    activeRequests: 0,
+
+    /**
+     * Show/Hide sync bar based on active requests
+     */
+    updateSyncBar(isLoading) {
+        const bar = document.getElementById('global-sync-bar');
+        if (!bar) return;
+
+        if (isLoading) {
+            this.activeRequests++;
+            if (this.activeRequests === 1) {
+                bar.classList.remove('success');
+                bar.classList.add('loading');
+            }
+        } else {
+            this.activeRequests = Math.max(0, this.activeRequests - 1);
+            if (this.activeRequests === 0) {
+                bar.classList.remove('loading');
+                bar.classList.add('success');
+
+                // Remove success class after animation finishes to reset
+                setTimeout(() => {
+                    if (this.activeRequests === 0) {
+                        bar.classList.remove('success');
+                    }
+                }, 500);
+            }
+        }
+    },
+
     /**
      * Generic GAS API call
      * @param {string} action - The action to perform
@@ -28,15 +59,21 @@ SGE.api = {
 
             url.searchParams.set('params', JSON.stringify(params));
 
+            this.updateSyncBar(true);
+
             const resp = await fetch(url.toString(), {
                 method: 'GET',
                 redirect: 'follow'
             });
             const text = await resp.text();
+
+            this.updateSyncBar(false);
+
             const data = JSON.parse(text);
             if (!data.success) throw new Error(data.error || 'Unknown error');
             return data.data;
         } catch (e) {
+            this.updateSyncBar(false);
             console.warn('GAS call failed:', e.message);
             return null;
         }
@@ -214,6 +251,15 @@ SGE.api = {
      */
     async syncEditColaborador(colData) {
         return SGE.api.callGAS('editar_colaborador', colData);
+    },
+
+    /**
+     * Sync a batch of collaborators to GAS
+     * @param {Array} updatesArray - Array of {id, ...fields} objects
+     */
+    async syncBatchColaboradores(updatesArray) {
+        if (!updatesArray || updatesArray.length === 0) return true;
+        return SGE.api.callGAS('atualizar_lote_colaboradores', { atualizacoes: updatesArray });
     },
 
     /**

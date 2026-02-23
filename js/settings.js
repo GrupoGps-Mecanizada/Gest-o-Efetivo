@@ -605,10 +605,19 @@ SGE.settings = {
             if (SGE.CONFIG.regimes.includes(cleanVal)) { h.toast('Regime já existe', 'error'); return false; }
 
             SGE.CONFIG.regimes[SGE.CONFIG.regimes.indexOf(oldVal)] = cleanVal;
-            SGE.state.colaboradores.forEach(c => { if (c.regime === oldVal) c.regime = cleanVal; });
+
+            const updates = [];
+            SGE.state.colaboradores.forEach(c => {
+              if (c.regime === oldVal) {
+                c.regime = cleanVal;
+                updates.push({ id: c.id, regime: cleanVal });
+              }
+            });
             SGE.configManager.save();
             SGE.settings.render();
             h.toast('Regime atualizado', 'success');
+
+            if (updates.length > 0) SGE.api.syncBatchColaboradores(updates);
           }
         });
       });
@@ -663,10 +672,19 @@ SGE.settings = {
             if (SGE.CONFIG.funcoes.includes(cleanVal)) { h.toast('Função já existe', 'error'); return false; }
 
             SGE.CONFIG.funcoes[SGE.CONFIG.funcoes.indexOf(oldVal)] = cleanVal;
-            SGE.state.colaboradores.forEach(c => { if (c.funcao === oldVal) c.funcao = cleanVal; });
+
+            const updates = [];
+            SGE.state.colaboradores.forEach(c => {
+              if (c.funcao === oldVal) {
+                c.funcao = cleanVal;
+                updates.push({ id: c.id, funcao: cleanVal });
+              }
+            });
             SGE.configManager.save();
             SGE.settings.render();
             h.toast('Função atualizada', 'success');
+
+            if (updates.length > 0) SGE.api.syncBatchColaboradores(updates);
           }
         });
       });
@@ -739,9 +757,14 @@ SGE.settings = {
             if (cleanSigla !== oldVal) {
               SGE.CONFIG.equipTipos[cleanSigla] = { nome: newNome, cor: vals.cor };
               delete SGE.CONFIG.equipTipos[oldVal];
+              const updates = [];
               SGE.state.colaboradores.forEach(c => {
-                if (c.equipamento && c.equipamento.startsWith(oldVal)) c.equipamento = c.equipamento.replace(oldVal, cleanSigla);
+                if (c.equipamento && c.equipamento.startsWith(oldVal)) {
+                  c.equipamento = c.equipamento.replace(oldVal, cleanSigla);
+                  updates.push({ id: c.id, equipamento: c.equipamento });
+                }
               });
+              if (updates.length > 0) SGE.api.syncBatchColaboradores(updates);
             } else {
               SGE.CONFIG.equipTipos[oldVal] = { nome: newNome, cor: vals.cor };
             }
@@ -803,10 +826,19 @@ SGE.settings = {
             if (SGE.CONFIG.statuses.includes(cleanVal)) { h.toast('Status já existe', 'error'); return false; }
 
             SGE.CONFIG.statuses[SGE.CONFIG.statuses.indexOf(oldVal)] = cleanVal;
-            SGE.state.colaboradores.forEach(c => { if (c.status === oldVal) c.status = cleanVal; });
+
+            const updates = [];
+            SGE.state.colaboradores.forEach(c => {
+              if (c.status === oldVal) {
+                c.status = cleanVal;
+                updates.push({ id: c.id, status: cleanVal });
+              }
+            });
             SGE.configManager.save();
             SGE.settings.render();
             h.toast('Status atualizado', 'success');
+
+            if (updates.length > 0) SGE.api.syncBatchColaboradores(updates);
           }
         });
       });
@@ -899,9 +931,15 @@ SGE.settings = {
 
             // Reassign collaborators if the name changed
             if (oldName !== sup.nome) {
+              const updates = [];
               SGE.state.colaboradores.forEach(c => {
-                if (c.supervisor === oldName) c.supervisor = sup.nome;
+                if (c.supervisor === oldName) {
+                  c.supervisor = sup.nome;
+                  updates.push({ id: c.id, supervisor: sup.nome });
+                }
               });
+              if (updates.length > 0) SGE.api.syncBatchColaboradores(updates);
+
               // Update the kanban order if the name is in the fixed configuration
               const kIdx = SGE.CONFIG.ordemKanban.indexOf(oldName);
               if (kIdx !== -1) {

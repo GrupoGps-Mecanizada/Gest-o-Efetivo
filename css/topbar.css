@@ -1,3 +1,32 @@
+/* ===================== GLOBAL SYNC BAR ===================== */
+#global-sync-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 0;
+    background-color: var(--success);
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: width 0.3s ease, opacity 0.3s ease;
+}
+
+#global-sync-bar.loading {
+    opacity: 1;
+    width: 80%;
+    /* Animate to 80% while pending */
+    transition: width 10s cubic-bezier(0, 0.5, 0.5, 1), opacity 0.3s ease;
+    /* Slow crawl while waiting */
+}
+
+#global-sync-bar.success {
+    opacity: 1;
+    width: 100%;
+    transition: width 0.3s ease;
+    /* Fast finish when done */
+}
+
 /* ===================== TOPBAR ===================== */
 #topbar {
     display: flex;
