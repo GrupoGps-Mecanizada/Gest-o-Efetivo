@@ -62,6 +62,11 @@ const SCHEMA = {
     validation: {
       9: { values: ['NEGATIVO', 'ATENÇÃO', 'POSITIVO'] }
     }
+  },
+  Configuracoes: {
+    headers: ['Chave', 'Valor', 'Última Edição'],
+    colWidths: [150, 400, 150],
+    validation: {}
   }
 };
 
@@ -381,6 +386,9 @@ function doPost(e) {
       case 'salvar_etilometria':
         result = salvarEtilometria(params);
         break;
+      case 'salvar_configuracoes':
+        result = salvarConfiguracoes(params);
+        break;
       default:
         return jsonResponse({ success: false, error: `Ação desconhecida: ${action}` });
     }
@@ -462,6 +470,9 @@ function doGet(e) {
         break;
       case 'excluir_usuario':
         result = excluirUsuario(params);
+        break;
+      case 'listar_configuracoes':
+        result = listarConfiguracoes();
         break;
       default:
         return jsonResponse({ success: false, error: `Ação desconhecida: ${action}` });
@@ -1114,5 +1125,33 @@ function excluirUsuario(params) {
   if (rowIndex < 0) throw new Error('Usuário não encontrado.');
 
   sheet.deleteRow(rowIndex + 1);
+  return { success: true };
+}
+
+// ===================== CONFIGURAÇÕES =====================
+
+function listarConfiguracoes() {
+  const sheet = getSheet('Configuracoes');
+  const data = sheetToObjects(sheet, [
+    { col: 'Chave', key: 'chave' },
+    { col: 'Valor', key: 'valor' }
+  ]);
+  const configRow = data.find(d => d.chave === 'SGE_CONFIG');
+  return configRow && configRow.valor ? JSON.parse(configRow.valor) : null;
+}
+
+function salvarConfiguracoes(params) {
+  const sheet = getSheet('Configuracoes');
+  const headers = sheet.getDataRange().getValues()[0] || ['Chave', 'Valor', 'Última Edição'];
+  
+  const rowIndex = findRowByColumn(sheet, headers.indexOf('Chave'), 'SGE_CONFIG');
+  const jsonStr = JSON.stringify(params.config || {});
+  
+  if (rowIndex > 0) {
+    sheet.getRange(rowIndex, headers.indexOf('Valor') + 1).setValue(jsonStr);
+    sheet.getRange(rowIndex, headers.indexOf('Última Edição') + 1).setValue(new Date().toISOString());
+  } else {
+    sheet.appendRow(['SGE_CONFIG', jsonStr, new Date().toISOString()]);
+  }
   return { success: true };
 }

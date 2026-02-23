@@ -165,3 +165,98 @@
 .sem-id-save:hover {
     background: var(--green)30
 }
+
+/* ===================== CONFIG LISTS ===================== */
+.config-list {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-1);
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.config-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    gap: 12px;
+}
+
+.config-row:last-child {
+    border-bottom: none;
+}
+
+.config-row:hover {
+    background: var(--bg-2);
+}
+
+.config-row-title {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.config-row-subtitle {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-left: 8px;
+}
+
+.config-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.config-row:hover .config-actions {
+    opacity: 1;
+}
+
+.btn-icon-sq {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 4px;
+    background: transparent;
+    border: none;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.btn-icon-sq:hover {
+    background: var(--bg-2);
+    color: var(--accent);
+}
+
+.btn-icon-sq.danger:hover {
+    background: var(--red)20;
+    color: var(--danger);
+}
+
+.config-header-wrap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.btn-add-small {
+    padding: 4px 10px;
+    font-size: 11px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}

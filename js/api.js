@@ -59,7 +59,8 @@ SGE.api = {
                 SGE.api.callGAS('listar_colaboradores'),
                 SGE.api.callGAS('listar_supervisores'),
                 SGE.api.callGAS('listar_movimentacoes'),
-                SGE.api.callGAS('listar_equipamentos')
+                SGE.api.callGAS('listar_equipamentos'),
+                SGE.api.callGAS('listar_configuracoes')
             ];
 
             // If ADM, we add user list call to the pipeline
@@ -72,13 +73,22 @@ SGE.api = {
             // Launch explicitly in parallel
             const results = await Promise.all(promises);
 
-            const [colabData, supData, movData, equipData] = results;
-            const usrData = hasAdmCall ? results[4] : null;
+            const [colabData, supData, movData, equipData, configData] = results;
+            const usrData = hasAdmCall ? results[5] : null;
 
             if (colabData && Array.isArray(colabData)) SGE.state.colaboradores = colabData;
             if (supData && Array.isArray(supData)) SGE.state.supervisores = supData;
             if (movData && Array.isArray(movData)) SGE.state.movimentacoes = movData;
             if (equipData && Array.isArray(equipData)) SGE.state.equipamentos = equipData;
+
+            if (configData) {
+                if (configData.regimes) SGE.CONFIG.regimes = configData.regimes;
+                if (configData.funcoes) SGE.CONFIG.funcoes = configData.funcoes;
+                if (configData.equipTipos) SGE.CONFIG.equipTipos = configData.equipTipos;
+                if (configData.turnoMap) SGE.CONFIG.turnoMap = configData.turnoMap;
+                if (configData.ordemKanban) SGE.CONFIG.ordemKanban = configData.ordemKanban;
+                localStorage.setItem('SGE_CUSTOM_CONFIG', JSON.stringify(configData));
+            }
 
             if (hasAdmCall && usrData && Array.isArray(usrData)) {
                 SGE.state.usuarios = usrData;

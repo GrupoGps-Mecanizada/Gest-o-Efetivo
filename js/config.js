@@ -74,3 +74,57 @@ SGE.CONFIG = {
     'SEM REGISTRO'
   ]
 };
+
+/**
+ * Manage custom dynamic configurations
+ */
+SGE.configManager = {
+  /**
+   * Load any saved configurations from localStorage and merge into SGE.CONFIG
+   */
+  load() {
+    try {
+      const saved = localStorage.getItem('SGE_CUSTOM_CONFIG');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.regimes) SGE.CONFIG.regimes = parsed.regimes;
+        if (parsed.funcoes) SGE.CONFIG.funcoes = parsed.funcoes;
+        if (parsed.equipTipos) SGE.CONFIG.equipTipos = parsed.equipTipos;
+        if (parsed.turnoMap) SGE.CONFIG.turnoMap = parsed.turnoMap;
+        if (parsed.ordemKanban) SGE.CONFIG.ordemKanban = parsed.ordemKanban;
+        if (parsed.statuses) SGE.CONFIG.statuses = parsed.statuses;
+        if (parsed.motivos) SGE.CONFIG.motivos = parsed.motivos;
+      }
+    } catch (e) {
+      console.warn('Failed to load custom configs', e);
+    }
+  },
+
+  /**
+   * Save current SGE.CONFIG to localStorage
+   */
+  save() {
+    try {
+      const dataToSave = {
+        regimes: SGE.CONFIG.regimes,
+        funcoes: SGE.CONFIG.funcoes,
+        equipTipos: SGE.CONFIG.equipTipos,
+        turnoMap: SGE.CONFIG.turnoMap,
+        ordemKanban: SGE.CONFIG.ordemKanban,
+        statuses: SGE.CONFIG.statuses,
+        motivos: SGE.CONFIG.motivos
+      };
+      localStorage.setItem('SGE_CUSTOM_CONFIG', JSON.stringify(dataToSave));
+
+      // Async sync to the database behind the scenes
+      if (window.SGE && SGE.api && typeof SGE.api.callGAS === 'function') {
+        SGE.api.callGAS('salvar_configuracoes', { config: dataToSave }).catch(e => console.warn('Failed to sync configs to DB', e));
+      }
+    } catch (e) {
+      console.warn('Failed to save custom configs', e);
+    }
+  }
+};
+
+// Auto-load config immediately on script execution
+SGE.configManager.load();

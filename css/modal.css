@@ -97,3 +97,70 @@
         padding: 12px;
     }
 }
+
+/* ===================== DYNAMIC MODAL & CONFIRM ===================== */
+.modal-confirm-msg {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-2);
+}
+
+.modal-dynamic-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modal-dynamic-form label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-3);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+.modal-dynamic-form input[type="text"],
+.modal-dynamic-form input[type="number"],
+.modal-dynamic-form select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-1);
+    color: var(--text-1);
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.modal-dynamic-form input:focus,
+.modal-dynamic-form select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.modal-dynamic-form input[type="color"] {
+    width: 100%;
+    height: 42px;
+    padding: 4px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-1);
+    cursor: pointer;
+}
+
+.btn-danger-confirm {
+    background: var(--danger);
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-danger-confirm:hover {
+    opacity: 0.9;
+}

@@ -258,5 +258,105 @@ SGE.modal = {
     document.getElementById('modal-overlay').classList.remove('open');
     SGE.state.pendingMove = null;
     SGE.state.modalContext = null;
+  },
+
+  /**
+   * Universal Confirmation Modal (Replaces window.confirm)
+   */
+  confirm({ title = 'Confirmar Ação', message, confirmText = 'Confirmar', confirmColor = 'danger', onConfirm }) {
+    SGE.state.modalContext = 'confirm';
+
+    const header = document.querySelector('.modal-header');
+    header.innerHTML = `
+      <div class="modal-title">${title}</div>
+    `;
+
+    const body = document.querySelector('.modal-body');
+    body.innerHTML = `
+      <div class="modal-confirm-msg">${message}</div>
+    `;
+
+    const btnClass = confirmColor === 'danger' ? 'btn-danger-confirm' : 'btn-confirm';
+
+    const footer = document.querySelector('.modal-footer');
+    footer.innerHTML = `
+      <button class="btn-cancel" id="modal-cancel">Cancelar</button>
+      <button class="${btnClass}" id="modal-confirm">${confirmText}</button>
+    `;
+
+    document.getElementById('modal-cancel').addEventListener('click', SGE.modal.close);
+    document.getElementById('modal-confirm').addEventListener('click', () => {
+      if (onConfirm) onConfirm();
+      SGE.modal.close();
+    });
+
+    document.getElementById('modal-overlay').classList.add('open');
+  },
+
+  /**
+   * Universal Dynamic Form Modal (Replaces window.prompt)
+   */
+  openDynamic({ title, subtitle = '', fields, okText = 'Salvar', onConfirm }) {
+    SGE.state.modalContext = 'dynamic';
+
+    const header = document.querySelector('.modal-header');
+    header.innerHTML = `
+      <div class="modal-title">${title}</div>
+      ${subtitle ? `<div class="modal-subtitle">${subtitle}</div>` : ''}
+    `;
+
+    // Generate fields DHTML
+    const fieldsHtml = fields.map((f, i) => {
+      let inputHtml = '';
+      if (f.type === 'select') {
+        inputHtml = `<select id="dyn-field-${i}">
+          ${f.options.map(opt => `<option value="${opt.value}" ${opt.value === f.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
+        </select>`;
+      } else {
+        // text, color, number
+        inputHtml = `<input type="${f.type || 'text'}" id="dyn-field-${i}" value="${f.value || ''}" placeholder="${f.placeholder || ''}" ${f.uppercase ? 'style="text-transform:uppercase"' : ''} />`;
+      }
+      return `
+        <div>
+          <label>${f.label}</label>
+          ${inputHtml}
+        </div>
+      `;
+    }).join('');
+
+    const body = document.querySelector('.modal-body');
+    body.innerHTML = `
+      <div class="modal-dynamic-form">
+        ${fieldsHtml}
+      </div>
+    `;
+
+    const footer = document.querySelector('.modal-footer');
+    footer.innerHTML = `
+      <button class="btn-cancel" id="modal-cancel">Cancelar</button>
+      <button class="btn-confirm" id="modal-confirm">${okText}</button>
+    `;
+
+    document.getElementById('modal-cancel').addEventListener('click', SGE.modal.close);
+    document.getElementById('modal-confirm').addEventListener('click', () => {
+      // Collect values
+      const values = fields.reduce((acc, f, i) => {
+        let val = document.getElementById(`dyn-field-${i}`).value;
+        if (f.uppercase) val = val.toUpperCase();
+        acc[f.id] = val;
+        return acc;
+      }, {});
+
+      if (onConfirm) {
+        // If onConfirm returns explicit false, don't close
+        if (onConfirm(values) !== false) {
+          SGE.modal.close();
+        }
+      } else {
+        SGE.modal.close();
+      }
+    });
+
+    document.getElementById('modal-overlay').classList.add('open');
   }
 };

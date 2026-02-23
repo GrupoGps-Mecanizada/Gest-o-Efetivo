@@ -8,7 +8,6 @@ window.SGE = window.SGE || {};
 
 SGE.viz = {
   render() {
-    SGE.viz.renderToolbar();
     if (SGE.state.viz.mode === 'table') {
       SGE.viz.renderTable();
     } else {
@@ -74,7 +73,20 @@ SGE.viz = {
     const v = SGE.state.viz;
     const h = SGE.helpers;
 
+    // Initialize filters state if not present
+    v.filters = v.filters || {};
+
     let cols = h.filtrarColaboradores();
+
+    // Apply Smart Table Filters
+    if (Object.keys(v.filters).length > 0) {
+      cols = cols.filter(c => {
+        for (const key in v.filters) {
+          if (v.filters[key] && c[key] !== v.filters[key]) return false;
+        }
+        return true;
+      });
+    }
 
     // Sort
     cols.sort((a, b) => {
@@ -84,13 +96,13 @@ SGE.viz = {
     });
 
     const columns = [
-      { key: 'id', label: 'ID' },
-      { key: 'nome', label: 'Nome' },
-      { key: 'funcao', label: 'Função' },
-      { key: 'regime', label: 'Regime' },
-      { key: 'supervisor', label: 'Supervisor' },
-      { key: 'status', label: 'Status' },
-      { key: 'equipamento', label: 'Equipamento' },
+      { key: 'id', label: 'ID', filterable: false },
+      { key: 'nome', label: 'Nome', filterable: false },
+      { key: 'funcao', label: 'Função', filterable: true, options: SGE.CONFIG.funcoes },
+      { key: 'regime', label: 'Regime', filterable: true, options: SGE.CONFIG.regimes },
+      { key: 'supervisor', label: 'Supervisor', filterable: true, options: SGE.state.supervisores.map(s => s.nome) },
+      { key: 'status', label: 'Status', filterable: true, options: SGE.CONFIG.statuses },
+      { key: 'equipamento', label: 'Equipamento', filterable: true, options: Object.keys(SGE.CONFIG.equipTipos) },
     ];
 
     content.innerHTML = `
@@ -99,9 +111,19 @@ SGE.viz = {
           <thead>
             <tr>
               ${columns.map(c => `
-                <th class="${v.sortCol === c.key ? 'sorted' : ''}" data-col="${c.key}">
-                  ${c.label}
-                  <span class="sort-arrow">${v.sortCol === c.key ? (v.sortAsc ? '↑' : '↓') : '↕'}</span>
+                <th class="${v.sortCol === c.key ? 'sorted' : ''}">
+                  <div style="display:flex; flex-direction:column; gap:4px">
+                    <div class="th-sort-clicker" data-col="${c.key}" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between">
+                      <span>${c.label}</span>
+                      <span class="sort-arrow">${v.sortCol === c.key ? (v.sortAsc ? '↑' : '↓') : '↕'}</span>
+                    </div>
+                    ${c.filterable ? `
+                      <select class="table-filter-sel" data-col="${c.key}" style="width:100%; max-width:120px; font-size:10px; padding:2px; background:var(--bg-1); border:1px solid var(--border); border-radius:3px; color:var(--text-1); cursor:pointer">
+                        <option value="">Tudo</option>
+                        ${c.options.map(opt => `<option value="${opt}" ${v.filters[c.key] === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                      </select>
+                    ` : ''}
+                  </div>
                 </th>
               `).join('')}
             </tr>
@@ -124,13 +146,29 @@ SGE.viz = {
     `;
 
     // Sort click
-    content.querySelectorAll('.viz-table th').forEach(th => {
+    content.querySelectorAll('.th-sort-clicker').forEach(th => {
       th.addEventListener('click', () => {
         const col = th.dataset.col;
         if (v.sortCol === col) v.sortAsc = !v.sortAsc;
         else { v.sortCol = col; v.sortAsc = true; }
         SGE.viz.render();
       });
+    });
+
+    // Filter change
+    content.querySelectorAll('.table-filter-sel').forEach(sel => {
+      sel.addEventListener('change', () => {
+        const col = sel.dataset.col;
+        const val = sel.value;
+        if (val === "") {
+          delete v.filters[col];
+        } else {
+          v.filters[col] = val;
+        }
+        SGE.viz.render();
+      });
+      // Prevent sorting when clicking on the select box
+      sel.addEventListener('click', e => e.stopPropagation());
     });
 
     // Row click
