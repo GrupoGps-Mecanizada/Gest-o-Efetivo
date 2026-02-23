@@ -23,7 +23,7 @@ const SCHEMA = {
     validation: {
       2: { values: ['OP', 'MOT'] },                    // Função
       3: { values: ['24HS-A', '24HS-B', '24HS-C', '24HS-D', 'ADM', '16HS-5X2', '16HS-6X3', 'SEM REGISTRO'] }, // Regime
-      6: { values: ['ATIVO', 'INATIVO', 'FÉRIAS'] }    // Status
+      6: { values: ['ATIVO', 'INATIVO', 'FÉRIAS', 'AFASTADO', 'DESLIGADO', 'EM AVISO', 'EM CONTRATAÇÃO'] }    // Status
     }
   },
   Supervisores: {
