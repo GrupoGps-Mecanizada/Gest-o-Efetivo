@@ -37,5 +37,13 @@ SGE.state = {
     drag: {
         cardData: null,
         colSrcIdx: null
-    }
+    },
+
+    // Scroll positions per view — persisted to sessionStorage
+    scrollPositions: {},
+
+    // Background sync state
+    syncLock: false,          // Prevents concurrent background syncs
+    syncDebounceTimer: null,  // Timer for debounced sync calls
+    lastSyncHash: null        // Quick hash comparison to skip re-renders
 };

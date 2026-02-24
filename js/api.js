@@ -167,124 +167,170 @@ SGE.api = {
     },
 
     /**
-     * Background sync - fetches fresh data silently and updates UI if changed
+     * Quick lightweight hash of data arrays for fast change detection.
+     * Uses length + first+last item id to avoid full JSON comparison on no-change cases.
      */
-    async syncBackground() {
-        if (!SGE.CONFIG.gasUrl) return;
-        try {
-            console.log('SGE: Starting background sync...');
-
-            // Quickly check status/hash first to see if anything changed (optional optimization)
-            const status = await SGE.api.callGAS('status', {}, true);
-
-            // Fetch everything in parallel
-            const promises = [
-                SGE.api.callGAS('listar_colaboradores', {}, true),
-                SGE.api.callGAS('listar_supervisores', {}, true),
-                SGE.api.callGAS('listar_movimentacoes', {}, true),
-                SGE.api.callGAS('listar_equipamentos', {}, true)
-            ];
-
-            let hasAdmCall = false;
-            if (SGE.auth.hasRole('ADM')) {
-                promises.push(SGE.api.callGAS('listar_usuarios', {}, true));
-                hasAdmCall = true;
-            }
-
-            const results = await Promise.all(promises);
-
-            const [colabData, supData, movData, equipData] = results;
-            const usrData = hasAdmCall ? results[4] : null;
-
-            let hasChanges = false;
-
-            // Simple cheap comparison: check lengths or stringified versions
-            if (JSON.stringify(colabData) !== JSON.stringify(SGE.state.colaboradores)) hasChanges = true;
-            if (JSON.stringify(supData) !== JSON.stringify(SGE.state.supervisores)) hasChanges = true;
-            if (JSON.stringify(movData) !== JSON.stringify(SGE.state.movimentacoes)) hasChanges = true;
-            if (JSON.stringify(equipData) !== JSON.stringify(SGE.state.equipamentos)) hasChanges = true;
-            if (hasAdmCall && usrData && JSON.stringify(usrData) !== JSON.stringify(SGE.state.usuarios)) hasChanges = true;
-
-            if (hasChanges) {
-                console.log('SGE: Background sync found new data. Updating state globally.');
-                if (colabData) SGE.state.colaboradores = colabData;
-                if (supData) SGE.state.supervisores = supData;
-                if (movData) SGE.state.movimentacoes = movData;
-                if (equipData) SGE.state.equipamentos = equipData;
-                if (usrData) SGE.state.usuarios = usrData;
-
-                SGE.api.cacheData();
-
-                SGE.helpers.updateStats();
-
-                // Re-render currently visible views carefully (imperceptible)
-                // Avoid re-rendering kanban if user is dragging a card
-                if (!(SGE.state.drag && SGE.state.drag.cardData)) {
-                    if (SGE.state.activeView === 'kanban') SGE.kanban.render();
-                }
-
-                if (SGE.state.activeView === 'viz' && SGE.dashboard) SGE.dashboard.render();
-                if (SGE.state.activeView === 'equip' && SGE.equip) SGE.equip.render();
-                if (SGE.state.activeView === 'search' && SGE.search) {
-                    const si = document.getElementById('search-input');
-                    SGE.search.render(si ? si.value : '');
-                }
-                if (SGE.state.activeView === 'history' && SGE.history) SGE.history.render();
-                if (SGE.state.activeView === 'tabela' && SGE.viz) SGE.viz.renderTable();
-                if (SGE.state.activeView === 'grupo' && SGE.viz) SGE.viz.renderGroups();
-            } else {
-                // console.log('SGE: Background sync complete. No changes detected.');
-            }
-        } catch (e) {
-            console.warn('SGE: Background sync failed:', e);
-        }
+    _quickHash(colabs, sups, movs, equips) {
+        const snap = (arr) => {
+            if (!arr || arr.length === 0) return '0';
+            const first = arr[0];
+            const last = arr[arr.length - 1];
+            return `${arr.length}:${first.id || first.nome || ''}:${last.id || last.nome || ''}`;
+        };
+        return `${snap(colabs)}|${snap(sups)}|${snap(movs)}|${snap(equips)}`;
     },
 
     /**
+     * Debounced syncBackground — coalesces rapid successive calls into one.
+     * Safe to call at will after any mutation. Only one sync runs at a time.
+     */
+    syncBackground: (() => {
+        let debounceTimer = null;
+        let running = false;
+
+        const _doSync = async () => {
+            if (running || !SGE.CONFIG.gasUrl) return;
+            running = true;
+
+            try {
+                // Fetch everything in parallel (silent — no sync bar)
+                const promises = [
+                    SGE.api.callGAS('listar_colaboradores', {}, true),
+                    SGE.api.callGAS('listar_supervisores', {}, true),
+                    SGE.api.callGAS('listar_movimentacoes', {}, true),
+                    SGE.api.callGAS('listar_equipamentos', {}, true)
+                ];
+
+                let hasAdmCall = false;
+                if (SGE.auth.hasRole('ADM')) {
+                    promises.push(SGE.api.callGAS('listar_usuarios', {}, true));
+                    hasAdmCall = true;
+                }
+
+                const results = await Promise.all(promises);
+                const [colabData, supData, movData, equipData] = results;
+                const usrData = hasAdmCall ? results[4] : null;
+
+                if (!colabData) {
+                    running = false;
+                    return; // Network issue, skip
+                }
+
+                // Fast pre-check: compare lightweight hashes before doing expensive JSON.stringify
+                const newHash = SGE.api._quickHash(colabData, supData, movData, equipData);
+                if (newHash === SGE.state.lastSyncHash) {
+                    // console.log('SGE Sync: No changes detected (hash match).');
+                    running = false;
+                    return;
+                }
+
+                // Deep comparison only when hashes differ
+                const colabChanged = JSON.stringify(colabData) !== JSON.stringify(SGE.state.colaboradores);
+                const supChanged = JSON.stringify(supData) !== JSON.stringify(SGE.state.supervisores);
+                const movChanged = JSON.stringify(movData) !== JSON.stringify(SGE.state.movimentacoes);
+                const equipChanged = JSON.stringify(equipData) !== JSON.stringify(SGE.state.equipamentos);
+                const usrChanged = hasAdmCall && usrData
+                    && JSON.stringify(usrData) !== JSON.stringify(SGE.state.usuarios);
+
+                const hasChanges = colabChanged || supChanged || movChanged || equipChanged || usrChanged;
+
+                if (hasChanges) {
+                    console.log('SGE Sync: New data detected — updating state.');
+
+                    if (colabData) SGE.state.colaboradores = colabData;
+                    if (supData) SGE.state.supervisores = supData;
+                    if (movData) SGE.state.movimentacoes = movData;
+                    if (equipData) SGE.state.equipamentos = equipData;
+                    if (usrData) SGE.state.usuarios = usrData;
+
+                    SGE.state.lastSyncHash = SGE.api._quickHash(
+                        SGE.state.colaboradores,
+                        SGE.state.supervisores,
+                        SGE.state.movimentacoes,
+                        SGE.state.equipamentos
+                    );
+
+                    SGE.api.cacheData();
+                    SGE.helpers.updateStats();
+
+                    // Re-render ONLY the currently visible view, intelligently
+                    const v = SGE.state.activeView;
+
+                    // Kanban uses smart DOM morphing (won't interrupt scroll/drag)
+                    if (v === 'kanban' && !(SGE.state.drag && SGE.state.drag.cardData)) {
+                        SGE.kanban.render();
+                    }
+                    if (v === 'viz' && SGE.dashboard) SGE.dashboard.render();
+                    if (v === 'equip' && SGE.equip) SGE.equip.render();
+                    if (v === 'search' && SGE.search) {
+                        const si = document.getElementById('search-input');
+                        SGE.search.render(si ? si.value : '');
+                    }
+                    if (v === 'history' && SGE.history) SGE.history.render();
+                    if (v === 'tabela' && SGE.viz) SGE.viz.renderTable();
+                    if (v === 'grupo' && SGE.viz) SGE.viz.renderGroups();
+
+                } else {
+                    SGE.state.lastSyncHash = newHash;
+                }
+            } catch (e) {
+                console.warn('SGE Sync error:', e);
+            } finally {
+                running = false;
+            }
+        };
+
+        // Public interface: debounced by 300ms, only one run at a time
+        return function syncBackground(immediate = false) {
+            if (immediate) {
+                clearTimeout(debounceTimer);
+                _doSync();
+                return;
+            }
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(_doSync, 300);
+        };
+    })(),
+
+    /**
      * Sync a movement to GAS
-     * @param {Object} movData - Movement parameters
      */
     async syncMove(movData) {
         const res = await SGE.api.callGAS('mover_colaborador', movData);
-        SGE.api.syncBackground(); // Intelligent trigger
+        SGE.api.syncBackground(true); // immediate sync after mutation
         return res;
     },
 
     /**
      * Sync a new collaborator to GAS
-     * @param {Object} colData - Collaborator data
      */
     async syncNewColaborador(colData) {
         const res = await SGE.api.callGAS('criar_colaborador', colData);
-        SGE.api.syncBackground(); // Intelligent trigger
+        SGE.api.syncBackground(true);
         return res;
     },
 
     /**
      * Sync collaborator edit to GAS
-     * @param {Object} colData - Updated collaborator data
      */
     async syncEditColaborador(colData) {
         const res = await SGE.api.callGAS('editar_colaborador', colData);
-        SGE.api.syncBackground(); // Intelligent trigger
+        SGE.api.syncBackground(true);
         return res;
     },
 
     /**
      * Sync a batch of collaborators to GAS
-     * @param {Array} updatesArray - Array of {id, ...fields} objects
      */
     async syncBatchColaboradores(updatesArray) {
         if (!updatesArray || updatesArray.length === 0) return true;
         const res = await SGE.api.callGAS('atualizar_lote_colaboradores', { atualizacoes: updatesArray });
-        SGE.api.syncBackground(); // Intelligent trigger
+        SGE.api.syncBackground(true);
         return res;
     },
 
     /**
      * Sync ID update to GAS
-     * @param {string} tempId - Temporary ID
-     * @param {string} newId - New permanent ID
      */
     async syncIdUpdate(tempId, newId) {
         return SGE.api.callGAS('atualizar_id', { temp_id: tempId, novo_id: newId });

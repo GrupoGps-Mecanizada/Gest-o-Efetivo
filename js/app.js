@@ -70,6 +70,9 @@ SGE.app = {
             if (statusEl) statusEl.innerHTML = msg + '<span class="loading-dots"></span>';
         };
 
+        // Restore persisted scroll positions from sessionStorage
+        SGE.navigation.loadScrollPositions();
+
         // 1. Try to load from Cache first for instant boot
         let usedCache = false;
         try {
@@ -85,8 +88,8 @@ SGE.app = {
                 usedCache = true;
                 setStatus('Carregando offline (instanciado do cache)...');
 
-                // Trigger background sync
-                setTimeout(() => { SGE.api.syncBackground(); }, 1000);
+                // Trigger background sync after UI is ready
+                setTimeout(() => { SGE.api.syncBackground(); }, 1500);
             }
         } catch (e) {
             console.warn('Cache load failed:', e);
@@ -121,13 +124,20 @@ SGE.app = {
         SGE.app.setupKanbanArrows();
         SGE.app.setupRefresh();
 
-        // Render initial view (Dashboard/Viz)
-        SGE.navigation.switchView('viz');
+        // Restore the view the user was on before the page reload (from URL hash)
+        const initialView = SGE.navigation.getInitialView();
+        SGE.navigation.switchView(initialView, true); // skipHash=true: don't push state again
 
-        // Iniciar polling silencioso
+        // Listen for browser back/forward navigation
+        window.addEventListener('popstate', (e) => {
+            const view = (e.state && e.state.view) || SGE.navigation.getInitialView();
+            SGE.navigation.switchView(view, true); // skipHash=true: hash already reflects this state
+        });
+
+        // Silent polling (runs every 30s; after mutations, syncBackground(true) runs immediately)
         setInterval(() => {
             SGE.api.syncBackground();
-        }, 30000); // 30 segundos
+        }, 30000);
 
         // Fade out loading screen and show app
         await new Promise(r => setTimeout(r, 300));
@@ -262,10 +272,11 @@ SGE.app = {
                 const icon = btn.querySelector('svg');
                 if (icon) icon.classList.add('loading-spinner');
 
-                await SGE.api.syncBackground();
+                // Force an immediate sync (bypasses debounce)
+                await SGE.api.syncBackground(true);
 
                 if (icon) icon.classList.remove('loading-spinner');
-                SGE.helpers.toast('Sincronizando em tempo real...', 'success');
+                SGE.helpers.toast('Dados sincronizados!', 'success');
             });
         }
     }

@@ -2,43 +2,40 @@
 
 /**
  * SGE — Kanban View
- * Renders kanban board with drag-and-drop for cards and columns
+ * Renders kanban board with drag-and-drop for cards and columns.
+ * Uses smart DOM morphing on background sync to avoid interrupting
+ * user scroll, hover states, or drag operations.
  */
 window.SGE = window.SGE || {};
 
 SGE.kanban = {
     /**
-     * Render the full kanban board
+     * Render the full kanban board.
+     * On an already-rendered board, performs intelligent DOM morphing:
+     * - Adds new cards
+     * - Removes gone cards
+     * - Updates changed cards in-place
+     * - Never resets scroll positions
      */
     render() {
         const container = document.getElementById('kanban-view');
+        if (!container) return;
 
-        // Save scroll states to prevent jumping during silent refresh
-        const scrollState = { mainX: 0, mainY: 0, cols: {} };
-        if (container) {
-            scrollState.mainX = container.scrollLeft;
-            scrollState.mainY = container.scrollTop;
-            container.querySelectorAll('.col-body').forEach(cb => {
-                const supName = cb.dataset.supervisor;
-                if (supName) scrollState.cols[supName] = cb.scrollTop;
-            });
-        }
-
-        const frag = document.createDocumentFragment();
-        const cols = SGE.helpers.filtrarColaboradores();
+        const filteredColabs = SGE.helpers.filtrarColaboradores();
         const supAtivos = SGE.state.supervisores.filter(s => s.ativo);
 
-        // Sort supervisors explicitly by the configuration array
+        // Sort supervisors by configured order
         const order = SGE.CONFIG.ordemKanban || [];
         supAtivos.sort((a, b) => {
             const idxA = order.indexOf(a.nome);
             const idxB = order.indexOf(b.nome);
             if (idxA === -1 && idxB === -1) return a.nome.localeCompare(b.nome);
-            if (idxA === -1) return 1; // Unrecognized to bottom
+            if (idxA === -1) return 1;
             if (idxB === -1) return -1;
             return idxA - idxB;
         });
 
+        // No data state
         if (supAtivos.length === 0 && SGE.state.colaboradores.length === 0) {
             container.innerHTML = `
         <div class="no-data-message" style="width:100%;padding-top:80px">
@@ -52,18 +49,231 @@ SGE.kanban = {
             return;
         }
 
+        // Check if this is a first render (no columns exist yet)
+        const existingCols = container.querySelectorAll('.kanban-col');
+        const isFirstRender = existingCols.length === 0;
+
+        if (isFirstRender) {
+            SGE.kanban._fullRender(container, filteredColabs, supAtivos);
+        } else {
+            SGE.kanban._morphRender(container, filteredColabs, supAtivos);
+        }
+    },
+
+    /**
+     * Full (initial) render: build all columns from scratch.
+     * Only called when container is empty.
+     */
+    _fullRender(container, filteredColabs, supAtivos) {
+        const frag = document.createDocumentFragment();
+
         supAtivos.forEach((sup, idx) => {
-            const membros = cols.filter(c => c.supervisor === sup.nome);
-            const colEl = document.createElement('div');
-            colEl.className = 'kanban-col';
-            colEl.dataset.supervisor = sup.nome;
-            colEl.dataset.supIdx = idx;
+            const membros = filteredColabs.filter(c => c.supervisor === sup.nome);
+            const colEl = SGE.kanban._buildColumn(sup, idx, membros);
+            frag.appendChild(colEl);
+        });
 
-            if (SGE.auth.hasRole('GESTAO')) {
-                colEl.draggable = true;
+        container.innerHTML = '';
+        container.appendChild(frag);
+    },
+
+    /**
+     * Smart morph render: update only what changed.
+     * Preserves scroll positions and event listeners on unchanged cards.
+     */
+    _morphRender(container, filteredColabs, supAtivos) {
+        // Save scroll states before any DOM changes
+        const scrollState = { mainX: container.scrollLeft, cols: {} };
+        container.querySelectorAll('.col-body').forEach(cb => {
+            if (cb.dataset.supervisor) scrollState.cols[cb.dataset.supervisor] = cb.scrollTop;
+        });
+
+        // Build lookup of existing columns
+        const existingColMap = {};
+        container.querySelectorAll('.kanban-col').forEach(col => {
+            existingColMap[col.dataset.supervisor] = col;
+        });
+
+        // Determine which supervisors are needed (in new order)
+        const neededSupNames = supAtivos.map(s => s.nome);
+
+        // Remove columns for supervisors no longer active
+        Object.keys(existingColMap).forEach(name => {
+            if (!neededSupNames.includes(name)) {
+                existingColMap[name].remove();
+                delete existingColMap[name];
             }
+        });
 
-            colEl.innerHTML = `
+        // Add or update columns
+        supAtivos.forEach((sup, idx) => {
+            const membros = filteredColabs.filter(c => c.supervisor === sup.nome);
+            const existing = existingColMap[sup.nome];
+
+            if (!existing) {
+                // New column — insert at the correct position
+                const newCol = SGE.kanban._buildColumn(sup, idx, membros);
+                const refNode = container.children[idx] || null;
+                container.insertBefore(newCol, refNode);
+                existingColMap[sup.nome] = newCol;
+            } else {
+                // Update column header count
+                const countEl = existing.querySelector('.col-count');
+                if (countEl) countEl.textContent = membros.length;
+
+                // Morph the column body
+                const body = existing.querySelector('.col-body');
+                if (body) {
+                    SGE.kanban._morphColumnBody(body, sup, membros);
+                }
+
+                // Reorder column if needed (place it at the expected index)
+                const currentIdx = Array.from(container.children).indexOf(existing);
+                if (currentIdx !== idx) {
+                    const refNode = container.children[idx] || null;
+                    container.insertBefore(existing, refNode);
+                }
+            }
+        });
+
+        // Restore scroll states after all DOM mutations
+        requestAnimationFrame(() => {
+            container.scrollLeft = scrollState.mainX;
+            container.querySelectorAll('.col-body').forEach(cb => {
+                const sup = cb.dataset.supervisor;
+                if (sup && scrollState.cols[sup] != null) {
+                    cb.scrollTop = scrollState.cols[sup];
+                }
+            });
+        });
+    },
+
+    /**
+     * Morph just the cards inside a column body.
+     * Adds, removes, and updates cards without touching unchanged ones.
+     */
+    _morphColumnBody(body, sup, membros) {
+        if (membros.length === 0) {
+            // If there's already an empty message, leave it; otherwise replace
+            if (!body.querySelector('.empty-col')) {
+                body.innerHTML = '<div class="empty-col">Nenhum colaborador</div>';
+            }
+            return;
+        }
+
+        // Remove empty-col placeholder if present
+        const emptyEl = body.querySelector('.empty-col');
+        if (emptyEl) emptyEl.remove();
+
+        // Build a map of existing card elements by collaborator id
+        const existingCards = {};
+        body.querySelectorAll('.card[data-id]').forEach(card => {
+            existingCards[card.dataset.id] = card;
+        });
+
+        const newIds = new Set(membros.map(m => m.id));
+
+        // Remove cards that are no longer in this column
+        Object.keys(existingCards).forEach(id => {
+            if (!newIds.has(id)) {
+                existingCards[id].remove();
+                delete existingCards[id];
+            }
+        });
+
+        // Add or update cards in order
+        membros.forEach((col, i) => {
+            const existing = existingCards[col.id];
+
+            if (!existing) {
+                // New card — create and insert at correct position
+                const newCard = SGE.kanban.makeCard(col);
+                const refNode = body.children[i] || null;
+                body.insertBefore(newCard, refNode);
+            } else {
+                // Card exists — check if data changed and update in-place
+                SGE.kanban._updateCardIfChanged(existing, col);
+
+                // Reorder if needed
+                const currentIdx = Array.from(body.children).indexOf(existing);
+                if (currentIdx !== i) {
+                    const refNode = body.children[i] || null;
+                    body.insertBefore(existing, refNode);
+                }
+            }
+        });
+    },
+
+    /**
+     * Update a card's content in-place only if its displayed data changed.
+     * Preserves event listeners and prevents unnecessary repaints.
+     */
+    _updateCardIfChanged(cardEl, col) {
+        const h = SGE.helpers;
+        const semId = h.isSemId(col);
+        const isFerias = h.isFerias(col);
+
+        // Compare key visible fields using data attributes for fast diffing
+        const prev = {
+            nome: cardEl.dataset.nome || '',
+            funcao: cardEl.dataset.funcao || '',
+            regime: cardEl.dataset.regime || '',
+            equipamento: cardEl.dataset.equipamento || '',
+            ferias: cardEl.dataset.ferias || '',
+            semId: cardEl.dataset.semId || ''
+        };
+
+        const next = {
+            nome: col.nome || '',
+            funcao: col.funcao || '',
+            regime: col.regime || '',
+            equipamento: col.equipamento || '',
+            ferias: isFerias ? '1' : '',
+            semId: semId ? '1' : ''
+        };
+
+        const changed = Object.keys(next).some(k => prev[k] !== next[k]);
+        if (!changed) return; // Nothing to update — skip repaint
+
+        // Stamp data attributes for future comparisons
+        Object.assign(cardEl.dataset, next);
+
+        const badgeRegime = h.regimeBadgeClass(col.regime);
+        const badgeFuncao = col.funcao === 'MOT' ? 'badge-MOT' : 'badge-OP';
+        const alertHtml = semId ? '<div class="card-alert" title="Sem ID definitivo"></div>' : '';
+        const feriasHtml = isFerias ? '<span class="badge badge-SEM">🏖 Férias</span>' : '';
+
+        // Update inner HTML (preserves the card element and its drag listeners)
+        cardEl.innerHTML = `
+      ${alertHtml}
+      <div class="card-top">
+        <div class="card-id">${col.id}</div>
+        <div class="card-name">${col.nome}</div>
+      </div>
+      <div class="card-badges">
+        <span class="badge ${badgeFuncao}">${col.funcao}</span>
+        <span class="badge ${badgeRegime}">${col.regime}</span>
+        ${feriasHtml}
+      </div>
+      <div class="card-vaga">${h.equipamentoIconSvg()} ${col.equipamento || 'Sem equipamento'}</div>
+    `;
+    },
+
+    /**
+     * Build a full column element (used in first render and for new columns).
+     */
+    _buildColumn(sup, idx, membros) {
+        const container = document.getElementById('kanban-view');
+        const colEl = document.createElement('div');
+        colEl.className = 'kanban-col';
+        colEl.dataset.supervisor = sup.nome;
+        colEl.dataset.supIdx = idx;
+
+        if (SGE.auth.hasRole('GESTAO')) {
+            colEl.draggable = true;
+        }
+
+        colEl.innerHTML = `
         <div class="col-header">
           <div class="col-title">
             ☰ ${sup.nome}
@@ -74,41 +284,38 @@ SGE.kanban = {
         <div class="col-body" data-supervisor="${sup.nome}"></div>
       `;
 
-            // Column drag (reorder supervisors)
-            if (SGE.auth.hasRole('GESTAO')) {
-                SGE.kanban._setupColumnDrag(colEl, idx, container);
-            }
+        if (SGE.auth.hasRole('GESTAO')) {
+            SGE.kanban._setupColumnDrag(colEl, idx, container);
+        }
 
-            const body = colEl.querySelector('.col-body');
+        const body = colEl.querySelector('.col-body');
 
-            // Card drag events on column body
-            if (SGE.auth.hasRole('GESTAO')) {
-                SGE.kanban._setupColumnDrop(body, sup);
-            }
+        if (SGE.auth.hasRole('GESTAO')) {
+            SGE.kanban._setupColumnDrop(body, sup);
+        }
 
-            if (membros.length === 0) {
-                body.innerHTML = '<div class="empty-col">Nenhum colaborador</div>';
-            } else {
-                const bodyFrag = document.createDocumentFragment();
-                membros.forEach(c => bodyFrag.appendChild(SGE.kanban.makeCard(c)));
-                body.appendChild(bodyFrag);
-            }
+        if (membros.length === 0) {
+            body.innerHTML = '<div class="empty-col">Nenhum colaborador</div>';
+        } else {
+            const bodyFrag = document.createDocumentFragment();
+            membros.forEach(c => {
+                const card = SGE.kanban.makeCard(c);
+                // Stamp initial data attributes for future diffing
+                const h = SGE.helpers;
+                Object.assign(card.dataset, {
+                    nome: c.nome || '',
+                    funcao: c.funcao || '',
+                    regime: c.regime || '',
+                    equipamento: c.equipamento || '',
+                    ferias: h.isFerias(c) ? '1' : '',
+                    semId: h.isSemId(c) ? '1' : ''
+                });
+                bodyFrag.appendChild(card);
+            });
+            body.appendChild(bodyFrag);
+        }
 
-            frag.appendChild(colEl);
-        });
-
-        container.innerHTML = '';
-        container.appendChild(frag);
-
-        // Restore scroll states
-        container.scrollLeft = scrollState.mainX;
-        container.scrollTop = scrollState.mainY;
-        container.querySelectorAll('.col-body').forEach(cb => {
-            const supName = cb.dataset.supervisor;
-            if (supName && scrollState.cols[supName]) {
-                cb.scrollTop = scrollState.cols[supName];
-            }
-        });
+        return colEl;
     },
 
     /**

@@ -2,16 +2,96 @@
 
 /**
  * SGE — Navigation
- * View switching and filter management
+ * View switching, filter management, and scroll/position persistence
  */
 window.SGE = window.SGE || {};
 
 SGE.navigation = {
+
+    // Valid view names for hash restoration
+    _validViews: ['viz', 'kanban', 'search', 'history', 'tabela', 'grupo', 'equip', 'settings', 'ferias', 'treinamentos'],
+
+    /**
+     * Save scroll position for current active view before leaving
+     */
+    _saveScrollPosition(viewName) {
+        if (!viewName) return;
+        try {
+            // General view scroll
+            const viewEl = document.getElementById(`${viewName}-view`);
+            if (viewEl) {
+                SGE.state.scrollPositions[viewName] = viewEl.scrollTop;
+            }
+
+            // Kanban: also save main horizontal scroll + each column scroll
+            if (viewName === 'kanban') {
+                const kv = document.getElementById('kanban-view');
+                if (kv) {
+                    const kanbanState = { scrollLeft: kv.scrollLeft, cols: {} };
+                    kv.querySelectorAll('.col-body').forEach(cb => {
+                        if (cb.dataset.supervisor) {
+                            kanbanState.cols[cb.dataset.supervisor] = cb.scrollTop;
+                        }
+                    });
+                    SGE.state.scrollPositions['_kanban'] = kanbanState;
+                }
+            }
+
+            // Persist to sessionStorage so it survives a hash-triggered reload
+            sessionStorage.setItem('SGE_SCROLL', JSON.stringify(SGE.state.scrollPositions));
+        } catch (e) { /* ignore */ }
+    },
+
+    /**
+     * Restore scroll position for a view after rendering
+     */
+    _restoreScrollPosition(viewName) {
+        if (!viewName) return;
+        requestAnimationFrame(() => {
+            try {
+                const viewEl = document.getElementById(`${viewName}-view`);
+                const pos = SGE.state.scrollPositions[viewName];
+                if (viewEl && pos) {
+                    viewEl.scrollTop = pos;
+                }
+
+                // Kanban: restore horizontal + per-column scroll
+                if (viewName === 'kanban') {
+                    const kanbanState = SGE.state.scrollPositions['_kanban'];
+                    const kv = document.getElementById('kanban-view');
+                    if (kv && kanbanState) {
+                        kv.scrollLeft = kanbanState.scrollLeft || 0;
+                        if (kanbanState.cols) {
+                            kv.querySelectorAll('.col-body').forEach(cb => {
+                                const sup = cb.dataset.supervisor;
+                                if (sup && kanbanState.cols[sup]) {
+                                    cb.scrollTop = kanbanState.cols[sup];
+                                }
+                            });
+                        }
+                    }
+                }
+            } catch (e) { /* ignore */ }
+        });
+    },
+
     /**
      * Switch to a specific view
+     * @param {string} viewName - Target view identifier
+     * @param {boolean} [skipHash] - If true, don't update location.hash (used when restoring from hash)
      */
-    switchView(viewName) {
+    switchView(viewName, skipHash = false) {
+        // Save scroll of departing view
+        if (SGE.state.activeView && SGE.state.activeView !== viewName) {
+            SGE.navigation._saveScrollPosition(SGE.state.activeView);
+        }
+
         SGE.state.activeView = viewName;
+
+        // Update URL hash for page-reload persistence (browser history supported)
+        if (!skipHash) {
+            history.pushState({ view: viewName }, '', `#${viewName}`);
+        }
 
         // Clear active states globally
         document.querySelectorAll('#nav [data-view], #nav .nav-module').forEach(el => {
@@ -71,6 +151,32 @@ SGE.navigation = {
                 SGE.settings.render();
                 break;
         }
+
+        // Restore scroll after render
+        SGE.navigation._restoreScrollPosition(viewName);
+    },
+
+    /**
+     * Determine the initial view from URL hash or default
+     */
+    getInitialView() {
+        const hash = location.hash.replace('#', '').trim().toLowerCase();
+        if (hash && SGE.navigation._validViews.includes(hash)) {
+            return hash;
+        }
+        return 'viz'; // default
+    },
+
+    /**
+     * Load persisted scroll positions from sessionStorage
+     */
+    loadScrollPositions() {
+        try {
+            const saved = sessionStorage.getItem('SGE_SCROLL');
+            if (saved) {
+                SGE.state.scrollPositions = JSON.parse(saved);
+            }
+        } catch (e) { /* ignore */ }
     },
 
     /**
@@ -92,9 +198,36 @@ SGE.navigation = {
                     chip.classList.add('active');
                 }
 
+                // Persist active filters to sessionStorage
+                try {
+                    sessionStorage.setItem('SGE_FILTROS', JSON.stringify(SGE.state.filtros));
+                } catch (e) { /* ignore */ }
+
                 SGE.kanban.render();
             });
         });
+    },
+
+    /**
+     * Restore previously active filter chips from sessionStorage
+     */
+    restoreFilters() {
+        try {
+            const saved = sessionStorage.getItem('SGE_FILTROS');
+            if (saved) {
+                const filtros = JSON.parse(saved);
+                Object.assign(SGE.state.filtros, filtros);
+
+                // Visually activate the chips
+                document.querySelectorAll('.filter-chip').forEach(chip => {
+                    const type = chip.dataset.type;
+                    const value = chip.dataset.value;
+                    if (SGE.state.filtros[type] === value) {
+                        chip.classList.add('active');
+                    }
+                });
+            }
+        } catch (e) { /* ignore */ }
     },
 
     /**
@@ -103,9 +236,6 @@ SGE.navigation = {
     buildFilterChips() {
         const filterbar = document.getElementById('filterbar');
         if (!filterbar) return;
-
-        // Get unique statuses from data
-        const allStatuses = [...new Set(SGE.state.colaboradores.map(c => c.status).filter(Boolean))];
 
         filterbar.innerHTML = `
       <span class="filter-label">Regime</span>
@@ -125,5 +255,6 @@ SGE.navigation = {
     `;
 
         SGE.navigation.setupFilters();
+        SGE.navigation.restoreFilters();
     }
 };
