@@ -12,6 +12,18 @@ SGE.kanban = {
      */
     render() {
         const container = document.getElementById('kanban-view');
+
+        // Save scroll states to prevent jumping during silent refresh
+        const scrollState = { mainX: 0, mainY: 0, cols: {} };
+        if (container) {
+            scrollState.mainX = container.scrollLeft;
+            scrollState.mainY = container.scrollTop;
+            container.querySelectorAll('.col-body').forEach(cb => {
+                const supName = cb.dataset.supervisor;
+                if (supName) scrollState.cols[supName] = cb.scrollTop;
+            });
+        }
+
         const frag = document.createDocumentFragment();
         const cols = SGE.helpers.filtrarColaboradores();
         const supAtivos = SGE.state.supervisores.filter(s => s.ativo);
@@ -87,6 +99,16 @@ SGE.kanban = {
 
         container.innerHTML = '';
         container.appendChild(frag);
+
+        // Restore scroll states
+        container.scrollLeft = scrollState.mainX;
+        container.scrollTop = scrollState.mainY;
+        container.querySelectorAll('.col-body').forEach(cb => {
+            const supName = cb.dataset.supervisor;
+            if (supName && scrollState.cols[supName]) {
+                cb.scrollTop = scrollState.cols[supName];
+            }
+        });
     },
 
     /**

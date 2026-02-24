@@ -146,6 +146,9 @@ SGE.equip = {
         `;
     }).join('');
 
+    const viewContainer = document.getElementById('equip-view');
+    const savedScroll = viewContainer ? viewContainer.scrollTop : 0;
+
     view.innerHTML = `
       <div class="equip-toolbar" id="equip-toolbar">
         <button class="equip-type-btn ${state.filtroTipo === 'TODOS' ? 'active' : ''}" data-tipo="TODOS">TODOS</button>
@@ -186,6 +189,7 @@ SGE.equip = {
     `;
 
     SGE.equip.setupListeners();
+    if (viewContainer) viewContainer.scrollTop = savedScroll;
   },
 
   /**

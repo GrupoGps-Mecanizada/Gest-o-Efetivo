@@ -105,6 +105,10 @@ SGE.viz = {
       { key: 'equipamento', label: 'Equipamento', filterable: true, options: Object.keys(SGE.CONFIG.equipTipos) },
     ];
 
+    // Salvar estado de scroll para não pular a tela no refresh
+    const viewContainer = document.getElementById('tabela-view');
+    const savedScroll = viewContainer ? viewContainer.scrollTop : 0;
+
     content.innerHTML = `
       <div class="viz-table-wrap">
         <table class="viz-table">
@@ -178,6 +182,8 @@ SGE.viz = {
         if (col) SGE.drawer.open(col);
       });
     });
+
+    if (viewContainer) viewContainer.scrollTop = savedScroll;
   },
 
   renderGroups() {
@@ -193,6 +199,14 @@ SGE.viz = {
       const key = c[v.groupBy] || 'Sem Informação';
       if (!groups[key]) groups[key] = [];
       groups[key].push(c);
+    });
+
+    // Salvar estado de scroll e expansões
+    const viewContainer = document.getElementById('grupo-view');
+    const savedScroll = viewContainer ? viewContainer.scrollTop : 0;
+    const expandedGroups = new Set();
+    content.querySelectorAll('.viz-group-header.expanded .group-label').forEach(el => {
+      expandedGroups.add(el.textContent.trim());
     });
 
     const container = document.createElement('div');
@@ -241,6 +255,11 @@ SGE.viz = {
         });
       });
 
+      if (expandedGroups.has(groupName)) {
+        header.classList.add('expanded');
+        body.classList.add('open');
+      }
+
       section.appendChild(header);
       section.appendChild(body);
       container.appendChild(section);
@@ -248,5 +267,7 @@ SGE.viz = {
 
     content.innerHTML = '';
     content.appendChild(container);
+
+    if (viewContainer) viewContainer.scrollTop = savedScroll;
   }
 };

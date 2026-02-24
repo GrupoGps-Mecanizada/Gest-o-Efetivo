@@ -124,6 +124,11 @@ SGE.app = {
         // Render initial view (Dashboard/Viz)
         SGE.navigation.switchView('viz');
 
+        // Iniciar polling silencioso
+        setInterval(() => {
+            SGE.api.syncBackground();
+        }, 30000); // 30 segundos
+
         // Fade out loading screen and show app
         await new Promise(r => setTimeout(r, 300));
         if (topbar) topbar.style.transition = 'opacity .4s ease';
@@ -254,11 +259,13 @@ SGE.app = {
         const btn = document.getElementById('refresh-btn');
         if (btn) {
             btn.addEventListener('click', async () => {
-                SGE.helpers.toast('Recarregando dados...', 'info');
-                await SGE.api.loadData();
-                SGE.helpers.updateStats();
-                SGE.navigation.switchView(SGE.state.activeView);
-                SGE.helpers.toast('Dados atualizados', 'success');
+                const icon = btn.querySelector('svg');
+                if (icon) icon.classList.add('loading-spinner');
+
+                await SGE.api.syncBackground();
+
+                if (icon) icon.classList.remove('loading-spinner');
+                SGE.helpers.toast('Sincronizando em tempo real...', 'success');
             });
         }
     }

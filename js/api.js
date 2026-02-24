@@ -44,7 +44,7 @@ SGE.api = {
      * @param {Object} params - Parameters for the action
      * @returns {Promise<*>} Response data or null on failure
      */
-    async callGAS(action, params = {}) {
+    async callGAS(action, params = {}, silent = false) {
         if (!SGE.CONFIG.gasUrl) return null;
         try {
             // GAS Web Apps redirect on POST which loses CORS headers.
@@ -59,7 +59,7 @@ SGE.api = {
 
             url.searchParams.set('params', JSON.stringify(params));
 
-            this.updateSyncBar(true);
+            if (!silent) this.updateSyncBar(true);
 
             const resp = await fetch(url.toString(), {
                 method: 'GET',
@@ -67,13 +67,13 @@ SGE.api = {
             });
             const text = await resp.text();
 
-            this.updateSyncBar(false);
+            if (!silent) this.updateSyncBar(false);
 
             const data = JSON.parse(text);
             if (!data.success) throw new Error(data.error || 'Unknown error');
             return data.data;
         } catch (e) {
-            this.updateSyncBar(false);
+            if (!silent) this.updateSyncBar(false);
             console.warn('GAS call failed:', e.message);
             return null;
         }
@@ -175,19 +175,19 @@ SGE.api = {
             console.log('SGE: Starting background sync...');
 
             // Quickly check status/hash first to see if anything changed (optional optimization)
-            const status = await SGE.api.callGAS('status');
+            const status = await SGE.api.callGAS('status', {}, true);
 
             // Fetch everything in parallel
             const promises = [
-                SGE.api.callGAS('listar_colaboradores'),
-                SGE.api.callGAS('listar_supervisores'),
-                SGE.api.callGAS('listar_movimentacoes'),
-                SGE.api.callGAS('listar_equipamentos')
+                SGE.api.callGAS('listar_colaboradores', {}, true),
+                SGE.api.callGAS('listar_supervisores', {}, true),
+                SGE.api.callGAS('listar_movimentacoes', {}, true),
+                SGE.api.callGAS('listar_equipamentos', {}, true)
             ];
 
             let hasAdmCall = false;
             if (SGE.auth.hasRole('ADM')) {
-                promises.push(SGE.api.callGAS('listar_usuarios'));
+                promises.push(SGE.api.callGAS('listar_usuarios', {}, true));
                 hasAdmCall = true;
             }
 
@@ -215,14 +215,25 @@ SGE.api = {
 
                 SGE.api.cacheData();
 
-                // Re-render currently visible views
-                SGE.kanban.render();
                 SGE.helpers.updateStats();
-                if (document.getElementById('equip-view').classList.contains('active')) SGE.equip.render();
 
-                SGE.helpers.toast('Base de dados sincronizada automaticamente.', 'success');
+                // Re-render currently visible views carefully (imperceptible)
+                // Avoid re-rendering kanban if user is dragging a card
+                if (!(SGE.state.drag && SGE.state.drag.cardData)) {
+                    if (SGE.state.activeView === 'kanban') SGE.kanban.render();
+                }
+
+                if (SGE.state.activeView === 'viz' && SGE.dashboard) SGE.dashboard.render();
+                if (SGE.state.activeView === 'equip' && SGE.equip) SGE.equip.render();
+                if (SGE.state.activeView === 'search' && SGE.search) {
+                    const si = document.getElementById('search-input');
+                    SGE.search.render(si ? si.value : '');
+                }
+                if (SGE.state.activeView === 'history' && SGE.history) SGE.history.render();
+                if (SGE.state.activeView === 'tabela' && SGE.viz) SGE.viz.renderTable();
+                if (SGE.state.activeView === 'grupo' && SGE.viz) SGE.viz.renderGroups();
             } else {
-                console.log('SGE: Background sync complete. No changes detected.');
+                // console.log('SGE: Background sync complete. No changes detected.');
             }
         } catch (e) {
             console.warn('SGE: Background sync failed:', e);
@@ -234,7 +245,9 @@ SGE.api = {
      * @param {Object} movData - Movement parameters
      */
     async syncMove(movData) {
-        return SGE.api.callGAS('mover_colaborador', movData);
+        const res = await SGE.api.callGAS('mover_colaborador', movData);
+        SGE.api.syncBackground(); // Intelligent trigger
+        return res;
     },
 
     /**
@@ -242,7 +255,9 @@ SGE.api = {
      * @param {Object} colData - Collaborator data
      */
     async syncNewColaborador(colData) {
-        return SGE.api.callGAS('criar_colaborador', colData);
+        const res = await SGE.api.callGAS('criar_colaborador', colData);
+        SGE.api.syncBackground(); // Intelligent trigger
+        return res;
     },
 
     /**
@@ -250,7 +265,9 @@ SGE.api = {
      * @param {Object} colData - Updated collaborator data
      */
     async syncEditColaborador(colData) {
-        return SGE.api.callGAS('editar_colaborador', colData);
+        const res = await SGE.api.callGAS('editar_colaborador', colData);
+        SGE.api.syncBackground(); // Intelligent trigger
+        return res;
     },
 
     /**
@@ -259,7 +276,9 @@ SGE.api = {
      */
     async syncBatchColaboradores(updatesArray) {
         if (!updatesArray || updatesArray.length === 0) return true;
-        return SGE.api.callGAS('atualizar_lote_colaboradores', { atualizacoes: updatesArray });
+        const res = await SGE.api.callGAS('atualizar_lote_colaboradores', { atualizacoes: updatesArray });
+        SGE.api.syncBackground(); // Intelligent trigger
+        return res;
     },
 
     /**

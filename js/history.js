@@ -9,6 +9,7 @@ window.SGE = window.SGE || {};
 SGE.history = {
     render() {
         const container = document.getElementById('history-view');
+        const savedScroll = container ? container.scrollTop : 0;
         const h = SGE.helpers;
 
         const filterInputs = container.querySelectorAll('.history-filter-input');
@@ -52,6 +53,8 @@ SGE.history = {
         <td style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">${m.usuario || '—'}</td>
       </tr>
     `).join('');
+
+        if (container) container.scrollTop = savedScroll;
     },
 
     /**

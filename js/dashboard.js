@@ -200,44 +200,112 @@ SGE.dashboard = {
 
         this.destroyAllCharts();
 
+        if (window.ChartDataLabels) {
+            Chart.register(ChartDataLabels);
+        }
+
         Chart.defaults.font.family = "'Inter', sans-serif";
-        Chart.defaults.color = "#64748b";
+        Chart.defaults.color = '#64748b';
         Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 56, 104, 0.9)';
         Chart.defaults.plugins.tooltip.padding = 10;
         Chart.defaults.plugins.tooltip.cornerRadius = 6;
 
-        const palette = this.getPalette();
+        // Desativar datalabels globalmente — cada gráfico configura os seus
+        Chart.defaults.plugins.datalabels = { display: false };
 
-        // ----------------------------------------------------
+        var self = this;
+        var palette = this.getPalette();
+
+        // ── Helper: legenda com quantidade (dataset único) ──
+        function legendWithQty(chart) {
+            var d = chart.data;
+            return d.labels.map(function (label, i) {
+                var val = d.datasets[0].data[i];
+                return {
+                    text: label + '   ' + val,
+                    fillStyle: d.datasets[0].backgroundColor[i],
+                    strokeStyle: d.datasets[0].backgroundColor[i],
+                    pointStyle: 'circle',
+                    hidden: false,
+                    index: i
+                };
+            });
+        }
+
+        // ── Helper: legenda com total (multi-dataset) ──
+        function legendMultiTotal(chart) {
+            return chart.data.datasets.map(function (ds, i) {
+                var total = ds.data.reduce(function (a, b) { return a + b; }, 0);
+                return {
+                    text: ds.label + '   ' + total,
+                    fillStyle: ds.backgroundColor,
+                    strokeStyle: ds.backgroundColor,
+                    pointStyle: 'circle',
+                    hidden: false,
+                    datasetIndex: i
+                };
+            });
+        }
+
+        var legendBottom = {
+            position: 'bottom',
+            labels: {
+                boxWidth: 10,
+                usePointStyle: true,
+                padding: 16,
+                font: { size: 11 }
+            }
+        };
+
+        var legendBottomWithQty = {
+            position: 'bottom',
+            labels: {
+                boxWidth: 10,
+                usePointStyle: true,
+                padding: 16,
+                font: { size: 11 },
+                generateLabels: legendWithQty
+            }
+        };
+
+        // ────────────────────────────────────────────────────────────
         // 1. Distribuição por Status (Doughnut)
-        // ----------------------------------------------------
-        const statusMap = { 'ATIVO': 0, 'FÉRIAS': 0, 'AFASTADO': 0, 'DESLIGADO': 0, 'EM AVISO': 0, 'EM CONTRATAÇÃO': 0, 'FALTA': 0, 'SEM_ID': 0, 'OUTROS': 0 };
-        data.forEach(c => {
-            const s = c.status?.toUpperCase() || '';
-            if (statusMap[s] !== undefined) statusMap[s]++;
-            else if (s) statusMap['OUTROS']++;
+        //    Labels: BRANCO CENTRADO DENTRO DA FATIA (apenas se ≥ 8% do total)
+        //    Valores menores ficam apenas na legenda.
+        // ────────────────────────────────────────────────────────────
+        var statusColorMap = {
+            'ATIVO': self.colors.success,
+            'FÉRIAS': self.colors.warning,
+            'AFASTADO': self.colors.amber,
+            'DESLIGADO': self.colors.purple,
+            'EM AVISO': self.colors.indigo,
+            'EM CONTRATAÇÃO': self.colors.teal,
+            'FALTA': self.colors.rose,
+            'SEM_ID': self.colors.danger,
+            'OUTROS': self.colors.slate
+        };
+
+        var statusMap = {};
+        data.forEach(function (c) {
+            var s = (c.status || '').toUpperCase();
+            if (!s) return;
+            statusMap[s] = (statusMap[s] || 0) + 1;
         });
 
-        // Limpar zeros
-        Object.keys(statusMap).forEach(k => { if (statusMap[k] === 0) delete statusMap[k]; });
+        var statusLabels = Object.keys(statusMap);
+        var statusValues = Object.values(statusMap);
+        var statusTotal = statusValues.reduce(function (a, b) { return a + b; }, 0);
+        var statusColors = statusLabels.map(function (lbl) {
+            return statusColorMap[lbl] || '#64748b';
+        });
 
         this.charts.status = new Chart(document.getElementById('chartStatus'), {
             type: 'doughnut',
             data: {
-                labels: Object.keys(statusMap),
+                labels: statusLabels,
                 datasets: [{
-                    data: Object.values(statusMap),
-                    backgroundColor: [
-                        this.colors.success,  // ATIVO
-                        this.colors.warning,  // FÉRIAS
-                        this.colors.amber,    // AFASTADO
-                        this.colors.purple,   // DESLIGADO
-                        this.colors.indigo,   // EM AVISO
-                        this.colors.teal,     // EM CONTRATAÇÃO
-                        this.colors.rose,     // FALTA
-                        this.colors.danger,   // SEM_ID
-                        this.colors.slate     // OUTROS
-                    ],
+                    data: statusValues,
+                    backgroundColor: statusColors,
                     borderWidth: 2,
                     borderColor: '#ffffff',
                     hoverOffset: 4
@@ -246,59 +314,109 @@ SGE.dashboard = {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                cutout: '65%',
+                cutout: '62%',
                 plugins: {
-                    legend: { position: 'bottom', labels: { boxWidth: 12, usePointStyle: true } }
+                    legend: legendBottomWithQty,
+                    datalabels: {
+                        // Mostrar APENAS em fatias com pelo menos 8% do total
+                        display: function (ctx) {
+                            var val = ctx.dataset.data[ctx.dataIndex];
+                            return statusTotal > 0 && (val / statusTotal) >= 0.08;
+                        },
+                        // Branco, centrado dentro da fatia
+                        color: '#ffffff',
+                        anchor: 'center',
+                        align: 'center',
+                        font: { weight: 'bold', size: 13 },
+                        formatter: function (val) { return val; }
+                    }
                 }
             }
         });
 
-        // ----------------------------------------------------
+        // ────────────────────────────────────────────────────────────
         // 2. Efetivo por Função (Polar Area)
-        // ----------------------------------------------------
-        const funcaoCounts = {};
-        data.forEach(c => {
-            const f = c.funcao || 'N/A';
+        //    Labels: apenas na legenda. Interno removido para evitar sobreposição.
+        // ────────────────────────────────────────────────────────────
+        var funcaoCounts = {};
+        data.forEach(function (c) {
+            var f = c.funcao || 'N/A';
             funcaoCounts[f] = (funcaoCounts[f] || 0) + 1;
         });
+
+        var funcaoColors = ['#0f3868', '#38bdf8', '#10b981', '#8b5cf6', '#f43f5e'];
+        var funcaoKeys = Object.keys(funcaoCounts);
+        var funcaoVals = Object.values(funcaoCounts);
+        var funcaoTotal = funcaoVals.reduce(function (a, b) { return a + b; }, 0);
 
         this.charts.funcao = new Chart(document.getElementById('chartFuncao'), {
             type: 'polarArea',
             data: {
-                labels: Object.keys(funcaoCounts),
+                labels: funcaoKeys,
                 datasets: [{
-                    data: Object.values(funcaoCounts),
-                    backgroundColor: [
-                        'rgba(15, 56, 104, 0.7)',
-                        'rgba(56, 189, 248, 0.7)',
-                        'rgba(16, 185, 129, 0.7)',
-                        'rgba(139, 92, 246, 0.7)',
-                        'rgba(244, 63, 94, 0.7)'
-                    ],
-                    borderWidth: 1
+                    data: funcaoVals,
+                    backgroundColor: funcaoColors.slice(0, funcaoKeys.length).map(function (c) { return c + 'CC'; }),
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'bottom', labels: { boxWidth: 12, usePointStyle: true } }
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 10,
+                            usePointStyle: true,
+                            padding: 16,
+                            font: { size: 11 },
+                            generateLabels: function (chart) {
+                                return funcaoKeys.map(function (label, i) {
+                                    return {
+                                        text: label + '   ' + funcaoVals[i],
+                                        fillStyle: funcaoColors[i] || '#64748b',
+                                        strokeStyle: funcaoColors[i] || '#64748b',
+                                        pointStyle: 'circle',
+                                        hidden: false,
+                                        index: i
+                                    };
+                                });
+                            }
+                        }
+                    },
+                    datalabels: {
+                        // Branco centrado apenas se ≥ 15% do total
+                        display: function (ctx) {
+                            var val = ctx.dataset.data[ctx.dataIndex];
+                            return funcaoTotal > 0 && (val / funcaoTotal) >= 0.15;
+                        },
+                        color: '#ffffff',
+                        anchor: 'center',
+                        align: 'center',
+                        font: { weight: 'bold', size: 12 },
+                        formatter: function (val) { return val; }
+                    }
                 },
                 scales: {
-                    r: { ticks: { display: false } }
+                    r: { ticks: { display: false }, grid: { color: 'rgba(0,0,0,0.06)' } }
                 }
             }
         });
 
-        // ----------------------------------------------------
+        // ────────────────────────────────────────────────────────────
         // 3. Alocação de Equipamento (Pie)
-        // ----------------------------------------------------
-        let comEquip = 0;
-        let semEquip = 0;
-        data.forEach(c => {
+        //    Labels: BRANCO CENTRADO DENTRO DA FATIA
+        // ────────────────────────────────────────────────────────────
+        var comEquip = 0;
+        var semEquip = 0;
+        data.forEach(function (c) {
             if (c.equipamento && c.equipamento.trim().length > 0 && c.equipamento.toUpperCase() !== 'N/A') comEquip++;
             else semEquip++;
         });
+
+        var equipTotal = comEquip + semEquip;
+        var equipColors = [self.colors.primary, self.colors.slate];
 
         this.charts.equipamento = new Chart(document.getElementById('chartEquipamento'), {
             type: 'pie',
@@ -306,7 +424,7 @@ SGE.dashboard = {
                 labels: ['Com Equipamento', 'Sem Equipamento'],
                 datasets: [{
                     data: [comEquip, semEquip],
-                    backgroundColor: [this.colors.primary, this.colors.slate],
+                    backgroundColor: equipColors,
                     borderWidth: 2,
                     borderColor: '#ffffff',
                     hoverOffset: 4
@@ -316,30 +434,44 @@ SGE.dashboard = {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'bottom', labels: { boxWidth: 12, usePointStyle: true } }
+                    legend: legendBottomWithQty,
+                    datalabels: {
+                        display: function (ctx) {
+                            var val = ctx.dataset.data[ctx.dataIndex];
+                            return equipTotal > 0 && (val / equipTotal) >= 0.08;
+                        },
+                        color: '#ffffff',
+                        anchor: 'center',
+                        align: 'center',
+                        font: { weight: 'bold', size: 14 },
+                        formatter: function (val) { return val; }
+                    }
                 }
             }
         });
 
-        // ----------------------------------------------------
-        // 4. Distribuição por Regime (Bar)
-        // ----------------------------------------------------
-        const regimeCounts = {};
-        data.forEach(c => {
-            const r = c.regime || 'Sem Registro';
+        // ────────────────────────────────────────────────────────────
+        // 4. Distribuição por Regime (Bar Vertical)
+        //    Labels: BRANCO CENTRADO DENTRO DA BARRA
+        //    Acima da barra (azul escuro) quando barra for muito pequena
+        // ────────────────────────────────────────────────────────────
+        var regimeCounts = {};
+        data.forEach(function (c) {
+            var r = c.regime || 'Sem Registro';
             regimeCounts[r] = (regimeCounts[r] || 0) + 1;
         });
 
-        const sortedRegimes = Object.entries(regimeCounts).sort((a, b) => b[1] - a[1]);
+        var sortedRegimes = Object.entries(regimeCounts).sort(function (a, b) { return b[1] - a[1]; });
+        var regimeMax = sortedRegimes.length > 0 ? sortedRegimes[0][1] : 1;
 
         this.charts.regime = new Chart(document.getElementById('chartRegime'), {
             type: 'bar',
             data: {
-                labels: sortedRegimes.map(i => i[0]),
+                labels: sortedRegimes.map(function (i) { return i[0]; }),
                 datasets: [{
                     label: 'Quantidade',
-                    data: sortedRegimes.map(i => i[1]),
-                    backgroundColor: this.colors.secondary,
+                    data: sortedRegimes.map(function (i) { return i[1]; }),
+                    backgroundColor: self.colors.secondary,
                     borderRadius: 4
                 }]
             },
@@ -347,30 +479,49 @@ SGE.dashboard = {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false }
+                    legend: { display: false },
+                    datalabels: {
+                        display: true,
+                        // Dentro da barra se ≥ 15% do máximo, senão acima
+                        anchor: function (ctx) {
+                            var val = ctx.dataset.data[ctx.dataIndex];
+                            return (val / regimeMax) >= 0.15 ? 'center' : 'end';
+                        },
+                        align: function (ctx) {
+                            var val = ctx.dataset.data[ctx.dataIndex];
+                            return (val / regimeMax) >= 0.15 ? 'center' : 'top';
+                        },
+                        color: function (ctx) {
+                            var val = ctx.dataset.data[ctx.dataIndex];
+                            return (val / regimeMax) >= 0.15 ? '#ffffff' : self.colors.primary;
+                        },
+                        font: { weight: 'bold', size: 12 },
+                        formatter: function (val) { return val; }
+                    }
                 },
                 scales: {
-                    y: { beginAtZero: true }
+                    y: { beginAtZero: true, ticks: { precision: 0 } }
                 }
             }
         });
 
-        // ----------------------------------------------------
+        // ────────────────────────────────────────────────────────────
         // 5. Composição de Status por Regime (Stacked Bar)
-        // ----------------------------------------------------
-        // Quais status ocorrem em cada regime
-        const regimesParaStatus = Object.keys(regimeCounts);
+        //    Labels: BRANCO CENTRADO DENTRO DO SEGMENTO
+        //    Só exibe se o segmento for ≥ 15% do total da barra (evita sobreposição)
+        // ────────────────────────────────────────────────────────────
+        var regimesParaStatus = Object.keys(regimeCounts);
+        var datasetAtivo = [];
+        var datasetFerias = [];
+        var datasetOutros = [];
 
-        // Count Ativos vs Férias vs Outros per Regime
-        const datasetAtivo = [];
-        const datasetFerias = [];
-        const datasetOutros = [];
-
-        regimesParaStatus.forEach(r => {
-            const colsInR = data.filter(c => (c.regime || 'Sem Registro') === r);
-            datasetAtivo.push(colsInR.filter(c => c.status === 'ATIVO').length);
-            datasetFerias.push(colsInR.filter(c => c.status === 'FÉRIAS').length);
-            datasetOutros.push(colsInR.filter(c => c.status !== 'ATIVO' && c.status !== 'FÉRIAS').length);
+        regimesParaStatus.forEach(function (r) {
+            var colsInR = data.filter(function (c) { return (c.regime || 'Sem Registro') === r; });
+            datasetAtivo.push(colsInR.filter(function (c) { return c.status === 'ATIVO'; }).length);
+            datasetFerias.push(colsInR.filter(function (c) { return c.status === 'FÉRIAS'; }).length);
+            datasetOutros.push(colsInR.filter(function (c) {
+                return c.status !== 'ATIVO' && c.status !== 'FÉRIAS';
+            }).length);
         });
 
         this.charts.statusRegime = new Chart(document.getElementById('chartStatusRegime'), {
@@ -378,58 +529,102 @@ SGE.dashboard = {
             data: {
                 labels: regimesParaStatus,
                 datasets: [
-                    { label: 'Ativos', data: datasetAtivo, backgroundColor: this.colors.success },
-                    { label: 'Férias', data: datasetFerias, backgroundColor: this.colors.warning },
-                    { label: 'Outros', data: datasetOutros, backgroundColor: this.colors.slate }
+                    { label: 'Ativos', data: datasetAtivo, backgroundColor: self.colors.success },
+                    { label: 'Férias', data: datasetFerias, backgroundColor: self.colors.warning },
+                    { label: 'Outros', data: datasetOutros, backgroundColor: self.colors.slate }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'bottom', labels: { boxWidth: 12, usePointStyle: true } }
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 10,
+                            usePointStyle: true,
+                            padding: 16,
+                            font: { size: 11 },
+                            generateLabels: legendMultiTotal
+                        }
+                    },
+                    datalabels: {
+                        display: function (ctx) {
+                            var val = ctx.dataset.data[ctx.dataIndex];
+                            if (!val || val <= 0) return false;
+                            // Total desta coluna (soma de todos os datasets)
+                            var colTotal = 0;
+                            ctx.chart.data.datasets.forEach(function (ds) {
+                                colTotal += (ds.data[ctx.dataIndex] || 0);
+                            });
+                            // Mostrar apenas se o segmento ≥ 15% da coluna
+                            return colTotal > 0 && (val / colTotal) >= 0.15;
+                        },
+                        color: '#ffffff',
+                        anchor: 'center',
+                        align: 'center',
+                        font: { weight: 'bold', size: 11 },
+                        formatter: function (val) { return val; }
+                    }
                 },
                 scales: {
                     x: { stacked: true },
-                    y: { stacked: true, beginAtZero: true }
+                    y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } }
                 }
             }
         });
 
-        // ----------------------------------------------------
+        // ────────────────────────────────────────────────────────────
         // 6. Lotação por Supervisor (Horizontal Bar)
-        // ----------------------------------------------------
-        const supCounts = {};
-        data.forEach(c => {
-            const s = c.supervisor || 'Não Atribuído';
+        //    Labels: BRANCO DENTRO DA BARRA (início direito) ou azul fora quando pequena
+        // ────────────────────────────────────────────────────────────
+        var supCounts = {};
+        data.forEach(function (c) {
+            var s = c.supervisor || 'Não Atribuído';
             supCounts[s] = (supCounts[s] || 0) + 1;
         });
 
-        const sortedSup = Object.entries(supCounts).sort((a, b) => b[1] - a[1]);
-
-        // Gerar array de cores propostas pelo palette (cíclico)
-        const barColors = sortedSup.map((_, i) => palette[i % palette.length]);
+        var sortedSup = Object.entries(supCounts).sort(function (a, b) { return b[1] - a[1]; });
+        var supMax = sortedSup.length > 0 ? sortedSup[0][1] : 1;
+        var barColors = sortedSup.map(function (_, i) { return palette[i % palette.length]; });
 
         this.charts.supervisor = new Chart(document.getElementById('chartSupervisor'), {
             type: 'bar',
             data: {
-                labels: sortedSup.map(s => s[0]),
+                labels: sortedSup.map(function (s) { return s[0]; }),
                 datasets: [{
                     label: 'Colaboradores',
-                    data: sortedSup.map(s => s[1]),
+                    data: sortedSup.map(function (s) { return s[1]; }),
                     backgroundColor: barColors,
                     borderRadius: 4
                 }]
             },
             options: {
-                indexAxis: 'y', // torna horizontal
+                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false }
+                    legend: { display: false },
+                    datalabels: {
+                        display: true,
+                        anchor: function (ctx) {
+                            var val = ctx.dataset.data[ctx.dataIndex];
+                            return (val / supMax) >= 0.2 ? 'end' : 'end';
+                        },
+                        align: function (ctx) {
+                            var val = ctx.dataset.data[ctx.dataIndex];
+                            return (val / supMax) >= 0.2 ? 'start' : 'right';
+                        },
+                        color: function (ctx) {
+                            var val = ctx.dataset.data[ctx.dataIndex];
+                            return (val / supMax) >= 0.2 ? '#ffffff' : self.colors.primary;
+                        },
+                        font: { weight: 'bold', size: 12 },
+                        formatter: function (val) { return val; }
+                    }
                 },
                 scales: {
-                    x: { beginAtZero: true }
+                    x: { beginAtZero: true, ticks: { precision: 0 } }
                 }
             }
         });

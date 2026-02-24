@@ -8,6 +8,8 @@ window.SGE = window.SGE || {};
 
 SGE.search = {
   render(q = '') {
+    const viewContainer = document.getElementById('search-view');
+    const savedScroll = viewContainer ? viewContainer.scrollTop : 0;
     const res = document.getElementById('search-results');
     const h = SGE.helpers;
     const query = q.toUpperCase().trim();
@@ -55,5 +57,7 @@ SGE.search = {
         if (col) SGE.drawer.open(col);
       });
     });
+
+    if (viewContainer) viewContainer.scrollTop = savedScroll;
   }
 };
