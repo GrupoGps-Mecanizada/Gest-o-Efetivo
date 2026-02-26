@@ -22,10 +22,10 @@ SGE.helpers = {
     },
 
     /**
-     * Check if collaborator has a temporary ID
+     * Check if collaborator has a temporary ID or missing Matricula GPS
      */
     isSemId(col) {
-        return col.id && col.id.startsWith('COL_TEMP_');
+        return col.status === 'SEM_ID' || !col.matricula_gps || col.matricula_gps.trim() === '';
     },
 
     /**

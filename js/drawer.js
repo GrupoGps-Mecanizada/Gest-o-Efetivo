@@ -15,7 +15,7 @@ SGE.drawer = {
     const h = SGE.helpers;
 
     document.getElementById('drawer-title').textContent = col.nome;
-    document.getElementById('drawer-id').textContent = col.id + (h.isSemId(col) ? ' ⚠ Sem ID definitivo' : '');
+    document.getElementById('drawer-id').textContent = (col.matricula_gps || 'SEM_MATRICULA') + (h.isSemId(col) ? ' ⚠' : '');
 
     const body = document.getElementById('drawer-body');
     const movs = SGE.state.movimentacoes.filter(m => m.colaborador_id === col.id);
@@ -30,6 +30,7 @@ SGE.drawer = {
       <div class="section-title">Dados Cadastrais</div>
       <div class="drawer-fields-grid">
         <div class="drawer-field"><div class="drawer-field-label">Função</div><div class="drawer-field-value">${col.funcao}</div></div>
+        <div class="drawer-field"><div class="drawer-field-label">CR</div><div class="drawer-field-value">${col.cr || '—'}</div></div>
         <div class="drawer-field"><div class="drawer-field-label">Regime</div><div class="drawer-field-value">${col.regime}</div></div>
         <div class="drawer-field"><div class="drawer-field-label">Supervisor</div><div class="drawer-field-value">${col.supervisor}</div></div>
         <div class="drawer-field"><div class="drawer-field-label">Status</div><div class="drawer-field-value">${col.status}</div></div>

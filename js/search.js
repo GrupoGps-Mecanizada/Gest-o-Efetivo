@@ -20,6 +20,7 @@ SGE.search = {
       : SGE.state.colaboradores.filter(c =>
         (c.nome && c.nome.toUpperCase().includes(query)) ||
         (c.id && c.id.toUpperCase().includes(query)) ||
+        (c.cr && c.cr.toUpperCase().includes(query)) ||
         (c.equipamento && c.equipamento.toUpperCase().includes(query)) ||
         (c.supervisor && c.supervisor.toUpperCase().includes(query))
       );
@@ -40,7 +41,7 @@ SGE.search = {
       return `
         <div class="search-card" data-id="${c.id}">
           <div class="search-card-header">
-            <div class="search-card-id">${c.id}</div>
+            <div class="search-card-id">${c.matricula_gps || 'S/ MAT'} ${c.cr ? `<span style="color:var(--text-3); font-size:10px; margin-left:4px;"> | CR: ${c.cr}</span>` : ''}</div>
             <div class="search-card-name">${c.nome}</div>
           </div>
           <div class="card-badges">

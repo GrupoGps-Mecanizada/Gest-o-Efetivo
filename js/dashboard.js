@@ -139,8 +139,8 @@ SGE.dashboard = {
     renderKPIs(data) {
         const total = data.length;
         const ativos = data.filter(c => c.status === 'ATIVO').length;
-        const ferias = data.filter(c => c.status === 'FÉRIAS').length;
-        const semId = data.filter(c => c.status === 'SEM_ID' || !c.id).length;
+        const ferias = data.filter(c => c.status === 'FÉRIAS' || c.status === 'FERIAS').length;
+        const semId = data.filter(c => c.status === 'SEM_ID' || !c.matricula_gps).length;
         const faltas = data.filter(c => c.status === 'FALTA' || c.status === 'AFASTADO').length;
 
         document.getElementById('dashboard-kpis').innerHTML = `
@@ -276,8 +276,10 @@ SGE.dashboard = {
         var statusColorMap = {
             'ATIVO': self.colors.success,
             'FÉRIAS': self.colors.warning,
+            'FERIAS': self.colors.warning,
             'AFASTADO': self.colors.amber,
             'DESLIGADO': self.colors.purple,
+            'INATIVO': self.colors.danger,
             'EM AVISO': self.colors.indigo,
             'EM CONTRATAÇÃO': self.colors.teal,
             'FALTA': self.colors.rose,
@@ -344,7 +346,7 @@ SGE.dashboard = {
             funcaoCounts[f] = (funcaoCounts[f] || 0) + 1;
         });
 
-        var funcaoColors = ['#0f3868', '#38bdf8', '#10b981', '#8b5cf6', '#f43f5e'];
+        var funcaoColors = ['#0f3868', '#38bdf8', '#10b981', '#8b5cf6', '#f43f5e', '#d97706', '#14b8a6', '#6366f1', '#f59e0b', '#ef4444'];
         var funcaoKeys = Object.keys(funcaoCounts);
         var funcaoVals = Object.values(funcaoCounts);
         var funcaoTotal = funcaoVals.reduce(function (a, b) { return a + b; }, 0);
@@ -355,7 +357,7 @@ SGE.dashboard = {
                 labels: funcaoKeys,
                 datasets: [{
                     data: funcaoVals,
-                    backgroundColor: funcaoColors.slice(0, funcaoKeys.length).map(function (c) { return c + 'CC'; }),
+                    backgroundColor: funcaoKeys.map(function (_, i) { return funcaoColors[i % funcaoColors.length] + 'CC'; }),
                     borderWidth: 2,
                     borderColor: '#ffffff'
                 }]
@@ -373,10 +375,11 @@ SGE.dashboard = {
                             font: { size: 11 },
                             generateLabels: function (chart) {
                                 return funcaoKeys.map(function (label, i) {
+                                    var col = funcaoColors[i % funcaoColors.length] || '#64748b';
                                     return {
                                         text: label + '   ' + funcaoVals[i],
-                                        fillStyle: funcaoColors[i] || '#64748b',
-                                        strokeStyle: funcaoColors[i] || '#64748b',
+                                        fillStyle: col,
+                                        strokeStyle: col,
                                         pointStyle: 'circle',
                                         hidden: false,
                                         index: i
@@ -518,9 +521,9 @@ SGE.dashboard = {
         regimesParaStatus.forEach(function (r) {
             var colsInR = data.filter(function (c) { return (c.regime || 'Sem Registro') === r; });
             datasetAtivo.push(colsInR.filter(function (c) { return c.status === 'ATIVO'; }).length);
-            datasetFerias.push(colsInR.filter(function (c) { return c.status === 'FÉRIAS'; }).length);
+            datasetFerias.push(colsInR.filter(function (c) { return c.status === 'FÉRIAS' || c.status === 'FERIAS'; }).length);
             datasetOutros.push(colsInR.filter(function (c) {
-                return c.status !== 'ATIVO' && c.status !== 'FÉRIAS';
+                return c.status !== 'ATIVO' && c.status !== 'FÉRIAS' && c.status !== 'FERIAS';
             }).length);
         });
 

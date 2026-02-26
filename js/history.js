@@ -41,18 +41,34 @@ SGE.history = {
             return;
         }
 
-        tbody.innerHTML = movs.map(m => `
+        tbody.innerHTML = movs.map(m => {
+            // Se effective_date existir usa ele, senao usa created_at
+            const dateStr = m.effective_date || m.created_at;
+            let displayDate = '';
+            if (dateStr) {
+                // Format YYYY-MM-DD
+                if (dateStr.length === 10) {
+                    const parts = dateStr.split('-');
+                    displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                } else {
+                    displayDate = h.formatDate(dateStr);
+                }
+            } else {
+                displayDate = '—';
+            }
+
+            return `
       <tr>
-        <td style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">${h.formatDate(m.created_at)}</td>
+        <td style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">${displayDate}</td>
         <td><strong>${m.colaborador_nome}</strong></td>
-        <td style="font-family:var(--font-mono);font-size:11px">${m.colaborador_id}</td>
+        <td style="font-family:var(--font-mono);font-size:11px">${m.colaborador_matricula}</td>
         <td>${m.supervisor_origem}<span class="mov-arrow">→</span>${m.supervisor_destino}</td>
         <td>${m.regime_origem}<span class="mov-arrow">→</span>${m.regime_destino}</td>
         <td>${m.motivo}</td>
         <td style="color:var(--text-3);font-size:11px">${m.observacao || '—'}</td>
         <td style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">${m.usuario || '—'}</td>
       </tr>
-    `).join('');
+    `}).join('');
 
         if (container) container.scrollTop = savedScroll;
     },
@@ -70,7 +86,7 @@ SGE.history = {
         const rows = SGE.state.movimentacoes.map(m => [
             m.created_at,
             m.colaborador_nome,
-            m.colaborador_id,
+            m.colaborador_matricula,
             m.supervisor_origem,
             m.supervisor_destino,
             m.regime_origem,

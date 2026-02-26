@@ -115,11 +115,11 @@ SGE.settings = {
     // Collaborators without definitive IDs
     const semIdCols = SGE.state.colaboradores.filter(c => h.isSemId(c));
     const semIdHtml = semIdCols.length === 0
-      ? '<div style="text-align:center;padding:20px;color:var(--text-3);font-size:12px">Todos os colaboradores possuem ID definitivo ✓</div>'
+      ? '<div style="text-align:center;padding:20px;color:var(--text-3);font-size:12px">Todos os colaboradores possuem Matrícula GPS ✓</div>'
       : `<div class="sem-id-list">${semIdCols.map(c => `
           <div class="sem-id-item">
             <div class="sem-id-name">${c.nome}</div>
-            <input class="sem-id-input" data-temp-id="${c.id}" placeholder="Novo ID..." />
+            <input class="sem-id-input" data-temp-id="${c.id}" placeholder="Nova Matrícula..." />
             <button class="sem-id-save" data-temp-id="${c.id}">Salvar</button>
           </div>
         `).join('')}</div>`;
@@ -132,8 +132,8 @@ SGE.settings = {
           <input type="text" id="new-col-nome" placeholder="NOME COMPLETO" />
         </div>
         <div class="form-field">
-          <label>ID (opcional)</label>
-          <input type="text" id="new-col-id" placeholder="COL000" />
+          <label>Matrícula GPS</label>
+          <input type="text" id="new-col-mat-gps" placeholder="Obrigatório" />
         </div>
         <div class="form-field">
           <label>Função</label>
@@ -167,9 +167,9 @@ SGE.settings = {
           <label>Mat. Usiminas</label>
           <input type="text" id="new-col-mat-usiminas" placeholder="Matrícula Usiminas" />
         </div>
-        <div class="form-field">
-          <label>Mat. GPS</label>
-          <input type="text" id="new-col-mat-gps" placeholder="Matrícula GPS" />
+        <div class="form-field" style="display:none">
+          <label>Mat. GPS (oculto)</label>
+          <input type="text" id="new-col-mat-gps-old" placeholder="Matrícula GPS" />
         </div>
       </div>
       <button class="btn-primary" id="new-col-save" style="align-self:flex-start">
@@ -283,7 +283,7 @@ SGE.settings = {
       <div class="settings-section">
         <div class="settings-section-header">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2h12v12H2z"/><path d="M5 6h6M5 9h4"/></svg>
-          IDs Pendentes
+          Matrículas Pendentes / Sem Matrícula GPS
         </div>
         <div class="settings-section-body">${semIdHtml}</div>
       </div>
@@ -389,19 +389,28 @@ SGE.settings = {
       btn.addEventListener('click', async () => {
         const tempId = btn.dataset.tempId;
         const input = container.querySelector(`.sem-id-input[data-temp-id="${tempId}"]`);
-        const newId = input.value.trim().toUpperCase();
-        if (!newId) return h.toast('Digite um ID válido', 'error');
+        const newMatricula = input.value.trim().toUpperCase();
+        if (!newMatricula) return h.toast('Digite uma Matrícula válida', 'error');
 
-        const exists = SGE.state.colaboradores.some(c => c.id === newId);
-        if (exists) return h.toast('ID já existe', 'error');
+        // Note: the backend uses UUID, so we simply PATCH the 'matricula_gps' and 'status' (remove SEM_ID)
+
+        const exists = SGE.state.colaboradores.some(c => c.matricula_gps === newMatricula);
+        if (exists) return h.toast('Matrícula já existe', 'error');
 
         const col = SGE.state.colaboradores.find(c => c.id === tempId);
         if (col) {
-          col.id = newId;
+          col.matricula_gps = newMatricula;
+          if (col.status === 'SEM_ID') col.status = 'ATIVO'; // Default recovery if status was frozen due to missing ID
           SGE.settings.render();
           SGE.helpers.updateStats();
-          h.toast(`ID atualizado: ${newId}`);
-          await SGE.api.syncIdUpdate(tempId, newId);
+          SGE.kanban.render();
+          h.toast(`Matrícula atualizada: ${newMatricula}`);
+
+          await SGE.api.syncEditColaborador({
+            colaborador_id: tempId,
+            matricula_gps: newMatricula,
+            status: col.status
+          });
         }
       });
     });

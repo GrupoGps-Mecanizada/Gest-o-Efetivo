@@ -135,8 +135,10 @@ SGE.viz = {
           <tbody>
             ${cols.map(c => `
               <tr data-id="${c.id}" style="cursor:pointer">
-                <td class="id-cell">${c.id}</td>
-                <td class="name-cell">${c.nome}</td>
+                <td class="id-cell">${c.matricula_gps || 'S/ MAT'}</td>
+                <td class="name-cell">
+                  <div>${c.nome}</div>
+                </td>
                 <td><span class="badge ${c.funcao === 'MOT' ? 'badge-MOT' : 'badge-OP'}">${c.funcao}</span></td>
                 <td><span class="badge ${h.regimeBadgeClass(c.regime)}">${c.regime}</span></td>
                 <td>${c.supervisor || '—'}</td>
@@ -233,7 +235,7 @@ SGE.viz = {
       body.innerHTML = members.map(c => `
         <div class="card" style="cursor:pointer" data-id="${c.id}">
           <div class="card-top">
-            <div class="card-id">${c.id}</div>
+            <div class="card-id">${c.matricula_gps || 'S/ MAT'}</div>
             <div class="card-name">${c.nome}</div>
           </div>
           <div class="card-badges">

@@ -7,9 +7,8 @@
 window.SGE = window.SGE || {};
 
 SGE.CONFIG = {
-  // Google Apps Script Web App URL
-  // Set this to your deployed GAS URL to enable data sync
-  gasUrl: 'https://script.google.com/macros/s/AKfycby72PHCQfvkX6hqbmsfcAHEMNmlOzteFEE9hRObQOclMyZlQ4F6ArCzjvLMDq0_lISy/exec',
+  // Supabase is now used instead of Google Apps Script
+  // gasUrl: 'https://script.google.com/macros/s/.../exec',
 
   // Default user identifier
   usuario: 'admin',

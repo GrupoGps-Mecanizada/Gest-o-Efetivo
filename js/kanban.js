@@ -217,6 +217,7 @@ SGE.kanban = {
         const prev = {
             nome: cardEl.dataset.nome || '',
             funcao: cardEl.dataset.funcao || '',
+            cr: cardEl.dataset.cr || '',
             regime: cardEl.dataset.regime || '',
             equipamento: cardEl.dataset.equipamento || '',
             ferias: cardEl.dataset.ferias || '',
@@ -226,6 +227,7 @@ SGE.kanban = {
         const next = {
             nome: col.nome || '',
             funcao: col.funcao || '',
+            cr: col.cr || '',
             regime: col.regime || '',
             equipamento: col.equipamento || '',
             ferias: isFerias ? '1' : '',
@@ -247,7 +249,7 @@ SGE.kanban = {
         cardEl.innerHTML = `
       ${alertHtml}
       <div class="card-top">
-        <div class="card-id">${col.id}</div>
+        <div class="card-id">${col.matricula_gps || 'S/ MAT'} ${col.cr ? `<span style="color:var(--text-3); font-size:10px; margin-left:4px;"> | CR: ${col.cr}</span>` : ''}</div>
         <div class="card-name">${col.nome}</div>
       </div>
       <div class="card-badges">
@@ -305,6 +307,7 @@ SGE.kanban = {
                 Object.assign(card.dataset, {
                     nome: c.nome || '',
                     funcao: c.funcao || '',
+                    cr: c.cr || '',
                     regime: c.regime || '',
                     equipamento: c.equipamento || '',
                     ferias: h.isFerias(c) ? '1' : '',
@@ -339,7 +342,7 @@ SGE.kanban = {
         el.innerHTML = `
       ${alertHtml}
       <div class="card-top">
-        <div class="card-id">${colaborador.id}</div>
+        <div class="card-id">${colaborador.matricula_gps || 'S/ MAT'} ${colaborador.cr ? `<span style="color:var(--text-3); font-size:10px; margin-left:4px;"> | CR: ${colaborador.cr}</span>` : ''}</div>
         <div class="card-name">${colaborador.nome}</div>
       </div>
       <div class="card-badges">

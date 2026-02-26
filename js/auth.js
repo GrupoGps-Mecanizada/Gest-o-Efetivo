@@ -1,63 +1,107 @@
 'use strict';
 
 /**
- * SGE — Authentication Module (RBAC)
+ * SGE — Authentication Module (Supabase Auth)
  * Handles login, session management, and role-based permissions
  */
 window.SGE = window.SGE || {};
 
 SGE.auth = {
-    // Current logged in user
     currentUser: null,
 
     /**
-     * Initialize Auth - Check if user is logged in
+     * Initialize Auth - Check for existing session
      */
-    init() {
-        const stored = localStorage.getItem('SGE_USER');
-        if (stored) {
-            try {
-                const user = JSON.parse(stored);
-                if (user && user.token) {
-                    SGE.auth.currentUser = user;
-                    SGE.auth.applyRoleUI(user.perfil);
-                    return true;
-                }
-            } catch (e) {
-                console.warn('Failed to parse stored user:', e);
+    async init() {
+        if (!window.supabase) return false;
+
+        const { data: { session } } = await supabase.auth.getSession();
+
+        // Listen for auth changes (login/logout)
+        supabase.auth.onAuthStateChange((_event, session) => {
+            if (session) {
+                this.updateCurrentUser(session.user);
+            } else {
+                this.currentUser = null;
             }
+        });
+
+        if (session) {
+            this.updateCurrentUser(session.user);
+            return true;
         }
         return false;
     },
 
     /**
-     * Perform login using GAS API
+     * Update internal state based on Supabase user
      */
-    async login(usuario, senha) {
+    updateCurrentUser(user) {
+        // Map Supabase user metadata to SGE profile
+        // We assume 'perfil' is stored in user_metadata or provided by a trigger
+        this.currentUser = {
+            id: user.id,
+            usuario: user.email.split('@')[0],
+            email: user.email,
+            perfil: user.user_metadata.perfil || 'VISAO' // Default to lowest role
+        };
+
+        this.applyRoleUI(this.currentUser.perfil);
+    },
+
+    /**
+     * Perform login using Supabase Bio
+     */
+    async login(email, password) {
+        if (!window.supabase) return { success: false, error: 'Supabase não configurado' };
+
         try {
-            const data = await SGE.api.callGAS('login', { usuario, senha });
-            if (data && data.token) {
-                SGE.auth.currentUser = data;
-                localStorage.setItem('SGE_USER', JSON.stringify(data));
-                SGE.auth.applyRoleUI(data.perfil);
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
 
-                // Update config globally so all writes are attributed to this user
-                SGE.CONFIG.usuario = data.usuario;
+            if (error) throw error;
 
-                return { success: true, user: data };
-            }
-            return { success: false, error: 'Resposta inválida do servidor' };
+            this.updateCurrentUser(data.user);
+            return { success: true, user: this.currentUser };
         } catch (e) {
             return { success: false, error: e.message || 'Erro ao fazer login' };
         }
     },
 
     /**
+     * Perform Registration natively through Supabase Auth
+     */
+    async register(email, password, name) {
+        if (!window.supabase) return { success: false, error: 'Supabase não configurado' };
+
+        try {
+            const { data, error } = await supabase.auth.signUp({
+                email: email,
+                password: password,
+                options: {
+                    data: {
+                        perfil: 'VISAO', // Default permission
+                        full_name: name
+                    }
+                }
+            });
+
+            if (error) throw error;
+
+            return { success: true };
+        } catch (e) {
+            return { success: false, error: e.message || 'Erro ao criar conta' };
+        }
+    },
+
+    /**
      * Logout and reload page
      */
-    logout() {
-        localStorage.removeItem('SGE_USER');
-        SGE.api.clearCache(); // Also clear offline cache for safety
+    async logout() {
+        if (window.supabase) await supabase.auth.signOut();
+        SGE.api.clearCache();
         window.location.reload();
     },
 
@@ -66,12 +110,12 @@ SGE.auth = {
      * Hierarchy: ADM > GESTAO > VISAO
      */
     hasRole(requiredRole) {
-        if (!SGE.auth.currentUser) return false;
+        if (!this.currentUser) return false;
 
-        const role = SGE.auth.currentUser.perfil;
-        if (role === 'ADM') return true; // ADM has all roles
+        const role = this.currentUser.perfil;
+        if (role === 'ADM') return true;
         if (requiredRole === 'GESTAO' && role === 'GESTAO') return true;
-        if (requiredRole === 'VISAO') return true; // Everyone has VISAO
+        if (requiredRole === 'VISAO') return true;
 
         return false;
     },
@@ -80,22 +124,22 @@ SGE.auth = {
      * Apply CSS classes and UI logic based on role
      */
     applyRoleUI(role) {
-        // Tag the body so CSS can hide/show elements automatically
         document.body.classList.remove('role-adm', 'role-gestao', 'role-visao');
         document.body.classList.add(`role-${role.toLowerCase()}`);
 
         const topbarUser = document.getElementById('topbar-user');
-        if (topbarUser) {
+        if (topbarUser && this.currentUser) {
             topbarUser.innerHTML = `
                 <div style="display:flex; align-items:center; gap:4px; margin-right:12px; font-size:13px;">
                     <span style="color:var(--text-3);">Bem-vindo(a),</span>
-                    <strong style="color:var(--text-1); font-weight:700;">${SGE.auth.currentUser.usuario}</strong>
+                    <strong style="color:var(--text-1); font-weight:700;">${this.currentUser.usuario}</strong>
                 </div>
-                <button title="Sair do sistema" onclick="SGE.auth.logout()" style="display:flex; align-items:center; gap:4px; font-weight:600; font-size:13px; background:none; border:none; color:var(--text-3); cursor:pointer; padding:4px 8px; border-radius:4px; transition: background 0.2s">
+                <button title="Sair do sistema" id="logout-btn" style="display:flex; align-items:center; gap:4px; font-weight:600; font-size:13px; background:none; border:none; color:var(--text-3); cursor:pointer; padding:4px 8px; border-radius:4px; transition: background 0.2s">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
                     Sair
                 </button>
             `;
+            document.getElementById('logout-btn').onclick = () => this.logout();
         }
     }
 };

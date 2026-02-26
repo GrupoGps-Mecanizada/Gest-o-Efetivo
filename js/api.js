@@ -1,13 +1,14 @@
 'use strict';
 
 /**
- * SGE — API Communication
- * Handles Google Apps Script API calls and data loading from Google Sheets
+ * SGE — API Communication (Supabase Edition)
+ * Handles data synchronization and real-time updates using Supabase
  */
 window.SGE = window.SGE || {};
 
 SGE.api = {
     activeRequests: 0,
+    subscriptions: [],
 
     /**
      * Show/Hide sync bar based on active requests
@@ -28,7 +29,6 @@ SGE.api = {
                 bar.classList.remove('loading');
                 bar.classList.add('success');
 
-                // Remove success class after animation finishes to reset
                 setTimeout(() => {
                     if (this.activeRequests === 0) {
                         bar.classList.remove('success');
@@ -39,105 +39,152 @@ SGE.api = {
     },
 
     /**
-     * Generic GAS API call
-     * @param {string} action - The action to perform
-     * @param {Object} params - Parameters for the action
-     * @returns {Promise<*>} Response data or null on failure
+     * Standardized error handler for Supabase responses
      */
-    async callGAS(action, params = {}, silent = false) {
-        if (!SGE.CONFIG.gasUrl) return null;
+    _handleError(error, context) {
+        console.error(`SGE Supabase [${context}]:`, error.message);
+        SGE.helpers.toast(`Erro em ${context}: ${error.message}`, 'error');
+        return null;
+    },
+
+    /**
+     * Initialize Real-time subscriptions
+     */
+    setupRealtime() {
+        if (!window.supabase) return;
+
+        // Subscribe to changes in critical tables
+        const channels = [
+            { table: 'employees', event: '*' },
+            { table: 'supervisors', event: '*' },
+            { table: 'equipment', event: '*' },
+            { table: 'movements', event: 'INSERT' }
+        ];
+
+        channels.forEach(ch => {
+            const subscription = supabase
+                .channel(`public:${ch.table}`)
+                .on('postgres_changes', { event: ch.event, schema: 'public', table: ch.table }, (payload) => {
+                    console.info(`SGE Real-time: Change in ${ch.table}`, payload);
+                    this.loadData(true); // Soft reload on any change
+                })
+                .subscribe();
+
+            this.subscriptions.push(subscription);
+        });
+
+        console.info('SGE: Real-time subscriptions active.');
+    },
+
+    /**
+     * Load all data from Supabase
+     * @param {boolean} silent - If true, won't show the sync bar
+     */
+    async loadData(silent = false) {
+        if (!window.supabase) {
+            console.warn('SGE: Supabase client not initialized. Waiting for config...');
+            return false;
+        }
+
         try {
-            // GAS Web Apps redirect on POST which loses CORS headers.
-            // Using GET with query params avoids this completely.
-            const url = new URL(SGE.CONFIG.gasUrl);
-            url.searchParams.set('action', action);
-
-            // Auto-inject current user for backend audit logs
-            if (SGE.auth && SGE.auth.currentUser) {
-                params._user = SGE.auth.currentUser.usuario;
-            }
-
-            url.searchParams.set('params', JSON.stringify(params));
-
             if (!silent) this.updateSyncBar(true);
 
-            const resp = await fetch(url.toString(), {
-                method: 'GET',
-                redirect: 'follow'
-            });
-            const text = await resp.text();
+            // Fetch everything in parallel
+            const [
+                { data: employees, error: errEmp },
+                { data: supervisors, error: errSup },
+                { data: movements, error: errMov },
+                { data: equipment, error: errEq },
+                { data: configs, error: errCfg }
+            ] = await Promise.all([
+                supabase.from('employees').select('*, supervisors(name), equipment(sigla, numero)'),
+                supabase.from('supervisors').select('*').order('name'),
+                supabase.from('movements').select('*, employees(name)').order('created_at', { ascending: false }).limit(100),
+                supabase.from('equipment').select('*'),
+                supabase.from('app_config').select('*')
+            ]);
 
             if (!silent) this.updateSyncBar(false);
 
-            const data = JSON.parse(text);
-            if (!data.success) throw new Error(data.error || 'Unknown error');
-            return data.data;
+            if (errEmp) return this._handleError(errEmp, 'Carregar Colaboradores');
+            if (errSup) return this._handleError(errSup, 'Carregar Supervisores');
+            if (errMov) return this._handleError(errMov, 'Carregar Histórico');
+            if (errEq) return this._handleError(errEq, 'Carregar Equipamentos');
+
+            // Map Supabase JSON structure back to SGE state format
+            // SGE internally uses strings for supervisor and equipment in collaborators
+            SGE.state.colaboradores = employees.map(e => ({
+                id: e.id,
+                nome: e.name,
+                funcao: e.function,
+                cr: e.cr,
+                regime: e.regime,
+                status: e.status,
+                telefone: e.telefone,
+                matricula_usiminas: e.matricula_usiminas,
+                matricula_gps: e.matricula_gps,
+                supervisor: e.supervisors ? e.supervisors.name : 'SEM SUPERVISOR',
+                equipamento: e.equipment ? `${e.equipment.sigla}-${e.equipment.numero || ''}`.replace(/-$/, '') : 'SEM EQUIPAMENTO'
+            }));
+
+            SGE.state.supervisores = supervisors.map(s => ({
+                id: s.id,
+                nome: s.name,
+                regime_padrao: s.default_regime || 'Misto',
+                ativo: s.is_active !== false // Uses is_active from DB if available, defaults true
+            }));
+
+            // Map movements
+            SGE.state.movimentacoes = movements.map(m => ({
+                ...m,
+                colaborador_nome: m.employees ? m.employees.name : 'Desconhecido',
+                colaborador_matricula: m.employees ? (m.employees.matricula_gps || 'S/ MAT') : 'S/ MAT'
+            }));
+
+            // Sort movements by effective_date then created_at
+            SGE.state.movimentacoes.sort((a, b) => {
+                const dateA = a.effective_date || a.created_at;
+                const dateB = b.effective_date || b.created_at;
+                return new Date(dateB) - new Date(dateA);
+            });
+
+            SGE.state.equipamentos = equipment;
+
+            // Load configurations
+            if (configs) {
+                configs.forEach(cfg => {
+                    if (SGE.CONFIG[cfg.key]) SGE.CONFIG[cfg.key] = cfg.value;
+                });
+            }
+
+            SGE.state.dataLoaded = true;
+            this.cacheData();
+
+            // Trigger UI refresh if data changed
+            this.refreshUI();
+
+            return true;
         } catch (e) {
             if (!silent) this.updateSyncBar(false);
-            console.warn('GAS call failed:', e.message);
-            return null;
+            console.error('SGE Data loading failed:', e);
+            return false;
         }
     },
 
     /**
-     * Load all data from Google Sheets via GAS
-     * Populates state.colaboradores and state.supervisores
+     * Intelligently refresh the visible parts of the UI
      */
-    async loadData() {
-        if (!SGE.CONFIG.gasUrl) {
-            console.info('SGE: No GAS URL configured. Set SGE.CONFIG.gasUrl in js/config.js');
-            SGE.state.dataLoaded = true;
-            return false;
-        }
+    refreshUI() {
+        const v = SGE.state.activeView;
+        SGE.helpers.updateStats();
 
-        try {
-            // Prepare all API calls simultaneously
-            const promises = [
-                SGE.api.callGAS('listar_colaboradores'),
-                SGE.api.callGAS('listar_supervisores'),
-                SGE.api.callGAS('listar_movimentacoes'),
-                SGE.api.callGAS('listar_equipamentos'),
-                SGE.api.callGAS('listar_configuracoes')
-            ];
-
-            // If ADM, we add user list call to the pipeline
-            let hasAdmCall = false;
-            if (SGE.auth.hasRole('ADM')) {
-                promises.push(SGE.api.callGAS('listar_usuarios'));
-                hasAdmCall = true;
-            }
-
-            // Launch explicitly in parallel
-            const results = await Promise.all(promises);
-
-            const [colabData, supData, movData, equipData, configData] = results;
-            const usrData = hasAdmCall ? results[5] : null;
-
-            if (colabData && Array.isArray(colabData)) SGE.state.colaboradores = colabData;
-            if (supData && Array.isArray(supData)) SGE.state.supervisores = supData;
-            if (movData && Array.isArray(movData)) SGE.state.movimentacoes = movData;
-            if (equipData && Array.isArray(equipData)) SGE.state.equipamentos = equipData;
-
-            if (configData) {
-                if (configData.regimes) SGE.CONFIG.regimes = configData.regimes;
-                if (configData.funcoes) SGE.CONFIG.funcoes = configData.funcoes;
-                if (configData.equipTipos) SGE.CONFIG.equipTipos = configData.equipTipos;
-                if (configData.turnoMap) SGE.CONFIG.turnoMap = configData.turnoMap;
-                if (configData.ordemKanban) SGE.CONFIG.ordemKanban = configData.ordemKanban;
-                localStorage.setItem('SGE_CUSTOM_CONFIG', JSON.stringify(configData));
-            }
-
-            if (hasAdmCall && usrData && Array.isArray(usrData)) {
-                SGE.state.usuarios = usrData;
-            }
-
-            SGE.state.dataLoaded = true;
-            SGE.api.cacheData(); // Save loaded data to local storage
-            return true;
-        } catch (e) {
-            console.error('Error loading data:', e);
-            return false;
-        }
+        if (v === 'kanban' && !(SGE.state.drag && SGE.state.drag.cardData)) SGE.kanban.render();
+        if (v === 'viz' && SGE.dashboard) SGE.dashboard.render();
+        if (v === 'equip' && SGE.equip) SGE.equip.render();
+        if (v === 'search' && SGE.search) SGE.search.render();
+        if (v === 'history' && SGE.history) SGE.history.render();
+        if (v === 'tabela' && SGE.viz) SGE.viz.renderTable();
+        if (v === 'grupo' && SGE.viz) SGE.viz.renderGroups();
     },
 
     /**
@@ -150,196 +197,126 @@ SGE.api = {
                 colaboradores: SGE.state.colaboradores,
                 supervisores: SGE.state.supervisores,
                 movimentacoes: SGE.state.movimentacoes,
-                equipamentos: SGE.state.equipamentos,
-                usuarios: SGE.state.usuarios
+                equipamentos: SGE.state.equipamentos
             };
             localStorage.setItem('SGE_CACHE', JSON.stringify(cachePayload));
         } catch (e) {
-            console.warn('Could not save cache to localStorage:', e);
+            console.warn('SGE: Could not save cache:', e);
         }
     },
 
-    /**
-     * Delete cache (useful on logout)
-     */
     clearCache() {
         localStorage.removeItem('SGE_CACHE');
     },
 
     /**
-     * Quick lightweight hash of data arrays for fast change detection.
-     * Uses length + first+last item id to avoid full JSON comparison on no-change cases.
+     * syncBackground is now obsolete thanks to Real-time
+     * Kept for signature compatibility but does nothing
      */
-    _quickHash(colabs, sups, movs, equips) {
-        const snap = (arr) => {
-            if (!arr || arr.length === 0) return '0';
-            const first = arr[0];
-            const last = arr[arr.length - 1];
-            return `${arr.length}:${first.id || first.nome || ''}:${last.id || last.nome || ''}`;
-        };
-        return `${snap(colabs)}|${snap(sups)}|${snap(movs)}|${snap(equips)}`;
+    syncBackground(immediate = false) {
+        if (immediate) this.loadData(true);
     },
 
     /**
-     * Debounced syncBackground — coalesces rapid successive calls into one.
-     * Safe to call at will after any mutation. Only one sync runs at a time.
-     */
-    syncBackground: (() => {
-        let debounceTimer = null;
-        let running = false;
-
-        const _doSync = async () => {
-            if (running || !SGE.CONFIG.gasUrl) return;
-            running = true;
-
-            try {
-                // Fetch everything in parallel (silent — no sync bar)
-                const promises = [
-                    SGE.api.callGAS('listar_colaboradores', {}, true),
-                    SGE.api.callGAS('listar_supervisores', {}, true),
-                    SGE.api.callGAS('listar_movimentacoes', {}, true),
-                    SGE.api.callGAS('listar_equipamentos', {}, true)
-                ];
-
-                let hasAdmCall = false;
-                if (SGE.auth.hasRole('ADM')) {
-                    promises.push(SGE.api.callGAS('listar_usuarios', {}, true));
-                    hasAdmCall = true;
-                }
-
-                const results = await Promise.all(promises);
-                const [colabData, supData, movData, equipData] = results;
-                const usrData = hasAdmCall ? results[4] : null;
-
-                if (!colabData) {
-                    running = false;
-                    return; // Network issue, skip
-                }
-
-                // Fast pre-check: compare lightweight hashes before doing expensive JSON.stringify
-                const newHash = SGE.api._quickHash(colabData, supData, movData, equipData);
-                if (newHash === SGE.state.lastSyncHash) {
-                    // console.log('SGE Sync: No changes detected (hash match).');
-                    running = false;
-                    return;
-                }
-
-                // Deep comparison only when hashes differ
-                const colabChanged = JSON.stringify(colabData) !== JSON.stringify(SGE.state.colaboradores);
-                const supChanged = JSON.stringify(supData) !== JSON.stringify(SGE.state.supervisores);
-                const movChanged = JSON.stringify(movData) !== JSON.stringify(SGE.state.movimentacoes);
-                const equipChanged = JSON.stringify(equipData) !== JSON.stringify(SGE.state.equipamentos);
-                const usrChanged = hasAdmCall && usrData
-                    && JSON.stringify(usrData) !== JSON.stringify(SGE.state.usuarios);
-
-                const hasChanges = colabChanged || supChanged || movChanged || equipChanged || usrChanged;
-
-                if (hasChanges) {
-                    console.log('SGE Sync: New data detected — updating state.');
-
-                    if (colabData) SGE.state.colaboradores = colabData;
-                    if (supData) SGE.state.supervisores = supData;
-                    if (movData) SGE.state.movimentacoes = movData;
-                    if (equipData) SGE.state.equipamentos = equipData;
-                    if (usrData) SGE.state.usuarios = usrData;
-
-                    SGE.state.lastSyncHash = SGE.api._quickHash(
-                        SGE.state.colaboradores,
-                        SGE.state.supervisores,
-                        SGE.state.movimentacoes,
-                        SGE.state.equipamentos
-                    );
-
-                    SGE.api.cacheData();
-                    SGE.helpers.updateStats();
-
-                    // Re-render ONLY the currently visible view, intelligently
-                    const v = SGE.state.activeView;
-
-                    // Kanban uses smart DOM morphing (won't interrupt scroll/drag)
-                    if (v === 'kanban' && !(SGE.state.drag && SGE.state.drag.cardData)) {
-                        SGE.kanban.render();
-                    }
-                    if (v === 'viz' && SGE.dashboard) SGE.dashboard.render();
-                    if (v === 'equip' && SGE.equip) SGE.equip.render();
-                    if (v === 'search' && SGE.search) {
-                        const si = document.getElementById('search-input');
-                        SGE.search.render(si ? si.value : '');
-                    }
-                    if (v === 'history' && SGE.history) SGE.history.render();
-                    if (v === 'tabela' && SGE.viz) SGE.viz.renderTable();
-                    if (v === 'grupo' && SGE.viz) SGE.viz.renderGroups();
-
-                } else {
-                    SGE.state.lastSyncHash = newHash;
-                }
-            } catch (e) {
-                console.warn('SGE Sync error:', e);
-            } finally {
-                running = false;
-            }
-        };
-
-        // Public interface: debounced by 300ms, only one run at a time
-        return function syncBackground(immediate = false) {
-            if (immediate) {
-                clearTimeout(debounceTimer);
-                _doSync();
-                return;
-            }
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(_doSync, 300);
-        };
-    })(),
-
-    /**
-     * Sync a movement to GAS
+     * Mutate data in Supabase
      */
     async syncMove(movData) {
-        const res = await SGE.api.callGAS('mover_colaborador', movData);
-        SGE.api.syncBackground(true); // immediate sync after mutation
-        return res;
+        if (!window.supabase) return null;
+        this.updateSyncBar(true);
+
+        try {
+            // Find IDs for supervisors and equipment based on names (since legacy system passes names initially)
+            // Note: The UI now sends `movData.supervisor_destino` (name). We need the ID.
+            const targetSup = SGE.state.supervisores.find(s => s.nome === movData.supervisor_destino);
+            const sourceSup = SGE.state.supervisores.find(s => s.nome === movData.supervisor_origem);
+
+            // 1. Update Employee
+            const { error: errEmp } = await supabase
+                .from('employees')
+                .update({
+                    supervisor_id: targetSup ? targetSup.id : null,
+                    regime: movData.regime_destino,
+                    updated_at: new Date()
+                })
+                .eq('id', movData.colaborador_id);
+
+            if (errEmp) throw errEmp;
+
+            // 2. Log Movement
+            const { error: errMov } = await supabase
+                .from('movements')
+                .insert({
+                    employee_id: movData.colaborador_id,
+                    from_supervisor_id: sourceSup ? sourceSup.id : null,
+                    to_supervisor_id: targetSup ? targetSup.id : null,
+                    reason: movData.motivo || 'N/A',
+                    effective_date: movData.effective_date || new Date().toISOString().split('T')[0]
+                });
+
+            if (errMov) throw errMov;
+
+            this.updateSyncBar(false);
+            return true;
+        } catch (e) {
+            this.updateSyncBar(false);
+            return this._handleError(e, 'Sincronizar Movimentação');
+        }
     },
 
-    /**
-     * Sync a new collaborator to GAS
-     */
     async syncNewColaborador(colData) {
-        const res = await SGE.api.callGAS('criar_colaborador', colData);
-        SGE.api.syncBackground(true);
-        return res;
+        if (!window.supabase) return null;
+        this.updateSyncBar(true);
+
+        try {
+            const { data, error } = await supabase
+                .from('employees')
+                .insert({
+                    name: colData.nome,
+                    function: colData.funcao,
+                    regime: colData.regime,
+                    status: colData.status,
+                    supervisor_id: colData.supervisor_id,
+                    equipment_id: colData.equipment_id
+                })
+                .select();
+
+            if (error) throw error;
+            this.updateSyncBar(false);
+            return data[0];
+        } catch (e) {
+            this.updateSyncBar(false);
+            return this._handleError(e, 'Criar Colaborador');
+        }
     },
 
-    /**
-     * Sync collaborator edit to GAS
-     */
     async syncEditColaborador(colData) {
-        const res = await SGE.api.callGAS('editar_colaborador', colData);
-        SGE.api.syncBackground(true);
-        return res;
-    },
+        if (!window.supabase) return null;
+        this.updateSyncBar(true);
 
-    /**
-     * Sync a batch of collaborators to GAS
-     */
-    async syncBatchColaboradores(updatesArray) {
-        if (!updatesArray || updatesArray.length === 0) return true;
-        const res = await SGE.api.callGAS('atualizar_lote_colaboradores', { atualizacoes: updatesArray });
-        SGE.api.syncBackground(true);
-        return res;
-    },
+        try {
+            const { error } = await supabase
+                .from('employees')
+                .update({
+                    name: colData.nome,
+                    function: colData.funcao,
+                    cr: colData.cr,
+                    regime: colData.regime,
+                    status: colData.status,
+                    telefone: colData.telefone,
+                    matricula_usiminas: colData.matricula_usiminas,
+                    matricula_gps: colData.matricula_gps,
+                    supervisor_id: colData.supervisor_id,
+                    equipment_id: colData.equipment_id,
+                    updated_at: new Date()
+                })
+                .eq('id', colData.id);
 
-    /**
-     * Sync ID update to GAS
-     */
-    async syncIdUpdate(tempId, newId) {
-        return SGE.api.callGAS('atualizar_id', { temp_id: tempId, novo_id: newId });
-    },
-
-    /**
-     * Reset and rebuild supervisors from collaborator data
-     */
-    async limparSupervisores() {
-        return SGE.api.callGAS('limpar_supervisores');
+            if (error) throw error;
+            this.updateSyncBar(false);
+            return true;
+        } catch (e) {
+            this.updateSyncBar(false);
+            return this._handleError(e, 'Editar Colaborador');
+        }
     }
 };

@@ -12,7 +12,7 @@ SGE.app = {
         const loginScreen = document.getElementById('login-screen');
 
         // Check auth status
-        if (SGE.auth.init()) {
+        if (await SGE.auth.init()) {
             // Already logged in
             if (loginScreen) loginScreen.classList.add('hidden');
             SGE.app.boot();
@@ -28,31 +28,70 @@ SGE.app = {
         const form = document.getElementById('login-form');
         const errEl = document.getElementById('login-error');
         const submitBtn = document.getElementById('login-submit');
+        const toggleBtn = document.getElementById('toggle-register');
+        const nameGroup = document.getElementById('group-name');
+
+        let isRegistering = false;
 
         if (!form) return;
+
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                isRegistering = !isRegistering;
+
+                if (isRegistering) {
+                    nameGroup.style.display = 'flex';
+                    submitBtn.textContent = 'Criar Conta';
+                    toggleBtn.textContent = 'Já tem uma conta? Entrar';
+                } else {
+                    nameGroup.style.display = 'none';
+                    submitBtn.textContent = 'Entrar';
+                    toggleBtn.textContent = 'Criar uma conta';
+                }
+                errEl.textContent = '';
+            });
+        }
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             errEl.textContent = '';
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Autenticando...';
+            submitBtn.textContent = isRegistering ? 'Criando...' : 'Autenticando...';
 
             const user = document.getElementById('login-user').value;
             const pass = document.getElementById('login-pass').value;
+            const name = document.getElementById('login-name').value;
 
-            const res = await SGE.auth.login(user, pass);
-
-            if (res.success) {
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('loading-screen').classList.remove('hide');
-                SGE.app.boot();
+            let res;
+            if (isRegistering) {
+                res = await SGE.auth.register(user, pass, name);
+                if (res.success) {
+                    SGE.helpers.toast('Conta criada! Por favor, faça login.', 'success');
+                    isRegistering = false;
+                    nameGroup.style.display = 'none';
+                    submitBtn.textContent = 'Entrar';
+                    toggleBtn.textContent = 'Criar uma conta';
+                    submitBtn.disabled = false;
+                    return; // Stop here, require them to log in
+                }
             } else {
-                errEl.textContent = res.error;
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Entrar';
+                res = await SGE.auth.login(user, pass);
+                if (res.success) {
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('loading-screen').classList.remove('hide');
+                    SGE.app.boot();
+                    return;
+                }
             }
+
+            // Error path
+            errEl.textContent = res.error;
+            submitBtn.disabled = false;
+            submitBtn.textContent = isRegistering ? 'Criar Conta' : 'Entrar';
         });
     },
+
 
     async boot() {
         const loadingScreen = document.getElementById('loading-screen');
@@ -95,18 +134,14 @@ SGE.app = {
             console.warn('Cache load failed:', e);
         }
 
-        // 2. If no cache, do the slow network load blocking the screen
+        // Initialize Real-time immediately if connected
+        if (window.supabase) SGE.api.setupRealtime();
+
+        // 2. If no cache, do the network load blocking the screen
         if (!usedCache) {
-            setStatus('Conectando ao banco de dados...');
-            if (SGE.CONFIG.gasUrl) {
-                setStatus('Baixando dados pela primeira vez... Isso pode levar alguns segundos.');
-                await SGE.api.loadData();
-                setStatus('Montando interface');
-            } else {
-                setStatus('Sem URL configurada — modo offline');
-                SGE.state.dataLoaded = true;
-                await new Promise(r => setTimeout(r, 600));
-            }
+            setStatus('Conectando ao banco de dados Supabase...');
+            await SGE.api.loadData();
+            setStatus('Montando interface');
         }
 
         // Build dynamic filter chips

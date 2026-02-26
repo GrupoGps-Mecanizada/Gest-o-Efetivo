@@ -34,6 +34,12 @@ SGE.modal = {
         </div>
         <div class="modal-colname">${supervisorDestino}</div>
       </div>
+      
+      <div class="form-field">
+        <label>Data da Mudança</label>
+        <input type="date" id="modal-data" value="${new Date().toISOString().split('T')[0]}" />
+      </div>
+
       <div class="form-field">
         <label>Regime Destino</label>
         <select id="modal-regime-dest">
@@ -74,6 +80,9 @@ SGE.modal = {
     if (!pending) return;
 
     const { colaborador, supervisorDestino } = pending;
+
+    // Get new fields including effective_date
+    const txData = document.getElementById('modal-data').value;
     const novoRegime = document.getElementById('modal-regime-dest').value;
     const motivo = document.getElementById('modal-motivo').value;
     const obs = document.getElementById('modal-obs').value.trim();
@@ -81,7 +90,7 @@ SGE.modal = {
     const supOld = colaborador.supervisor;
     const regOld = colaborador.regime;
 
-    // Register movement
+    // Register movement locally first for optimistic UI response
     const mov = {
       colaborador_id: colaborador.id,
       colaborador_nome: colaborador.nome,
@@ -91,8 +100,9 @@ SGE.modal = {
       regime_destino: novoRegime,
       motivo: motivo,
       observacao: obs,
+      effective_date: txData, // <-- Added effective_date
       created_at: new Date().toISOString(),
-      usuario: SGE.CONFIG.usuario
+      usuario: SGE.auth.currentUser ? SGE.auth.currentUser.usuario : SGE.CONFIG.usuario
     };
 
     SGE.state.movimentacoes.unshift(mov);
@@ -106,7 +116,7 @@ SGE.modal = {
     SGE.kanban.render();
     SGE.helpers.toast(`${colaborador.nome} movido para ${supervisorDestino}`);
 
-    // Sync with backend
+    // Sync with backend (Note: API function must support effective_date property now)
     await SGE.api.syncMove(mov);
   },
 
@@ -119,7 +129,7 @@ SGE.modal = {
     const header = document.querySelector('.modal-header');
     header.innerHTML = `
       <div class="modal-title">Editar Colaborador</div>
-      <div class="modal-subtitle">${colaborador.nome} (${colaborador.id})</div>
+      <div class="modal-subtitle">${colaborador.nome} (${colaborador.matricula_gps || 'S/ MAT'})</div>
     `;
 
     const body = document.querySelector('.modal-body');
@@ -128,6 +138,10 @@ SGE.modal = {
         <div class="form-field">
           <label>Nome</label>
           <input type="text" id="edit-nome" value="${colaborador.nome}" />
+        </div>
+        <div class="form-field">
+          <label>CR</label>
+          <input type="text" id="edit-cr" value="${colaborador.cr || ''}" />
         </div>
         <div class="form-field">
           <label>Função</label>
@@ -189,6 +203,7 @@ SGE.modal = {
    */
   async confirmEdit(colaborador) {
     colaborador.nome = document.getElementById('edit-nome').value.trim();
+    colaborador.cr = document.getElementById('edit-cr').value.trim();
     colaborador.funcao = document.getElementById('edit-funcao').value;
     colaborador.regime = document.getElementById('edit-regime').value;
     colaborador.status = document.getElementById('edit-status').value;
