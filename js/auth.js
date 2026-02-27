@@ -37,14 +37,24 @@ SGE.auth = {
      * Update internal state based on Supabase user
      */
     updateCurrentUser(user) {
-        // Map Supabase user metadata to SGE profile
-        // We assume 'perfil' is stored in user_metadata or provided by a trigger
+        const email = user.email || '';
+        let perfil = user.user_metadata.perfil || 'VISAO';
+
+        // Mapeamento automático por domínio do e-mail (prioridade sobre metadata)
+        if (email.endsWith('@sge') || email.endsWith('@sge.com')) {
+            perfil = 'ADM';
+        } else if (email.endsWith('@gestaomecanizada.com')) {
+            perfil = 'GESTAO';
+        } else if (email.endsWith('@mecanizada.com')) {
+            perfil = 'VISAO';
+        }
+
         this.currentUser = {
             id: user.id,
-            usuario: user.email.split('@')[0],
-            email: user.email,
-            nome: user.user_metadata.full_name || user.email.split('@')[0],
-            perfil: user.user_metadata.perfil || 'VISAO' // Default to lowest role
+            usuario: email.split('@')[0],
+            email: email,
+            nome: user.user_metadata.full_name || email.split('@')[0],
+            perfil: perfil
         };
 
         this.applyRoleUI(this.currentUser.perfil);
