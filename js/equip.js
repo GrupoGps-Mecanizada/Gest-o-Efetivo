@@ -126,13 +126,11 @@ SGE.equip = {
       entries = entries.filter(e => e.sigla === state.filtroTipo);
     }
 
-    // Sort: by sigla then numero (Push UNALLOCATED to the bottom)
+    // Sort: by sigla then numero numerically (Push UNALLOCATED to the bottom)
     entries.sort((a, b) => {
       if (a.isVirtual && !b.isVirtual) return 1;
       if (!a.isVirtual && b.isVirtual) return -1;
-
       if (a.sigla !== b.sigla) return a.sigla.localeCompare(b.sigla);
-      // Clean up string comparison for natural numeric sorting if possible
       const numA = parseInt(a.numero) || 0;
       const numB = parseInt(b.numero) || 0;
       if (numA !== numB) return numA - numB;
@@ -145,19 +143,32 @@ SGE.equip = {
       return sum + Object.values(e.turnos).reduce((s, arr) => s + arr.length, 0);
     }, 0);
 
-    // Group into explicit columns based on 'sigla'
-    const order = Object.keys(tipos);
-    order.push('UNALLOCATED');
+    // Fixed display order for group rows
+    const groupOrder = ['AP', 'AV', 'HV', 'ASP', 'BK', 'CJ', 'MT', 'UNALLOCATED'];
 
-    const columnsHtml = order.map(sigla => {
+    // Build groups HTML — horizontal rows
+    const groupsHtml = groupOrder.map(sigla => {
       const groupEntries = entries.filter(e => e.sigla === sigla);
       if (groupEntries.length === 0) return '';
 
+      const tipoInfo = tipos[sigla] || { nome: 'Sem Equipamento Definido', cor: '#94a3b8' };
+      const groupMemberCount = groupEntries.reduce((sum, e) => {
+        return sum + Object.values(e.turnos).reduce((s, arr) => s + arr.length, 0);
+      }, 0);
+
       return `
-            <div class="equip-column">
-                ${groupEntries.map(eq => SGE.equip.renderCard(eq, state.filtroTurno)).join('')}
-            </div>
-        `;
+        <div class="equip-group-row">
+          <div class="equip-group-header">
+            <div class="equip-group-color" style="background:${tipoInfo.cor}"></div>
+            <span class="equip-group-title">${tipoInfo.nome}</span>
+            <span class="equip-group-count">${groupEntries.length} equip · ${groupMemberCount} colab</span>
+            <div class="equip-group-line"></div>
+          </div>
+          <div class="equip-group-cards">
+            ${groupEntries.map(eq => SGE.equip.renderCard(eq, state.filtroTurno)).join('')}
+          </div>
+        </div>
+      `;
     }).join('');
 
     const viewContainer = document.getElementById('equip-view');
@@ -179,7 +190,7 @@ SGE.equip = {
           <button class="equip-turno-btn ${state.filtroTurno === t ? 'active' : ''}" data-turno="${t}">${t}</button>
         `).join('')}
       </div>
-      <div class="equip-columns-container" id="equip-grid">
+      <div class="equip-groups-container" id="equip-grid">
         ${entries.length === 0 ? `
           <div class="no-data-message" style="width:100%">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -188,7 +199,7 @@ SGE.equip = {
             <h3>Nenhum equipamento encontrado</h3>
             <p>Normalize os equipamentos primeiro para visualizá-los aqui.</p>
           </div>
-        ` : columnsHtml}
+        ` : groupsHtml}
       </div>
       <div class="equip-action-bar">
         <button class="equip-action-btn" id="equip-normalize-btn">

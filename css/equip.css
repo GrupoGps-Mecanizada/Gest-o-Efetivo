@@ -1,8 +1,12 @@
 /* ===================== EQUIPMENT VIEW ===================== */
 #equip-view {
     padding: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
+/* ===================== TOOLBAR ===================== */
 .equip-toolbar {
     display: flex;
     align-items: center;
@@ -87,58 +91,118 @@
     font-weight: 600;
 }
 
-/* ===================== EQUIPMENT COLUMNS ===================== */
-.equip-columns-container {
+/* ===================== GROUPS CONTAINER (vertical scroll) ===================== */
+.equip-groups-container {
     flex: 1;
-    overflow: auto;
-    padding: 16px 20px;
-    display: flex;
-    gap: 20px;
-    align-items: flex-start;
-}
-
-.equip-column {
+    overflow-y: auto;
+    padding: 16px 20px 20px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    width: 280px;
-    min-width: 280px;
+    gap: 24px;
+}
+
+/* ===================== GROUP ROW ===================== */
+.equip-group-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     flex-shrink: 0;
 }
 
-.equip-card {
-    background: var(--bg-1);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    overflow: hidden;
-    box-shadow: var(--shadow);
-    transition: border-color .18s;
-
-    /* Prevent card from breaking across columns */
-    break-inside: avoid;
-    margin-bottom: 16px;
+.equip-group-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 4px;
 }
 
+.equip-group-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.equip-group-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-1);
+    letter-spacing: .8px;
+    text-transform: uppercase;
+}
+
+.equip-group-count {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-3);
+    font-family: var(--font-mono);
+    margin-left: 4px;
+}
+
+.equip-group-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+    margin-left: 8px;
+}
+
+/* ===================== CARDS STRIP (horizontal scroll per group) ===================== */
+.equip-group-cards {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    padding: 4px 2px 8px;
+    scroll-behavior: smooth;
+}
+
+.equip-group-cards::-webkit-scrollbar {
+    height: 5px;
+}
+
+.equip-group-cards::-webkit-scrollbar-track {
+    background: var(--bg-2);
+    border-radius: 4px;
+}
+
+.equip-group-cards::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+.equip-group-cards::-webkit-scrollbar-thumb:hover {
+    background: var(--text-3);
+}
+
+/* ===================== CARD (fixed size) ===================== */
 .equip-card {
+    width: 260px;
+    min-width: 260px;
+    height: 340px;
     background: var(--bg-1);
     border: 1px solid var(--border);
-    border-radius: 14px;
+    border-radius: 12px;
     overflow: hidden;
     box-shadow: var(--shadow);
-    transition: border-color .18s;
-    height: max-content;
+    transition: border-color .18s, box-shadow .18s;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
 }
 
 .equip-card:hover {
     border-color: var(--border-bright);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, .25);
 }
 
+/* ===================== CARD HEADER ===================== */
 .equip-card-header {
     padding: 10px 14px;
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-shrink: 0;
+    background: var(--bg-2);
 }
 
 .equip-card-color {
@@ -164,7 +228,6 @@
     font-size: 10px;
     color: var(--text-3);
     margin-top: 1px;
-    /* allow it to fully display without truncating */
     display: block;
 }
 
@@ -179,11 +242,32 @@
     flex-shrink: 0;
 }
 
-/* ===================== TURNO ROWS ===================== */
+/* ===================== CARD BODY (internal scroll) ===================== */
 .equip-card-body {
+    flex: 1;
+    overflow-y: auto;
     padding: 6px 10px 10px;
 }
 
+/* Styled internal scrollbar */
+.equip-card-body::-webkit-scrollbar {
+    width: 4px;
+}
+
+.equip-card-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.equip-card-body::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+.equip-card-body::-webkit-scrollbar-thumb:hover {
+    background: var(--text-3);
+}
+
+/* ===================== TURNO ROWS ===================== */
 .equip-turno-row {
     display: flex;
     align-items: flex-start;
@@ -201,7 +285,7 @@
     font-size: 10px;
     font-weight: 700;
     color: var(--text-3);
-    width: 32px;
+    width: 30px;
     text-align: center;
     flex-shrink: 0;
     padding-top: 4px;
@@ -212,15 +296,15 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
 }
 
 .equip-member {
-    padding: 6px 10px;
+    padding: 5px 8px;
     border-radius: 6px;
     background: var(--bg-2);
     border: 1px solid var(--border);
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
     color: var(--text-1);
     cursor: pointer;
@@ -241,7 +325,8 @@
     font-family: var(--font-mono);
     font-weight: 700;
     color: var(--text-3);
-    font-size: 10px;
+    font-size: 9px;
+    flex-shrink: 0;
 }
 
 .equip-empty-turno {
@@ -251,7 +336,7 @@
     padding: 2px 0;
 }
 
-/* ===================== NORMALIZE BUTTON ===================== */
+/* ===================== ACTION BAR ===================== */
 .equip-action-bar {
     display: flex;
     align-items: center;
@@ -291,4 +376,56 @@
     font-size: 11px;
     color: var(--text-3);
     margin-left: auto;
+}
+
+/* ===================== NO DATA ===================== */
+.no-data-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    color: var(--text-3);
+    text-align: center;
+}
+
+.no-data-message svg {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 12px;
+    opacity: .4;
+}
+
+.no-data-message h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-2);
+    margin: 0 0 4px;
+}
+
+.no-data-message p {
+    font-size: 12px;
+    margin: 0;
+}
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width: 768px) {
+    .equip-groups-container {
+        padding: 12px 10px;
+        gap: 18px;
+    }
+
+    .equip-card {
+        width: 230px;
+        min-width: 230px;
+        height: 300px;
+    }
+
+    .equip-group-cards {
+        gap: 10px;
+    }
+
+    .equip-toolbar {
+        padding: 10px 12px;
+    }
 }
