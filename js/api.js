@@ -53,7 +53,13 @@ SGE.api = {
     setupRealtime() {
         if (!window.supabase) return;
 
-        // Subscribe to changes in critical tables
+        // Debounce: avoid flooding loadData on batch updates
+        let realtimeTimer = null;
+        const debouncedReload = () => {
+            if (realtimeTimer) clearTimeout(realtimeTimer);
+            realtimeTimer = setTimeout(() => this.loadData(true), 800);
+        };
+
         const channels = [
             { table: 'employees', event: '*' },
             { table: 'supervisors', event: '*' },
@@ -66,7 +72,7 @@ SGE.api = {
                 .channel(`public:${ch.table}`)
                 .on('postgres_changes', { event: ch.event, schema: 'public', table: ch.table }, (payload) => {
                     console.info(`SGE Real-time: Change in ${ch.table}`, payload);
-                    this.loadData(true); // Soft reload on any change
+                    debouncedReload();
                 })
                 .subscribe();
 
@@ -131,7 +137,7 @@ SGE.api = {
                 id: s.id,
                 nome: s.name,
                 regime_padrao: s.default_regime || 'Misto',
-                ativo: s.is_active !== false // Uses is_active from DB if available, defaults true
+                ativo: s.is_active !== false // Defaults to true if missing
             }));
 
             // Map movements
@@ -317,6 +323,180 @@ SGE.api = {
         } catch (e) {
             this.updateSyncBar(false);
             return this._handleError(e, 'Editar Colaborador');
+        }
+    },
+
+    /**
+     * Batch update multiple employees in Supabase
+     * @param {Array} updates - Array of {id, ...fieldsToUpdate}
+     */
+    async syncBatchColaboradores(updates) {
+        if (!window.supabase || !updates || updates.length === 0) return null;
+        this.updateSyncBar(true);
+
+        try {
+            const fieldMap = {
+                funcao: 'function',
+                regime: 'regime',
+                status: 'status',
+                equipamento: null, // handled specially
+                telefone: 'telefone',
+                matricula_usiminas: 'matricula_usiminas',
+                matricula_gps: 'matricula_gps'
+            };
+
+            const promises = updates.map(async (u) => {
+                const patch = { updated_at: new Date() };
+
+                for (const [frontKey, dbKey] of Object.entries(fieldMap)) {
+                    if (u[frontKey] !== undefined && dbKey) {
+                        patch[dbKey] = u[frontKey];
+                    }
+                }
+
+                // Handle supervisor name → ID lookup
+                if (u.supervisor !== undefined) {
+                    const sup = SGE.state.supervisores.find(s => s.nome === u.supervisor);
+                    patch.supervisor_id = sup ? sup.id : null;
+                }
+
+                return supabase.from('employees').update(patch).eq('id', u.id);
+            });
+
+            const results = await Promise.all(promises);
+            const errors = results.filter(r => r.error);
+            if (errors.length > 0) {
+                console.warn(`SGE Batch: ${errors.length}/${updates.length} failed`, errors);
+            }
+
+            this.updateSyncBar(false);
+            return true;
+        } catch (e) {
+            this.updateSyncBar(false);
+            return this._handleError(e, 'Atualização em lote');
+        }
+    },
+
+    /**
+     * Upsert a config value into app_config table
+     * @param {string} configKey - The config key (e.g. 'regimes', 'funcoes')
+     * @param {*} value - The value to store (will be stored as JSONB)
+     */
+    async syncConfigArray(configKey, value) {
+        if (!window.supabase) return null;
+
+        try {
+            const { error } = await supabase
+                .from('app_config')
+                .upsert({ key: configKey, value }, { onConflict: 'key' });
+
+            if (error) throw error;
+            return true;
+        } catch (e) {
+            return this._handleError(e, `Salvar config: ${configKey}`);
+        }
+    },
+
+    /**
+     * CRUD operations on the supervisors table
+     * @param {'create'|'update'|'delete'} action
+     * @param {Object} data - Supervisor data
+     */
+    async syncSupervisor(action, data) {
+        if (!window.supabase) return null;
+        this.updateSyncBar(true);
+
+        try {
+            let result;
+
+            if (action === 'create') {
+                const { data: inserted, error } = await supabase
+                    .from('supervisors')
+                    .insert({
+                        name: data.nome,
+                        default_regime: data.regime_padrao || 'Misto',
+                        is_active: data.ativo !== false
+                    })
+                    .select();
+                if (error) throw error;
+                result = inserted?.[0];
+            } else if (action === 'update') {
+                const patch = {};
+                if (data.nome !== undefined) patch.name = data.nome;
+                if (data.regime_padrao !== undefined) patch.default_regime = data.regime_padrao;
+                if (data.ativo !== undefined) patch.is_active = data.ativo;
+
+                if (Object.keys(patch).length > 0) {
+                    const { error } = await supabase
+                        .from('supervisors')
+                        .update(patch)
+                        .eq('id', data.id);
+                    if (error) throw error;
+                }
+                result = true;
+            } else if (action === 'delete') {
+                const { error } = await supabase
+                    .from('supervisors')
+                    .delete()
+                    .eq('id', data.id);
+                if (error) throw error;
+                result = true;
+            }
+
+            this.updateSyncBar(false);
+            return result;
+        } catch (e) {
+            this.updateSyncBar(false);
+            return this._handleError(e, `Supervisor (${action})`);
+        }
+    },
+
+    /**
+     * Normalize equipment: parse all employee equipment strings,
+     * upsert into equipment table, then reload data
+     */
+    async syncNormalizeEquipments() {
+        if (!window.supabase) return null;
+        this.updateSyncBar(true);
+
+        try {
+            const tipos = SGE.CONFIG.equipTipos;
+            const equipSet = new Map();
+
+            SGE.state.colaboradores.forEach(c => {
+                if (!c.equipamento || c.equipamento === 'SEM EQUIPAMENTO') return;
+                const parsed = SGE.equip ? SGE.equip.parseEquip(c.equipamento) : null;
+                if (!parsed || !tipos[parsed.sigla]) return;
+
+                const key = `${parsed.sigla}-${parsed.numero}`;
+                if (!equipSet.has(key)) {
+                    equipSet.set(key, {
+                        sigla: parsed.sigla,
+                        numero: parsed.numero,
+                        escala: '24HS',
+                        status: 'ATIVO'
+                    });
+                }
+            });
+
+            const rows = Array.from(equipSet.values());
+            let updated = 0;
+
+            if (rows.length > 0) {
+                const { error } = await supabase
+                    .from('equipment')
+                    .upsert(rows, { onConflict: 'sigla,numero' });
+                if (error) throw error;
+                updated = rows.length;
+            }
+
+            // Reload all data to reflect changes
+            await this.loadData(true);
+            this.updateSyncBar(false);
+            return { updated };
+        } catch (e) {
+            this.updateSyncBar(false);
+            return this._handleError(e, 'Normalizar Equipamentos');
         }
     }
 };

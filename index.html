@@ -80,38 +80,20 @@
   <div id="app">
 
     <!-- ==================== LOADING SCREEN ==================== -->
-    <div id="loading-screen" style="background:#f4f7fa; color:#0f3868">
-      <div class="loading-content">
-        <div style="margin-bottom:24px;">
-          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#0f3868" stroke-width="2"
-            class="loading-spinner">
-            <path
-              d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83">
-            </path>
-          </svg>
+    <div id="loading-screen" style="background:#f4f7fa">
+      <div class="loading-content" style="max-width:280px;">
+        <div class="loading-bar-container"
+          style="background:rgba(15,56,104,0.08); border-radius:6px; overflow:hidden; height:3px;">
+          <div class="loading-bar"
+            style="background:linear-gradient(90deg,#0f3868,#2563eb); border-radius:6px; height:100%;"></div>
         </div>
-        <h1 style="color:#0f3868; font-weight:800; letter-spacing:1px; margin-bottom:8px">SGE</h1>
-        <div class="loading-subtitle" style="color:#555; font-weight:500;">SISTEMA PARA GESTÃO DE EFETIVO</div>
-        <div class="loading-bar-container" style="background:rgba(15, 56, 104, 0.1)">
-          <div class="loading-bar" style="background:#0f3868"></div>
-        </div>
-        <div id="loading-status" style="color:#666; font-size:13px; font-weight:500">Inicializando...</div>
+        <div id="loading-status"
+          style="color:#94a3b8; font-size:12px; font-weight:500; margin-top:14px; text-align:center; letter-spacing:0.02em;">
+          Conectando...</div>
       </div>
     </div>
 
-    <!-- Injecting simple CSS for the new loading spinner -->
     <style>
-      .loading-spinner {
-        animation: spin 2s linear infinite;
-        opacity: 0.8;
-      }
-
-      @keyframes spin {
-        100% {
-          transform: rotate(360deg);
-        }
-      }
-
       #loading-screen {
         z-index: 9999;
       }
@@ -383,6 +365,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 
   <!-- JS Modules (order matters — dependencies first) -->
   <script src="js/config.js"></script>

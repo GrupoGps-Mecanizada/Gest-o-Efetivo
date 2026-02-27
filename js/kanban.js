@@ -249,15 +249,18 @@ SGE.kanban = {
         cardEl.innerHTML = `
       ${alertHtml}
       <div class="card-top">
-        <div class="card-id">${col.matricula_gps || 'S/ MAT'} ${col.cr ? `<span style="color:var(--text-3); font-size:10px; margin-left:4px;"> | CR: ${col.cr}</span>` : ''}</div>
-        <div class="card-name">${col.nome}</div>
+        <div class="card-name" style="font-weight: 600; font-size: 13px; margin-bottom: 4px; color: var(--text-1);">${col.nome}</div>
       </div>
-      <div class="card-badges">
+      <div class="card-badges" style="margin-bottom: 6px;">
         <span class="badge ${badgeFuncao}">${col.funcao}</span>
         <span class="badge ${badgeRegime}">${col.regime}</span>
         ${feriasHtml}
       </div>
-      <div class="card-vaga">${h.equipamentoIconSvg()} ${col.equipamento || 'Sem equipamento'}</div>
+      <div class="card-vaga" style="margin-bottom: 6px;">${h.equipamentoIconSvg()} ${col.equipamento || 'Sem equipamento'}</div>
+      <div class="card-id" style="font-size: 11px; color: var(--text-3); border-top: 1px solid var(--border-color); padding-top: 6px; margin-top: auto;">
+        MAT: <strong style="color: var(--text-2);">${col.matricula_gps || 'S/ MAT'}</strong>
+        ${col.cr ? `<span style="margin-left:8px;">CR: <strong style="color: var(--text-2);">${col.cr}</strong></span>` : ''}
+      </div>
     `;
     },
 
@@ -342,15 +345,18 @@ SGE.kanban = {
         el.innerHTML = `
       ${alertHtml}
       <div class="card-top">
-        <div class="card-id">${colaborador.matricula_gps || 'S/ MAT'} ${colaborador.cr ? `<span style="color:var(--text-3); font-size:10px; margin-left:4px;"> | CR: ${colaborador.cr}</span>` : ''}</div>
-        <div class="card-name">${colaborador.nome}</div>
+        <div class="card-name" style="font-weight: 600; font-size: 13px; margin-bottom: 4px; color: var(--text-1);">${colaborador.nome}</div>
       </div>
-      <div class="card-badges">
+      <div class="card-badges" style="margin-bottom: 6px;">
         <span class="badge ${badgeFuncao}">${colaborador.funcao}</span>
         <span class="badge ${badgeRegime}">${colaborador.regime}</span>
         ${feriasHtml}
       </div>
-      <div class="card-vaga">${h.equipamentoIconSvg()} ${colaborador.equipamento || 'Sem equipamento'}</div>
+      <div class="card-vaga" style="margin-bottom: 6px;">${h.equipamentoIconSvg()} ${colaborador.equipamento || 'Sem equipamento'}</div>
+      <div class="card-id" style="font-size: 11px; color: var(--text-3); border-top: 1px solid var(--border-color); padding-top: 6px; margin-top: auto;">
+        MAT: <strong style="color: var(--text-2);">${colaborador.matricula_gps || 'S/ MAT'}</strong>
+        ${colaborador.cr ? `<span style="margin-left:8px;">CR: <strong style="color: var(--text-2);">${colaborador.cr}</strong></span>` : ''}
+      </div>
     `;
 
         if (SGE.auth.hasRole('GESTAO')) {

@@ -115,9 +115,11 @@ SGE.configManager = {
       };
       localStorage.setItem('SGE_CUSTOM_CONFIG', JSON.stringify(dataToSave));
 
-      // Async sync to the database behind the scenes
-      if (window.SGE && SGE.api && typeof SGE.api.callGAS === 'function') {
-        SGE.api.callGAS('salvar_configuracoes', { config: dataToSave }).catch(e => console.warn('Failed to sync configs to DB', e));
+      // Async sync each config key to Supabase app_config table
+      if (window.SGE && SGE.api && typeof SGE.api.syncConfigArray === 'function') {
+        Object.entries(dataToSave).forEach(([key, value]) => {
+          SGE.api.syncConfigArray(key, value).catch(e => console.warn('Failed to sync config to Supabase', e));
+        });
       }
     } catch (e) {
       console.warn('Failed to save custom configs', e);

@@ -110,6 +110,26 @@ SGE.viz = {
     const savedScroll = viewContainer ? viewContainer.scrollTop : 0;
 
     content.innerHTML = `
+      <div class="viz-table-toolbar" style="display:flex; justify-content:flex-end; padding:8px 0; gap:8px; position:relative;">
+        <div class="export-dropdown-container" style="position:relative;">
+          <button id="export-main-btn" style="padding:7px 14px; background:var(--accent); border:none; border-radius:6px; cursor:pointer; color:#fff; font-size:12px; font-weight:600; display:flex; align-items:center; gap:6px; box-shadow:0 2px 4px rgba(0,0,0,0.1); transition:all .2s;">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 1v10M4 7l4 4 4-4"/><path d="M1 12v2h14v-2"/></svg>
+            Exportar Dados
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:4px;"><path d="M4 6l4 4 4-4"/></svg>
+          </button>
+          
+          <div id="export-menu" style="display:none; position:absolute; top:calc(100% + 4px); right:0; background:var(--bg-1); border:1px solid var(--border); border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.15); min-width:160px; z-index:100; overflow:hidden;">
+            <div class="export-tabela-btn" data-format="csv" style="padding:10px 14px; cursor:pointer; font-size:12px; color:var(--text-1); display:flex; align-items:center; gap:8px; transition:background .15s; border-bottom:1px solid var(--border);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              Documento CSV
+            </div>
+            <div class="export-tabela-btn" data-format="tsv" style="padding:10px 14px; cursor:pointer; font-size:12px; color:var(--text-1); display:flex; align-items:center; gap:8px; transition:background .15s;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#217346" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M8 13h2v4H8z"></path><path d="M14 13h2v4h-2z"></path></svg>
+              Planilha Excel (XLSX)
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="viz-table-wrap">
         <table class="viz-table">
           <thead>
@@ -182,6 +202,35 @@ SGE.viz = {
       tr.addEventListener('click', () => {
         const col = SGE.state.colaboradores.find(c => c.id === tr.dataset.id);
         if (col) SGE.drawer.open(col);
+      });
+    });
+
+    // Dropdown toggle
+    const exportBtn = content.querySelector('#export-main-btn');
+    const exportMenu = content.querySelector('#export-menu');
+    if (exportBtn && exportMenu) {
+      exportBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        exportMenu.style.display = exportMenu.style.display === 'none' ? 'block' : 'none';
+      });
+
+      // Close menu on click outside
+      document.addEventListener('click', () => {
+        if (exportMenu.style.display === 'block') exportMenu.style.display = 'none';
+      });
+
+      exportMenu.addEventListener('click', (e) => e.stopPropagation());
+    }
+
+    // Exports actions
+    content.querySelectorAll('.export-tabela-btn').forEach(btn => {
+      // Hover effects dynamically
+      btn.addEventListener('mouseenter', () => btn.style.background = 'var(--bg-3)');
+      btn.addEventListener('mouseleave', () => btn.style.background = 'transparent');
+
+      btn.addEventListener('click', () => {
+        if (exportMenu) exportMenu.style.display = 'none';
+        SGE.viz.exportData(cols, btn.dataset.format);
       });
     });
 
@@ -271,5 +320,65 @@ SGE.viz = {
     content.appendChild(container);
 
     if (viewContainer) viewContainer.scrollTop = savedScroll;
+  },
+
+  exportData(data, format) {
+    if (!data || data.length === 0) return SGE.helpers.toast('Nenhum dado para exportar', 'error');
+
+    // Create export payload matching the table columns
+    const exportData = data.map(c => ({
+      ID: c.matricula_gps || 'S/ MAT',
+      CR: c.cr || '',
+      Nome: c.nome,
+      Função: c.funcao,
+      Regime: c.regime,
+      Supervisor: c.supervisor || '',
+      Status: c.status,
+      Equipamento: c.equipamento || ''
+    }));
+
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const filename = `SGE_DB_Completo_${dateStr}.${format === 'tsv' ? 'xlsx' : format}`;
+
+    if (format === 'tsv') {
+      try {
+        const ws = window.XLSX.utils.json_to_sheet(exportData);
+        const wb = window.XLSX.utils.book_new();
+        window.XLSX.utils.book_append_sheet(wb, ws, "Gestão Efetivo");
+        window.XLSX.writeFile(wb, filename);
+        return SGE.helpers.toast(`Download XLSX concluído`, 'success');
+      } catch (err) {
+        console.error('Erro ao exportar XLSX:', err);
+        return SGE.helpers.toast('Erro ao gerar arquivo Excel. Tente CSV.', 'error');
+      }
+    }
+
+    // Fallback for CSV
+    let contentStr = '';
+    let mimeType = 'text/csv;charset=utf-8;';
+    const separator = ',';
+    const headers = Object.keys(exportData[0]).join(separator);
+    const rows = exportData.map(obj =>
+      Object.values(obj).map(v => {
+        let val = String(v).replace(/"/g, '""'); // escape quotes
+        if (val.includes(separator) || val.includes('\n') || val.includes('"')) val = `"${val}"`;
+        return val;
+      }).join(separator)
+    ).join('\n');
+
+    // Prefix BOM for excel UTF-8 compatibility on CSV
+    contentStr = '\ufeff' + headers + '\n' + rows;
+
+    const blob = new Blob([contentStr], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    SGE.helpers.toast(`Download CSV concluído`, 'success');
   }
 };

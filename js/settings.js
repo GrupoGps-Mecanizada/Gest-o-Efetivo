@@ -351,12 +351,15 @@ SGE.settings = {
 
     // Event: toggle supervisor
     container.querySelectorAll('.toggle-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const sup = SGE.state.supervisores.find(s => s.nome === btn.dataset.sup);
         if (sup) {
           sup.ativo = !sup.ativo;
           SGE.settings.render();
+          SGE.api.refreshUI();
+          SGE.api.cacheData();
           SGE.helpers.toast(`${sup.nome} ${sup.ativo ? 'ativado' : 'desativado'}`, 'info');
+          await SGE.api.syncSupervisor('update', { id: sup.id, ativo: sup.ativo });
         }
       });
     });
@@ -372,13 +375,16 @@ SGE.settings = {
         SGE.modal.confirm({
           title: 'Excluir Supervisor',
           message: `Tem certeza que deseja excluir o supervisor <b>${supName}</b>?`,
-          onConfirm: () => {
+          onConfirm: async () => {
+            const sup = SGE.state.supervisores.find(s => s.nome === supName);
             SGE.state.supervisores = SGE.state.supervisores.filter(s => s.nome !== supName);
-            // Remove from Kanban array
             SGE.CONFIG.ordemKanban = SGE.CONFIG.ordemKanban.filter(n => n !== supName);
             SGE.configManager.save();
             SGE.settings.render();
+            SGE.api.refreshUI();
+            SGE.api.cacheData();
             h.toast('Supervisor excluído com sucesso', 'success');
+            if (sup && sup.id) await SGE.api.syncSupervisor('delete', { id: sup.id });
           }
         });
       });
@@ -402,8 +408,8 @@ SGE.settings = {
           col.matricula_gps = newMatricula;
           if (col.status === 'SEM_ID') col.status = 'ATIVO'; // Default recovery if status was frozen due to missing ID
           SGE.settings.render();
-          SGE.helpers.updateStats();
-          SGE.kanban.render();
+          SGE.api.refreshUI();
+          SGE.api.cacheData();
           h.toast(`Matrícula atualizada: ${newMatricula}`);
 
           await SGE.api.syncEditColaborador({
@@ -446,8 +452,8 @@ SGE.settings = {
 
         SGE.state.colaboradores.push(newCol);
         SGE.settings.render();
-        SGE.helpers.updateStats();
-        SGE.kanban.render();
+        SGE.api.refreshUI();
+        SGE.api.cacheData();
         h.toast(`${nome} adicionado com sucesso`);
         await SGE.api.syncNewColaborador(newCol);
       });
@@ -463,20 +469,21 @@ SGE.settings = {
         if (!nome) return h.toast('Preencha o nome do supervisor', 'error');
         if (SGE.state.supervisores.some(s => s.nome === nome)) return h.toast('Supervisor já existe', 'error');
 
-        // Add locally
-        SGE.state.supervisores.push({ nome, regime_padrao: regime, ativo: true });
-
-        // Save to GAS
         newSupBtn.disabled = true;
         newSupBtn.textContent = 'Salvando...';
 
-        // This relies on ensureStructure syncing it up eventually, or we could add an explicit API call here.
-        // For now, we simulate success and let sync handle the rest if no specific endpoint exists.
-        setTimeout(() => {
+        const result = await SGE.api.syncSupervisor('create', { nome, regime_padrao: regime, ativo: true });
+
+        if (result) {
+          SGE.state.supervisores.push({ id: result.id, nome, regime_padrao: regime, ativo: true });
           SGE.settings.render();
-          SGE.kanban.render();
+          SGE.api.refreshUI();
+          SGE.api.cacheData();
           h.toast('Supervisor adicionado com sucesso');
-        }, 500);
+        } else {
+          newSupBtn.disabled = false;
+          newSupBtn.textContent = '+ Adicionar Supervisor';
+        }
       });
     }
 
@@ -494,15 +501,10 @@ SGE.settings = {
           user.ativo = !oldState;
           SGE.settings.render(); // Optimistic update
 
-          try {
-            const res = await SGE.api.callGAS('editar_usuario', { id: user.id, ativo: user.ativo });
-            if (!res) throw new Error('Falha na API');
-            SGE.helpers.toast(`Usuário ${user.usuario} ${user.ativo ? 'ativado' : 'desativado'}`);
-          } catch (e) {
-            user.ativo = oldState; // Rollback
-            SGE.settings.render();
-            SGE.helpers.toast('Erro ao alterar status', 'error');
-          }
+          // Supabase client SDK does not support admin user management from the browser
+          user.ativo = oldState; // Rollback
+          SGE.settings.render();
+          SGE.helpers.toast('Gerenciamento de usuários requer configuração do Supabase Admin (Edge Function). Em desenvolvimento.', 'info');
         });
       });
 
@@ -515,15 +517,8 @@ SGE.settings = {
             title: 'Excluir Login',
             message: 'Tem certeza que deseja excluir permanentemente este login?',
             onConfirm: async () => {
-              try {
-                const res = await SGE.api.callGAS('excluir_usuario', { id });
-                if (!res) throw new Error('Falha na API');
-                SGE.state.usuarios = SGE.state.usuarios.filter(u => u.id !== id);
-                SGE.settings.render();
-                SGE.helpers.toast('Usuário excluído com sucesso');
-              } catch (e) {
-                SGE.helpers.toast(e.message || 'Erro ao excluir usuário', 'error');
-              }
+              // Supabase client SDK does not support admin user deletion from the browser
+              SGE.helpers.toast('Exclusão de usuários requer configuração do Supabase Admin (Edge Function). Em desenvolvimento.', 'info');
             }
           });
         });
@@ -545,20 +540,11 @@ SGE.settings = {
           newUsrBtn.disabled = true;
           newUsrBtn.textContent = 'Adicionando...';
 
-          try {
-            const res = await SGE.api.callGAS('criar_usuario', { usuario, senha, perfil, ativo: true });
-            if (res && res.id) {
-              SGE.state.usuarios.push({ id: res.id, usuario, senha, perfil, ativo: true });
-              SGE.settings.render();
-              h.toast('Usuário criado com sucesso', 'success');
-            } else {
-              throw new Error('Falha ao criar');
-            }
-          } catch (e) {
-            h.toast('Erro criar usuário. Tente novamente.', 'error');
-            newUsrBtn.disabled = false;
-            newUsrBtn.textContent = 'Adicionar Usuário';
-          }
+          // Supabase client SDK does not support admin user creation from the browser
+          // Users should register via the login page's "Criar uma conta" flow
+          h.toast('Criação de usuários via admin requer Supabase Edge Function. Use o formulário de registro na tela de login.', 'info');
+          newUsrBtn.disabled = false;
+          newUsrBtn.textContent = 'Adicionar Usuário';
         });
       }
     }
@@ -575,6 +561,8 @@ SGE.settings = {
             SGE.CONFIG.regimes = SGE.CONFIG.regimes.filter(r => r !== btn.dataset.reg);
             SGE.configManager.save();
             SGE.settings.render();
+            SGE.api.refreshUI();
+            SGE.api.cacheData();
             h.toast('Regime excluído', 'success');
           }
         });
@@ -594,6 +582,7 @@ SGE.settings = {
             SGE.CONFIG.regimes.push(inp);
             SGE.configManager.save();
             SGE.settings.render();
+            SGE.api.refreshUI();
             h.toast('Regime adicionado', 'success');
           }
         });
@@ -624,6 +613,8 @@ SGE.settings = {
             });
             SGE.configManager.save();
             SGE.settings.render();
+            SGE.api.refreshUI();
+            SGE.api.cacheData();
             h.toast('Regime atualizado', 'success');
 
             if (updates.length > 0) SGE.api.syncBatchColaboradores(updates);
@@ -642,6 +633,8 @@ SGE.settings = {
             SGE.CONFIG.funcoes = SGE.CONFIG.funcoes.filter(f => f !== btn.dataset.func);
             SGE.configManager.save();
             SGE.settings.render();
+            SGE.api.refreshUI();
+            SGE.api.cacheData();
             h.toast('Função excluída', 'success');
           }
         });
@@ -661,6 +654,7 @@ SGE.settings = {
             SGE.CONFIG.funcoes.push(inp);
             SGE.configManager.save();
             SGE.settings.render();
+            SGE.api.refreshUI();
             h.toast('Função adicionada', 'success');
           }
         });
@@ -691,6 +685,8 @@ SGE.settings = {
             });
             SGE.configManager.save();
             SGE.settings.render();
+            SGE.api.refreshUI();
+            SGE.api.cacheData();
             h.toast('Função atualizada', 'success');
 
             if (updates.length > 0) SGE.api.syncBatchColaboradores(updates);
@@ -709,6 +705,8 @@ SGE.settings = {
             delete SGE.CONFIG.equipTipos[btn.dataset.eq];
             SGE.configManager.save();
             SGE.settings.render();
+            SGE.api.refreshUI();
+            SGE.api.cacheData();
             h.toast('Equipamento excluído', 'success');
           }
         });
@@ -734,6 +732,7 @@ SGE.settings = {
             SGE.CONFIG.equipTipos[sigla] = { nome, cor: vals.cor };
             SGE.configManager.save();
             SGE.settings.render();
+            SGE.api.refreshUI();
             h.toast('Equipamento adicionado', 'success');
           }
         });
@@ -780,6 +779,8 @@ SGE.settings = {
 
             SGE.configManager.save();
             SGE.settings.render();
+            SGE.api.refreshUI();
+            SGE.api.cacheData();
             h.toast('Equipamento atualizado', 'success');
           }
         });
@@ -797,6 +798,8 @@ SGE.settings = {
             SGE.CONFIG.statuses = SGE.CONFIG.statuses.filter(s => s !== btn.dataset.status);
             SGE.configManager.save();
             SGE.settings.render();
+            SGE.api.refreshUI();
+            SGE.api.cacheData();
             h.toast('Status excluído', 'success');
           }
         });
@@ -816,6 +819,7 @@ SGE.settings = {
             SGE.CONFIG.statuses.push(inp);
             SGE.configManager.save();
             SGE.settings.render();
+            SGE.api.refreshUI();
             h.toast('Status adicionado', 'success');
           }
         });
@@ -845,6 +849,8 @@ SGE.settings = {
             });
             SGE.configManager.save();
             SGE.settings.render();
+            SGE.api.refreshUI();
+            SGE.api.cacheData();
             h.toast('Status atualizado', 'success');
 
             if (updates.length > 0) SGE.api.syncBatchColaboradores(updates);
@@ -864,6 +870,7 @@ SGE.settings = {
             SGE.CONFIG.motivos = SGE.CONFIG.motivos.filter(m => m !== btn.dataset.motivo);
             SGE.configManager.save();
             SGE.settings.render();
+            SGE.api.refreshUI();
             h.toast('Motivo excluído', 'success');
           }
         });
@@ -883,6 +890,7 @@ SGE.settings = {
             SGE.CONFIG.motivos.push(inp);
             SGE.configManager.save();
             SGE.settings.render();
+            SGE.api.refreshUI();
             h.toast('Motivo adicionado', 'success');
           }
         });
@@ -903,6 +911,7 @@ SGE.settings = {
             SGE.CONFIG.motivos[SGE.CONFIG.motivos.indexOf(oldVal)] = cleanVal;
             SGE.configManager.save();
             SGE.settings.render();
+            SGE.api.refreshUI();
             h.toast('Motivo atualizado', 'success');
           }
         });
@@ -928,7 +937,7 @@ SGE.settings = {
               options: SGE.CONFIG.regimes.map(r => ({ value: r, label: r }))
             }
           ],
-          onConfirm: (vals) => {
+          onConfirm: async (vals) => {
             const newName = vals.nome.trim();
             const newRegime = vals.regime;
 
@@ -938,26 +947,36 @@ SGE.settings = {
             sup.nome = newName;
             sup.regime_padrao = newRegime;
 
-            // Reassign collaborators if the name changed
-            if (oldName !== sup.nome) {
+            // 1. Persist supervisor change to Supabase
+            await SGE.api.syncSupervisor('update', {
+              id: sup.id,
+              nome: newName,
+              regime_padrao: newRegime
+            });
+
+            // 2. Cascade: reassign all collaborators if name changed
+            if (oldName !== newName) {
               const updates = [];
               SGE.state.colaboradores.forEach(c => {
                 if (c.supervisor === oldName) {
-                  c.supervisor = sup.nome;
-                  updates.push({ id: c.id, supervisor: sup.nome });
+                  c.supervisor = newName;
+                  updates.push({ id: c.id, supervisor: newName });
                 }
               });
-              if (updates.length > 0) SGE.api.syncBatchColaboradores(updates);
+              if (updates.length > 0) await SGE.api.syncBatchColaboradores(updates);
 
-              // Update the kanban order if the name is in the fixed configuration
+              // Update kanban order config
               const kIdx = SGE.CONFIG.ordemKanban.indexOf(oldName);
               if (kIdx !== -1) {
-                SGE.CONFIG.ordemKanban[kIdx] = sup.nome;
-                SGE.configManager.save();
+                SGE.CONFIG.ordemKanban[kIdx] = newName;
               }
             }
 
+            // 3. Persist config and refresh ALL views
+            SGE.configManager.save();
             SGE.settings.render();
+            SGE.api.refreshUI();
+            SGE.api.cacheData();
             h.toast('Supervisor editado com sucesso', 'success');
           }
         });

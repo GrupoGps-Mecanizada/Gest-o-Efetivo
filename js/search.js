@@ -41,14 +41,17 @@ SGE.search = {
       return `
         <div class="search-card" data-id="${c.id}">
           <div class="search-card-header">
-            <div class="search-card-id">${c.matricula_gps || 'S/ MAT'} ${c.cr ? `<span style="color:var(--text-3); font-size:10px; margin-left:4px;"> | CR: ${c.cr}</span>` : ''}</div>
-            <div class="search-card-name">${c.nome}</div>
+            <div class="search-card-name" style="font-weight: 600; font-size: 13px; color: var(--text-1);">${c.nome}</div>
           </div>
-          <div class="card-badges">
+          <div class="card-badges" style="margin-top: 4px; margin-bottom: 6px;">
             <span class="badge ${c.funcao === 'MOT' ? 'badge-MOT' : 'badge-OP'}">${c.funcao}</span>
             <span class="badge ${badgeClass}">${c.regime}</span>
           </div>
-          <div class="search-card-sup">${c.supervisor || '—'}</div>
+          <div class="search-card-sup" style="margin-bottom: 6px;">${c.supervisor || '—'}</div>
+          <div class="search-card-id" style="font-size: 11px; color: var(--text-3); border-top: 1px solid var(--border-color); padding-top: 6px; margin-top: auto;">
+            MAT: <strong style="color: var(--text-2);">${c.matricula_gps || 'S/ MAT'}</strong>
+            ${c.cr ? `<span style="margin-left:8px;">CR: <strong style="color: var(--text-2);">${c.cr}</strong></span>` : ''}
+          </div>
         </div>`;
     }).join('');
 

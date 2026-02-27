@@ -309,12 +309,9 @@ SGE.equip = {
     if (normalizeBtn) {
       normalizeBtn.addEventListener('click', async () => {
         SGE.helpers.toast('Normalizando equipamentos...', 'info');
-        const result = await SGE.api.callGAS('normalizar_equipamentos');
+        const result = await SGE.api.syncNormalizeEquipments();
         if (result) {
           SGE.helpers.toast(`${result.updated} equipamentos normalizados`, 'success');
-          // Reload data
-          const data = await SGE.api.callGAS('listar_colaboradores');
-          if (data) SGE.state.colaboradores = data;
           SGE.equip.render();
         } else {
           SGE.helpers.toast('Erro ao normalizar', 'error');
