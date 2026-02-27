@@ -105,7 +105,7 @@ SGE.api = {
             ] = await Promise.all([
                 supabase.from('employees').select('*, supervisors(name), equipment(sigla, numero)'),
                 supabase.from('supervisors').select('*').order('name'),
-                supabase.from('movements').select('*, employees(name)').order('created_at', { ascending: false }).limit(100),
+                supabase.from('movements').select('*, employees(name, matricula_gps), from_sup:supervisors!movements_from_supervisor_id_fkey(name), to_sup:supervisors!movements_to_supervisor_id_fkey(name)').order('created_at', { ascending: false }).limit(100),
                 supabase.from('equipment').select('*'),
                 supabase.from('app_config').select('*')
             ]);
@@ -144,7 +144,14 @@ SGE.api = {
             SGE.state.movimentacoes = movements.map(m => ({
                 ...m,
                 colaborador_nome: m.employees ? m.employees.name : 'Desconhecido',
-                colaborador_matricula: m.employees ? (m.employees.matricula_gps || 'S/ MAT') : 'S/ MAT'
+                colaborador_matricula: m.employees ? (m.employees.matricula_gps || 'S/ MAT') : 'S/ MAT',
+                supervisor_origem: m.from_sup ? m.from_sup.name : 'SEM SUPERVISOR',
+                supervisor_destino: m.to_sup ? m.to_sup.name : 'SEM SUPERVISOR',
+                regime_origem: m.from_regime || '—',
+                regime_destino: m.to_regime || '—',
+                motivo: m.reason || 'N/A',
+                observacao: m.observation || '—',
+                usuario: m.created_by_name || 'Sistema'
             }));
 
             // Sort movements by effective_date then created_at
@@ -249,13 +256,21 @@ SGE.api = {
             if (errEmp) throw errEmp;
 
             // 2. Log Movement
+            const userName = movData.usuario
+                || (SGE.auth.currentUser ? (SGE.auth.currentUser.nome || SGE.auth.currentUser.usuario) : null)
+                || 'Sistema';
+
             const { error: errMov } = await supabase
                 .from('movements')
                 .insert({
                     employee_id: movData.colaborador_id,
                     from_supervisor_id: sourceSup ? sourceSup.id : null,
                     to_supervisor_id: targetSup ? targetSup.id : null,
+                    from_regime: movData.regime_origem || null,
+                    to_regime: movData.regime_destino || null,
                     reason: movData.motivo || 'N/A',
+                    observation: movData.observacao || null,
+                    created_by_name: userName,
                     effective_date: movData.effective_date || new Date().toISOString().split('T')[0]
                 });
 
@@ -448,6 +463,62 @@ SGE.api = {
         } catch (e) {
             this.updateSyncBar(false);
             return this._handleError(e, `Supervisor (${action})`);
+        }
+    },
+
+    /**
+     * CRUD operations on the equipment table (Vagas)
+     * @param {'create'|'update'|'delete'} action
+     * @param {Object} data - Equipment data
+     */
+    async syncEquipamento(action, data) {
+        if (!window.supabase) return null;
+        this.updateSyncBar(true);
+
+        try {
+            let result;
+
+            if (action === 'create') {
+                const { data: inserted, error } = await supabase
+                    .from('equipment')
+                    .insert({
+                        sigla: data.sigla,
+                        numero: data.numero || null,
+                        escala: data.escala || null,
+                        status: data.status || 'ATIVO'
+                    })
+                    .select();
+                if (error) throw error;
+                result = inserted?.[0];
+            } else if (action === 'update') {
+                const patch = {};
+                if (data.sigla !== undefined) patch.sigla = data.sigla;
+                if (data.numero !== undefined) patch.numero = data.numero || null;
+                if (data.escala !== undefined) patch.escala = data.escala || null;
+                if (data.status !== undefined) patch.status = data.status;
+
+                if (Object.keys(patch).length > 0) {
+                    const { error } = await supabase
+                        .from('equipment')
+                        .update(patch)
+                        .eq('id', data.id);
+                    if (error) throw error;
+                }
+                result = true;
+            } else if (action === 'delete') {
+                const { error } = await supabase
+                    .from('equipment')
+                    .delete()
+                    .eq('id', data.id);
+                if (error) throw error;
+                result = true;
+            }
+
+            this.updateSyncBar(false);
+            return result;
+        } catch (e) {
+            this.updateSyncBar(false);
+            return this._handleError(e, `Equipamento (${action})`);
         }
     },
 

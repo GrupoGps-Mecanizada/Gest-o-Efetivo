@@ -26,6 +26,18 @@ SGE.equip = {
    * Get turno label from regime
    */
   getTurno(regime) {
+    if (!regime) return 'S/R';
+    const r = String(regime).toUpperCase().trim();
+
+    // Try intelligent extraction first (works for "4x4-A", "24HS A", "A", etc)
+    if (r === 'A' || r.endsWith('-A') || r.endsWith(' A') || r === '4X4-A') return 'A';
+    if (r === 'B' || r.endsWith('-B') || r.endsWith(' B') || r === '4X4-B') return 'B';
+    if (r === 'C' || r.endsWith('-C') || r.endsWith(' C') || r === '4X4-C') return 'C';
+    if (r === 'D' || r.endsWith('-D') || r.endsWith(' D') || r === '4X4-D') return 'D';
+    if (r.includes('ADM')) return 'ADM';
+    if (r.includes('16H') || r.includes('16 H')) return '16H';
+
+    // Strict fallback map matching
     return SGE.CONFIG.turnoMap[regime] || 'S/R';
   },
 
@@ -40,7 +52,9 @@ SGE.equip = {
     // 1. Initialize strictly from backend master list
     if (SGE.state.equipamentos && Array.isArray(SGE.state.equipamentos)) {
       SGE.state.equipamentos.forEach(eq => {
-        const parsed = SGE.equip.parseEquip(eq.sigla + '-' + eq.numero);
+        // Handle null/undefined in numero cleanly
+        const eqStr = eq.numero ? `${eq.sigla}-${eq.numero}` : eq.sigla;
+        const parsed = SGE.equip.parseEquip(eqStr);
         if (!parsed || !tipos[parsed.sigla]) return;
 
         // Use strictly normalized keys to avoid duplicates
@@ -196,28 +210,37 @@ SGE.equip = {
    * Render a single equipment card
    */
   renderCard(eq, filtroTurno) {
-    // Collect specific turn members to calculate valid slots total (bypassing S/R members that dropped here accidentally)
+    // Collect all specific turn members to calculate valid slots total.
+    // We now count S/R as well, because if they are here, we need to see them to fix them.
     let totalValidMembers = 0;
-    Object.keys(eq.turnos).forEach(t => { if (t !== 'S/R') totalValidMembers += eq.turnos[t].length; });
+    Object.keys(eq.turnos).forEach(t => { totalValidMembers += eq.turnos[t].length; });
 
-    // Decide which turnos to render STRICTLY based on configured Escala property
+    // Decide which turnos to render based on configured Escala property and actual members
     let turnosOfThisEquip = [];
 
     // "Escala" determines the structural skeleton. Values: '24HS', 'ADM', '16H'.
     if (eq.isVirtual) {
       // Show every shift drawer that physically has a lost member inside
       turnosOfThisEquip = ['A', 'B', 'C', 'D', 'ADM', '16H', 'S/R'];
-    } else if (eq.escala === '24HS' || eq.escala === '24H') {
-      turnosOfThisEquip = ['A', 'B', 'C', 'D'];
-    } else if (eq.escala === 'ADM') {
-      turnosOfThisEquip = ['ADM'];
-    } else if (eq.escala === '16H' || eq.escala === '16HS') {
-      turnosOfThisEquip = ['16H'];
     } else {
-      turnosOfThisEquip = ['A', 'B', 'C', 'D']; // safe default
+      if (eq.escala === '24HS' || eq.escala === '24H' || eq.escala === '4x4') turnosOfThisEquip = ['A', 'B', 'C', 'D'];
+      else if (eq.escala === 'ADM') turnosOfThisEquip = ['ADM'];
+      else if (eq.escala === '16H' || eq.escala === '16HS') turnosOfThisEquip = ['16H'];
+      else turnosOfThisEquip = ['A', 'B', 'C', 'D']; // safe default
+
+      // Force display of any shift that actually has assigned members to prevent them from becoming invisible
+      Object.keys(eq.turnos).forEach(t => {
+        if (eq.turnos[t].length > 0 && !turnosOfThisEquip.includes(t)) {
+          turnosOfThisEquip.push(t);
+        }
+      });
+
+      // Maintain sensible visual order
+      const sortOrder = { 'A': 1, 'B': 2, 'C': 3, 'D': 4, 'ADM': 5, '16H': 6, 'S/R': 7 };
+      turnosOfThisEquip.sort((a, b) => (sortOrder[a] || 99) - (sortOrder[b] || 99));
     }
 
-    // If a specific UI filter is set ("A", "ADM"), only show that specific shift-drawer, if this equip even covers it
+    // If a specific UI filter is set ("A", "ADM"), only show that specific shift-drawer, if this equip covers it
     if (filtroTurno !== 'TODOS' && !eq.isVirtual) {
       turnosOfThisEquip = turnosOfThisEquip.filter(t => t === filtroTurno);
     }
@@ -238,12 +261,22 @@ SGE.equip = {
           <div class="equip-turno-members">
             ${members.length === 0
           ? '<span class="equip-empty-turno">—</span>'
-          : members.map(c => `
-                <span class="equip-member" data-id="${c.id}" title="${c.nome} (${c.funcao})">
-                  <span>${SGE.equip.abbreviateName(c.nome)}</span>
+          : members.map(c => {
+            const statusStr = String(c.status || 'ATIVO').toUpperCase();
+            const color = SGE.equip.getStatusColor(statusStr);
+            const isInactive = ['DESLIGADO', 'INATIVO', 'AFASTADO', 'FÉRIAS', 'FERIAS'].includes(statusStr);
+            const opacity = isInactive ? '0.6' : '1';
+            const textDecoration = (statusStr === 'DESLIGADO' || statusStr === 'INATIVO') ? 'line-through' : 'none';
+
+            return `
+                <span class="equip-member" data-id="${c.id}" title="${c.nome} (${c.funcao}) - Status: ${c.status}" style="border-left: 3px solid ${color}; opacity: ${opacity};">
+                  <div style="display:flex; flex-direction:column; gap:1px; line-height:1.2;">
+                    <span style="text-decoration: ${textDecoration}">${SGE.equip.abbreviateName(c.nome)}</span>
+                    <span style="font-size:8px; font-weight:700; color:${color}; letter-spacing:0.5px;">${statusStr}</span>
+                  </div>
                   <span class="equip-member-funcao">${c.funcao}</span>
                 </span>
-              `).join('')}
+              `}).join('')}
           </div>
         </div>
       `;
@@ -264,6 +297,26 @@ SGE.equip = {
         </div>
       </div>
     `;
+  },
+
+  /**
+   * Helper to get color based on status
+   */
+  getStatusColor(status) {
+    const s = String(status || '').toUpperCase();
+    const map = {
+      'ATIVO': 'var(--success, #10b981)',
+      'FÉRIAS': 'var(--warning, #f59e0b)',
+      'FERIAS': 'var(--warning, #f59e0b)',
+      'AFASTADO': 'var(--amber, #d97706)',
+      'DESLIGADO': 'var(--purple, #8b5cf6)',
+      'INATIVO': 'var(--danger, #ef4444)',
+      'EM AVISO': 'var(--indigo, #6366f1)',
+      'EM CONTRATAÇÃO': 'var(--teal, #14b8a6)',
+      'FALTA': 'var(--rose, #f43f5e)',
+      'SEM_ID': 'var(--danger, #ef4444)'
+    };
+    return map[s] || 'var(--border, #334155)';
   },
 
   /**

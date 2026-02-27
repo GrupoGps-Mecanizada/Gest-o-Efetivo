@@ -47,7 +47,7 @@
 /* KPI Grid */
 .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 16px;
 }
 
@@ -92,6 +92,14 @@
     background: #10b981;
 }
 
+.kpi-card.purple::before {
+    background: #8b5cf6;
+}
+
+.kpi-card.amber::before {
+    background: #d97706;
+}
+
 .kpi-icon {
     width: 52px;
     height: 52px;
@@ -126,17 +134,28 @@
 
 .kpi-info h4 {
     margin: 0;
-    font-size: 13px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     color: var(--text-3);
-    font-weight: 500;
+    font-weight: 600;
 }
 
 .kpi-info .kpi-val {
-    margin: 4px 0 0 0;
-    font-size: 28px;
+    margin: 6px 0 2px 0;
+    font-size: 26px;
     font-weight: 800;
     color: var(--text-1);
     line-height: 1.1;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.kpi-subtext {
+    font-size: 11px;
+    color: var(--text-3);
+    font-weight: 500;
 }
 
 /* Charts Grid */
@@ -214,7 +233,7 @@
 .chart-container {
     position: relative;
     flex: 1;
-    min-height: 280px;
+    min-height: 320px;
     width: 100%;
     display: flex;
     align-items: center;
@@ -222,10 +241,6 @@
 }
 
 /* Specific chart sizing */
-.chart-card.radar .chart-container {
-    min-height: 320px;
-}
-
 .chart-card.horizontal-bar .chart-container {
-    min-height: 400px;
+    min-height: 440px;
 }

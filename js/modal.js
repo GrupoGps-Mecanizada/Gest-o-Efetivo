@@ -88,7 +88,7 @@ SGE.modal = {
     const obs = document.getElementById('modal-obs').value.trim();
 
     const supOld = colaborador.supervisor;
-    const regOld = colaborador.regime;
+    const regOld = colaborador.regime || '—';
 
     // Register movement locally first for optimistic UI response
     const mov = {
@@ -97,12 +97,12 @@ SGE.modal = {
       supervisor_origem: supOld,
       supervisor_destino: supervisorDestino,
       regime_origem: regOld,
-      regime_destino: novoRegime,
+      regime_destino: novoRegime || '—',
       motivo: motivo,
       observacao: obs,
       effective_date: txData, // <-- Added effective_date
       created_at: new Date().toISOString(),
-      usuario: SGE.auth.currentUser ? SGE.auth.currentUser.usuario : SGE.CONFIG.usuario
+      usuario: SGE.auth.currentUser ? (SGE.auth.currentUser.nome || SGE.auth.currentUser.usuario) : SGE.CONFIG.usuario
     };
 
     SGE.state.movimentacoes.unshift(mov);
@@ -311,7 +311,7 @@ SGE.modal = {
   /**
    * Universal Dynamic Form Modal (Replaces window.prompt)
    */
-  openDynamic({ title, subtitle = '', fields, okText = 'Salvar', onConfirm }) {
+  openDynamic({ title, subtitle = '', fields, okText = 'Salvar', onConfirm, onDelete }) {
     SGE.state.modalContext = 'dynamic';
 
     const header = document.querySelector('.modal-header');
@@ -348,11 +348,21 @@ SGE.modal = {
 
     const footer = document.querySelector('.modal-footer');
     footer.innerHTML = `
+      ${onDelete ? `<button class="btn-cancel" style="color:var(--red); border-color:var(--red)40; margin-right:auto" id="modal-delete">Excluir</button>` : ''}
       <button class="btn-cancel" id="modal-cancel">Cancelar</button>
       <button class="btn-confirm" id="modal-confirm">${okText}</button>
     `;
 
     document.getElementById('modal-cancel').addEventListener('click', SGE.modal.close);
+
+    if (onDelete) {
+      document.getElementById('modal-delete').addEventListener('click', () => {
+        if (onDelete() !== false) {
+          SGE.modal.close();
+        }
+      });
+    }
+
     document.getElementById('modal-confirm').addEventListener('click', () => {
       // Collect values
       const values = fields.reduce((acc, f, i) => {

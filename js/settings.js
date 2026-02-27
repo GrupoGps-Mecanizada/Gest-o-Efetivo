@@ -82,6 +82,25 @@ SGE.settings = {
       `;
     }).join('');
 
+    // Dynamic Vagas Section
+    const vagasHtml = SGE.state.equipamentos.map(eq => {
+      const eqName = eq.numero ? `${eq.sigla} - ${eq.numero}` : eq.sigla;
+      return `
+      <div class="config-row">
+        <div class="config-row-title" style="flex:0 0 100px">${eqName}</div>
+        <div class="config-row-subtitle" style="flex:1; margin-left:0">${eq.escala || 'Sem Escala'} | ${eq.status}</div>
+        <div class="config-actions">
+          <button class="btn-icon-sq edit-vaga-btn" data-id="${eq.id}" title="Editar">
+             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+          </button>
+          <button class="btn-icon-sq danger del-vaga-btn" data-id="${eq.id}" title="Excluir">
+             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+          </button>
+        </div>
+      </div>
+      `;
+    }).join('');
+
     // Dynamic Statuses Section
     const statusesHtml = SGE.CONFIG.statuses.map(s => `
       <div class="config-row">
@@ -226,13 +245,25 @@ SGE.settings = {
 
         <div class="settings-section">
           <div class="settings-section-header config-header-wrap">
-            <span>Equipamentos</span>
+            <span>Equipamentos (Tipos)</span>
             <button class="btn-primary btn-add-small" id="btn-add-equip">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Adicionar
             </button>
           </div>
           <div class="settings-section-body" style="padding: 10px 18px 18px 18px;">
             <div class="config-list" style="max-height:260px; overflow-y:auto">${equipHtml}</div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-header config-header-wrap">
+            <span>Vagas (Alocação)</span>
+            <button class="btn-primary btn-add-small" id="btn-add-vaga">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Adicionar
+            </button>
+          </div>
+          <div class="settings-section-body" style="padding: 10px 18px 18px 18px;">
+            <div class="config-list" style="max-height:260px; overflow-y:auto">${vagasHtml}</div>
           </div>
         </div>
 
@@ -618,6 +649,15 @@ SGE.settings = {
             h.toast('Regime atualizado', 'success');
 
             if (updates.length > 0) SGE.api.syncBatchColaboradores(updates);
+          },
+          onDelete: () => {
+            const delBtn = container.querySelector(`.del-regime-btn[data-reg="${oldVal}"]`);
+            if (delBtn && delBtn.hasAttribute('disabled')) {
+              SGE.helpers.toast('Não é possível excluir: existem colaboradores usando esta configuração.', 'error');
+            } else if (delBtn) {
+              delBtn.click();
+            }
+            return false;
           }
         });
       });
@@ -690,6 +730,15 @@ SGE.settings = {
             h.toast('Função atualizada', 'success');
 
             if (updates.length > 0) SGE.api.syncBatchColaboradores(updates);
+          },
+          onDelete: () => {
+            const delBtn = container.querySelector(`.del-funcao-btn[data-func="${oldVal}"]`);
+            if (delBtn && delBtn.hasAttribute('disabled')) {
+              SGE.helpers.toast('Não é possível excluir: existem colaboradores usando esta configuração.', 'error');
+            } else if (delBtn) {
+              delBtn.click();
+            }
+            return false;
           }
         });
       });
@@ -782,6 +831,110 @@ SGE.settings = {
             SGE.api.refreshUI();
             SGE.api.cacheData();
             h.toast('Equipamento atualizado', 'success');
+          },
+          onDelete: () => {
+            const delBtn = container.querySelector(`.del-equip-btn[data-eq="${oldVal}"]`);
+            if (delBtn) delBtn.click();
+            return false;
+          }
+        });
+      });
+    });
+
+    // ==================== VAGAS (EQUIPMENT) EVENTS ====================
+
+    container.querySelectorAll('.del-vaga-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const vaga = SGE.state.equipamentos.find(e => e.id === id);
+        if (!vaga) return;
+
+        SGE.modal.confirm({
+          title: 'Excluir Vaga',
+          message: `Tem certeza que deseja excluir a vaga <b>${vaga.sigla} ${vaga.numero || ''}</b>?`,
+          onConfirm: async () => {
+            const res = await SGE.api.syncEquipamento('delete', { id });
+            if (res) {
+              SGE.state.equipamentos = SGE.state.equipamentos.filter(e => e.id !== id);
+              SGE.settings.render();
+              SGE.api.refreshUI();
+              h.toast('Vaga excluída com sucesso', 'success');
+            }
+          }
+        });
+      });
+    });
+
+    const addVagaBtn = document.getElementById('btn-add-vaga');
+    if (addVagaBtn) {
+      addVagaBtn.addEventListener('click', () => {
+        SGE.modal.openDynamic({
+          title: 'Adicionar Vaga',
+          fields: [
+            { id: 'sigla', type: 'select', label: 'Tipo (Sigla)', value: Object.keys(SGE.CONFIG.equipTipos)[0], options: Object.keys(SGE.CONFIG.equipTipos).map(k => ({ value: k, label: k })) },
+            { id: 'numero', label: 'Número', placeholder: 'Ex: 01', uppercase: true },
+            { id: 'escala', type: 'select', label: 'Escala', value: 'ADM', options: SGE.CONFIG.regimes.map(r => ({ value: r, label: r })) },
+            { id: 'status', type: 'select', label: 'Status', value: 'ATIVO', options: [{ value: 'ATIVO', label: 'ATIVO' }, { value: 'INATIVO', label: 'INATIVO' }, { value: 'MANUTENÇÃO', label: 'MANUTENÇÃO' }] }
+          ],
+          onConfirm: async (vals) => {
+            const sigla = vals.sigla.trim();
+            const num = vals.numero.trim();
+            if (!sigla) { h.toast('Sigla obrigatória', 'error'); return false; }
+
+            const res = await SGE.api.syncEquipamento('create', { sigla, numero: num, escala: vals.escala, status: vals.status });
+            if (res) {
+              SGE.state.equipamentos.push(res);
+              SGE.settings.render();
+              SGE.api.refreshUI();
+              h.toast('Vaga adicionada com sucesso', 'success');
+            }
+          }
+        });
+      });
+    }
+
+    container.querySelectorAll('.edit-vaga-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const vaga = SGE.state.equipamentos.find(e => e.id === id);
+        if (!vaga) return;
+
+        SGE.modal.openDynamic({
+          title: 'Editar Vaga',
+          fields: [
+            { id: 'sigla', type: 'select', label: 'Tipo (Sigla)', value: vaga.sigla, options: Object.keys(SGE.CONFIG.equipTipos).map(k => ({ value: k, label: k })) },
+            { id: 'numero', label: 'Número', value: vaga.numero || '', uppercase: true },
+            { id: 'escala', type: 'select', label: 'Escala', value: vaga.escala, options: SGE.CONFIG.regimes.map(r => ({ value: r, label: r })) },
+            { id: 'status', type: 'select', label: 'Status', value: vaga.status, options: [{ value: 'ATIVO', label: 'ATIVO' }, { value: 'INATIVO', label: 'INATIVO' }, { value: 'MANUTENÇÃO', label: 'MANUTENÇÃO' }] }
+          ],
+          onConfirm: async (vals) => {
+            const sigla = vals.sigla.trim();
+            const num = vals.numero.trim();
+            if (!sigla) { h.toast('Sigla obrigatória', 'error'); return false; }
+
+            const res = await SGE.api.syncEquipamento('update', { id, sigla, numero: num, escala: vals.escala, status: vals.status });
+            if (res) {
+              Object.assign(vaga, { sigla, numero: num, escala: vals.escala, status: vals.status });
+              SGE.settings.render();
+              SGE.api.refreshUI();
+              h.toast('Vaga atualizada', 'success');
+            }
+          },
+          onDelete: async () => {
+            SGE.modal.confirm({
+              title: 'Excluir Vaga',
+              message: `Tem certeza que deseja excluir esta vaga?`,
+              onConfirm: async () => {
+                const res = await SGE.api.syncEquipamento('delete', { id });
+                if (res) {
+                  SGE.state.equipamentos = SGE.state.equipamentos.filter(e => e.id !== id);
+                  SGE.settings.render();
+                  SGE.api.refreshUI();
+                  h.toast('Vaga excluída com sucesso', 'success');
+                }
+              }
+            });
+            return false; // don't close current modal yet, confirm modal will sit on top or replace
           }
         });
       });
@@ -854,6 +1007,15 @@ SGE.settings = {
             h.toast('Status atualizado', 'success');
 
             if (updates.length > 0) SGE.api.syncBatchColaboradores(updates);
+          },
+          onDelete: () => {
+            const delBtn = container.querySelector(`.del-status-btn[data-status="${oldVal}"]`);
+            if (delBtn && delBtn.hasAttribute('disabled')) {
+              SGE.helpers.toast('Não é possível excluir: existem colaboradores usando esta configuração.', 'error');
+            } else if (delBtn) {
+              delBtn.click();
+            }
+            return false;
           }
         });
       });
@@ -913,6 +1075,11 @@ SGE.settings = {
             SGE.settings.render();
             SGE.api.refreshUI();
             h.toast('Motivo atualizado', 'success');
+          },
+          onDelete: () => {
+            const delBtn = container.querySelector(`.del-motivo-btn[data-motivo="${oldVal}"]`);
+            if (delBtn) delBtn.click();
+            return false;
           }
         });
       });
@@ -978,6 +1145,15 @@ SGE.settings = {
             SGE.api.refreshUI();
             SGE.api.cacheData();
             h.toast('Supervisor editado com sucesso', 'success');
+          },
+          onDelete: () => {
+            const delBtn = container.querySelector(`.del-sup-btn[data-sup="${supName}"]`);
+            if (delBtn && delBtn.hasAttribute('disabled')) {
+              SGE.helpers.toast('Não é possível excluir: existem colaboradores sob este supervisor.', 'error');
+            } else if (delBtn) {
+              delBtn.click();
+            }
+            return false;
           }
         });
       });

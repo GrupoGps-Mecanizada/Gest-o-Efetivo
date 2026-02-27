@@ -43,6 +43,7 @@ SGE.auth = {
             id: user.id,
             usuario: user.email.split('@')[0],
             email: user.email,
+            nome: user.user_metadata.full_name || user.email.split('@')[0],
             perfil: user.user_metadata.perfil || 'VISAO' // Default to lowest role
         };
 

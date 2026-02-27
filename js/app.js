@@ -15,6 +15,13 @@ SGE.app = {
         if (await SGE.auth.init()) {
             // Already logged in
             if (loginScreen) loginScreen.classList.add('hidden');
+
+            // If we have cached data, skip loading screen entirely for instant boot
+            const hasCache = localStorage.getItem('SGE_CACHE');
+            if (hasCache && loadingScreen) {
+                loadingScreen.classList.add('hide');
+            }
+
             SGE.app.boot();
         } else {
             // Needs login
@@ -100,10 +107,15 @@ SGE.app = {
         const main = document.getElementById('main');
         const filterbar = document.getElementById('filterbar');
 
-        // Hide app content during loading
-        if (topbar) topbar.style.opacity = '0';
-        if (main) main.style.opacity = '0';
-        if (filterbar) filterbar.style.opacity = '0';
+        // Detect if loading screen was already hidden (cached instant boot)
+        const isInstantBoot = loadingScreen && loadingScreen.classList.contains('hide');
+
+        // Hide app content during loading (only if not instant boot)
+        if (!isInstantBoot) {
+            if (topbar) topbar.style.opacity = '0';
+            if (main) main.style.opacity = '0';
+            if (filterbar) filterbar.style.opacity = '0';
+        }
 
         const setStatus = (msg) => {
             if (statusEl) statusEl.innerHTML = msg + '<span class="loading-dots"></span>';
@@ -175,21 +187,37 @@ SGE.app = {
         }, 30000);
 
         // Fade out loading screen and show app
-        await new Promise(r => setTimeout(r, 300));
-        if (topbar) topbar.style.transition = 'opacity .4s ease';
-        if (main) main.style.transition = 'opacity .4s ease';
-        if (filterbar) filterbar.style.transition = 'opacity .4s ease';
-        if (topbar) topbar.style.opacity = '1';
-        if (main) main.style.opacity = '1';
-        if (filterbar) filterbar.style.opacity = '1';
+        if (isInstantBoot) {
+            // Instant boot: show everything immediately without animation
+            if (topbar) topbar.style.opacity = '1';
+            if (main) main.style.opacity = '1';
+            if (filterbar) filterbar.style.opacity = '1';
+            if (loadingScreen && loadingScreen.parentNode) loadingScreen.remove();
+        } else {
+            await new Promise(r => setTimeout(r, 300));
+            if (topbar) topbar.style.transition = 'opacity .4s ease';
+            if (main) main.style.transition = 'opacity .4s ease';
+            if (filterbar) filterbar.style.transition = 'opacity .4s ease';
+            if (topbar) topbar.style.opacity = '1';
+            if (main) main.style.opacity = '1';
+            if (filterbar) filterbar.style.opacity = '1';
 
-        if (loadingScreen && loadingScreen.parentNode) {
-            loadingScreen.classList.add('hide');
-            setTimeout(() => loadingScreen.remove(), 700);
+            if (loadingScreen && loadingScreen.parentNode) {
+                loadingScreen.classList.add('hide');
+                setTimeout(() => loadingScreen.remove(), 700);
+            }
         }
     },
 
     setupNavigation() {
+        // Logo click → go to dashboard
+        const logo = document.getElementById('logo-home');
+        if (logo) {
+            logo.addEventListener('click', () => {
+                SGE.navigation.switchView('viz');
+            });
+        }
+
         // Desktop / Normal view switching
         document.querySelectorAll('#nav [data-view], #nav .nav-btn').forEach(btn => {
             btn.addEventListener('click', () => {

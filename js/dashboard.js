@@ -144,40 +144,58 @@ SGE.dashboard = {
         const faltas = data.filter(c => c.status === 'FALTA' || c.status === 'AFASTADO').length;
 
         document.getElementById('dashboard-kpis').innerHTML = `
-            <div class="kpi-card">
-                <div class="kpi-icon">
+            <div class="kpi-card" style="border-left: 4px solid var(--primary);">
+                <div class="kpi-icon" style="color: var(--primary); background: rgba(15, 56, 104, 0.08);">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                 </div>
                 <div class="kpi-info">
                     <h4>Efetivo Total</h4>
                     <div class="kpi-val">${total}</div>
+                    <div class="kpi-subtext">Todos cadastrados no sistema</div>
                 </div>
             </div>
-            <div class="kpi-card success">
-                <div class="kpi-icon">
+            
+            <div class="kpi-card" style="border-left: 4px solid var(--success);">
+                <div class="kpi-icon" style="color: var(--success); background: rgba(16, 185, 129, 0.1);">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                 </div>
                 <div class="kpi-info">
                     <h4>Operação Ativa</h4>
-                    <div class="kpi-val">${ativos} <span style="font-size:12px;color:var(--text-3);font-weight:500;">(${(ativos / total * 100).toFixed(1)}%)</span></div>
+                    <div class="kpi-val">${ativos} <span style="font-size:14px;color:var(--text-3);font-weight:600;">(${(total > 0 ? (ativos / total * 100) : 0).toFixed(1)}%)</span></div>
+                    <div class="kpi-subtext">Trabalhando ou folgando</div>
                 </div>
             </div>
-            <div class="kpi-card warning">
-                <div class="kpi-icon">
+
+            <div class="kpi-card" style="border-left: 4px solid var(--warning);">
+                <div class="kpi-icon" style="color: var(--warning); background: rgba(245, 158, 11, 0.1);">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
                 </div>
                 <div class="kpi-info">
-                    <h4>Em Férias / Afast.</h4>
-                    <div class="kpi-val">${ferias + faltas}</div>
+                    <h4>Em Férias</h4>
+                    <div class="kpi-val">${ferias} <span style="font-size:14px;color:var(--text-3);font-weight:600;">(${(total > 0 ? (ferias / total * 100) : 0).toFixed(1)}%)</span></div>
+                    <div class="kpi-subtext">Licenças e férias</div>
                 </div>
             </div>
-            <div class="kpi-card danger">
-                <div class="kpi-icon">
+
+            <div class="kpi-card" style="border-left: 4px solid var(--amber);">
+                <div class="kpi-icon" style="color: var(--amber); background: rgba(217, 119, 6, 0.1);">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                 </div>
                 <div class="kpi-info">
-                    <h4>Sem ID ou Pendentes</h4>
+                    <h4>Afastamentos</h4>
+                    <div class="kpi-val">${faltas} <span style="font-size:14px;color:var(--text-3);font-weight:600;">(${(total > 0 ? (faltas / total * 100) : 0).toFixed(1)}%)</span></div>
+                    <div class="kpi-subtext">Atestados físicos e mentais</div>
+                </div>
+            </div>
+            
+            <div class="kpi-card" style="border-left: 4px solid var(--danger);">
+                <div class="kpi-icon" style="color: var(--danger); background: rgba(239, 68, 68, 0.1);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M15 11l-6 6"></path><path d="M9 11l6 6"></path></svg>
+                </div>
+                <div class="kpi-info">
+                    <h4>Pendentes / Sem ID</h4>
                     <div class="kpi-val">${semId}</div>
+                    <div class="kpi-subtext">Aguardando matrícula GPS</div>
                 </div>
             </div>
         `;
@@ -337,7 +355,7 @@ SGE.dashboard = {
         });
 
         // ────────────────────────────────────────────────────────────
-        // 2. Efetivo por Função (Polar Area)
+        // 2. Efetivo por Função (Polar Area -> Doughnut Custom)
         //    Labels: apenas na legenda. Interno removido para evitar sobreposição.
         // ────────────────────────────────────────────────────────────
         var funcaoCounts = {};
@@ -352,42 +370,23 @@ SGE.dashboard = {
         var funcaoTotal = funcaoVals.reduce(function (a, b) { return a + b; }, 0);
 
         this.charts.funcao = new Chart(document.getElementById('chartFuncao'), {
-            type: 'polarArea',
+            type: 'doughnut',
             data: {
                 labels: funcaoKeys,
                 datasets: [{
                     data: funcaoVals,
-                    backgroundColor: funcaoKeys.map(function (_, i) { return funcaoColors[i % funcaoColors.length] + 'CC'; }),
+                    backgroundColor: funcaoKeys.map(function (_, i) { return funcaoColors[i % funcaoColors.length]; }),
                     borderWidth: 2,
-                    borderColor: '#ffffff'
+                    borderColor: '#ffffff',
+                    hoverOffset: 4
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                cutout: '70%',
                 plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            boxWidth: 10,
-                            usePointStyle: true,
-                            padding: 16,
-                            font: { size: 11 },
-                            generateLabels: function (chart) {
-                                return funcaoKeys.map(function (label, i) {
-                                    var col = funcaoColors[i % funcaoColors.length] || '#64748b';
-                                    return {
-                                        text: label + '   ' + funcaoVals[i],
-                                        fillStyle: col,
-                                        strokeStyle: col,
-                                        pointStyle: 'circle',
-                                        hidden: false,
-                                        index: i
-                                    };
-                                });
-                            }
-                        }
-                    },
+                    legend: legendBottomWithQty,
                     datalabels: {
                         // Branco centrado apenas se ≥ 15% do total
                         display: function (ctx) {
@@ -400,9 +399,6 @@ SGE.dashboard = {
                         font: { weight: 'bold', size: 12 },
                         formatter: function (val) { return val; }
                     }
-                },
-                scales: {
-                    r: { ticks: { display: false }, grid: { color: 'rgba(0,0,0,0.06)' } }
                 }
             }
         });
