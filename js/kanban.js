@@ -242,6 +242,7 @@ SGE.kanban = {
 
         const badgeRegime = h.regimeBadgeClass(col.regime);
         const badgeFuncao = col.funcao === 'MOT' ? 'badge-MOT' : 'badge-OP';
+        const funcaoStyle = SGE.CONFIG.getFuncaoBadgeStyle(col.funcao);
         const alertHtml = semId ? '<div class="card-alert" title="Sem ID definitivo"></div>' : '';
         const feriasHtml = isFerias ? '<span class="badge badge-SEM">🏖 Férias</span>' : '';
 
@@ -252,7 +253,7 @@ SGE.kanban = {
         <div class="card-name" style="font-weight: 600; font-size: 13px; margin-bottom: 4px; color: var(--text-1);">${col.nome}</div>
       </div>
       <div class="card-badges" style="margin-bottom: 6px;">
-        <span class="badge ${badgeFuncao}">${col.funcao}</span>
+        <span class="badge" style="${funcaoStyle}">${col.funcao}</span>
         <span class="badge ${badgeRegime}">${col.regime}</span>
         ${feriasHtml}
       </div>
@@ -339,6 +340,7 @@ SGE.kanban = {
         const semId = h.isSemId(colaborador);
         const badgeRegime = h.regimeBadgeClass(colaborador.regime);
         const badgeFuncao = colaborador.funcao === 'MOT' ? 'badge-MOT' : 'badge-OP';
+        const funcaoStyle = SGE.CONFIG.getFuncaoBadgeStyle(colaborador.funcao);
         const alertHtml = semId ? '<div class="card-alert" title="Sem ID definitivo"></div>' : '';
         const feriasHtml = h.isFerias(colaborador) ? '<span class="badge badge-SEM">🏖 Férias</span>' : '';
 
@@ -348,7 +350,7 @@ SGE.kanban = {
         <div class="card-name" style="font-weight: 600; font-size: 13px; margin-bottom: 4px; color: var(--text-1);">${colaborador.nome}</div>
       </div>
       <div class="card-badges" style="margin-bottom: 6px;">
-        <span class="badge ${badgeFuncao}">${colaborador.funcao}</span>
+        <span class="badge" style="${funcaoStyle}">${colaborador.funcao}</span>
         <span class="badge ${badgeRegime}">${colaborador.regime}</span>
         ${feriasHtml}
       </div>

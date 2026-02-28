@@ -94,16 +94,14 @@ SGE.navigation = {
         }
 
         // Clear active states globally
-        document.querySelectorAll('#nav [data-view], #nav .nav-module').forEach(el => {
+        document.querySelectorAll('.nav-menu-item[data-view]').forEach(el => {
             el.classList.remove('active');
         });
 
-        // Update active nav button and its parent module (Nested Tabs Support)
-        const activeBtn = document.querySelector(`#nav [data-view="${viewName}"]`);
+        // Update active nav menu item
+        const activeBtn = document.querySelector(`.nav-menu-item[data-view="${viewName}"]`);
         if (activeBtn) {
             activeBtn.classList.add('active');
-            const parentModule = activeBtn.closest('.nav-module');
-            if (parentModule) parentModule.classList.add('active');
         }
 
         // Show/hide views
@@ -111,12 +109,8 @@ SGE.navigation = {
         const target = document.getElementById(`${viewName}-view`);
         if (target) target.classList.add('active');
 
-        // Show/hide filter bar and kanban-wrap (only on kanban)
-        const filterbar = document.getElementById('filterbar');
+        // Show/hide kanban-wrap (only on kanban)
         const kanbanWrap = document.getElementById('kanban-wrap');
-        if (filterbar) {
-            filterbar.style.display = viewName === 'kanban' ? 'flex' : 'none';
-        }
         if (kanbanWrap) {
             kanbanWrap.style.display = viewName === 'kanban' ? 'flex' : 'none';
         }
@@ -180,81 +174,185 @@ SGE.navigation = {
     },
 
     /**
-     * Setup filter chips event listeners
+     * Setup filter dropdown event listeners
      */
-    setupFilters() {
-        document.querySelectorAll('.filter-chip').forEach(chip => {
-            chip.addEventListener('click', () => {
-                const type = chip.dataset.type;
-                const value = chip.dataset.value;
+    setupFilterDropdown() {
+        const panel = document.getElementById('filter-dropdown-panel');
+        const body = document.getElementById('filter-dropdown-body');
+        if (!panel || !body) return;
 
-                if (SGE.state.filtros[type] === value) {
-                    SGE.state.filtros[type] = '';
-                    chip.classList.remove('active');
-                } else {
-                    // Deactivate siblings
-                    document.querySelectorAll(`.filter-chip[data-type="${type}"]`).forEach(c => c.classList.remove('active'));
-                    SGE.state.filtros[type] = value;
-                    chip.classList.add('active');
-                }
+        // Checkbox click handler (event delegation)
+        body.addEventListener('click', (e) => {
+            const item = e.target.closest('.filter-checkbox-item');
+            if (!item) return;
 
-                // Persist active filters to sessionStorage
-                try {
-                    sessionStorage.setItem('SGE_FILTROS', JSON.stringify(SGE.state.filtros));
-                } catch (e) { /* ignore */ }
+            const type = item.dataset.type;
+            const value = item.dataset.value;
+            const checkbox = item.querySelector('.filter-checkbox');
 
-                SGE.kanban.render();
-            });
+            if (!SGE.state.filtros[type]) SGE.state.filtros[type] = [];
+
+            const idx = SGE.state.filtros[type].indexOf(value);
+            if (idx >= 0) {
+                SGE.state.filtros[type].splice(idx, 1);
+                checkbox.classList.remove('checked');
+            } else {
+                SGE.state.filtros[type].push(value);
+                checkbox.classList.add('checked');
+            }
+
+            SGE.navigation._persistFilters();
+            SGE.navigation._updateFilterBadge();
+            SGE.navigation._refreshViews();
         });
+
+        // Clear all button
+        const clearBtn = document.getElementById('filter-clear-all');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                SGE.state.filtros = { regime: [], funcao: [], status: [] };
+                body.querySelectorAll('.filter-checkbox').forEach(cb => cb.classList.remove('checked'));
+                SGE.navigation._persistFilters();
+                SGE.navigation._updateFilterBadge();
+                SGE.navigation._refreshViews();
+            });
+        }
     },
 
     /**
-     * Restore previously active filter chips from sessionStorage
+     * Restore previously active filters from sessionStorage
      */
     restoreFilters() {
         try {
             const saved = sessionStorage.getItem('SGE_FILTROS');
             if (saved) {
                 const filtros = JSON.parse(saved);
-                Object.assign(SGE.state.filtros, filtros);
-
-                // Visually activate the chips
-                document.querySelectorAll('.filter-chip').forEach(chip => {
-                    const type = chip.dataset.type;
-                    const value = chip.dataset.value;
-                    if (SGE.state.filtros[type] === value) {
-                        chip.classList.add('active');
+                // Migrate old string format to array format
+                Object.keys(filtros).forEach(key => {
+                    if (typeof filtros[key] === 'string') {
+                        filtros[key] = filtros[key] ? [filtros[key]] : [];
                     }
                 });
+                Object.assign(SGE.state.filtros, filtros);
+
+                // Visually check the checkboxes
+                const body = document.getElementById('filter-dropdown-body');
+                if (body) {
+                    Object.keys(SGE.state.filtros).forEach(type => {
+                        SGE.state.filtros[type].forEach(val => {
+                            const item = body.querySelector(`.filter-checkbox-item[data-type="${type}"][data-value="${val}"]`);
+                            if (item) {
+                                item.querySelector('.filter-checkbox').classList.add('checked');
+                            }
+                        });
+                    });
+                }
+
+                SGE.navigation._updateFilterBadge();
             }
         } catch (e) { /* ignore */ }
     },
 
     /**
-     * Build filter chips dynamically from data
+     * Build filter dropdown content dynamically from data
      */
     buildFilterChips() {
-        const filterbar = document.getElementById('filterbar');
-        if (!filterbar) return;
+        // Build the dropdown instead
+        SGE.navigation.buildFilterDropdown();
+    },
 
-        filterbar.innerHTML = `
-      <span class="filter-label">Regime</span>
-      ${SGE.CONFIG.regimes.filter(r => r !== 'SEM REGISTRO').map(r =>
-            `<button class="filter-chip" data-type="regime" data-value="${r}">${r}</button>`
-        ).join('')}
-      <div class="filter-sep"></div>
-      <span class="filter-label">Função</span>
-      ${SGE.CONFIG.funcoes.map(f =>
-            `<button class="filter-chip" data-type="funcao" data-value="${f}">${f}</button>`
-        ).join('')}
-      <div class="filter-sep"></div>
-      <span class="filter-label">Status</span>
-      <button class="filter-chip" data-type="status" data-value="FÉRIAS">FÉRIAS</button>
-      <button class="filter-chip" data-type="status" data-value="SEM EQUIP">SEM EQUIP</button>
-      <button class="filter-chip" data-type="status" data-value="SEM_ID">SEM ID</button>
-    `;
+    buildFilterDropdown() {
+        const body = document.getElementById('filter-dropdown-body');
+        if (!body) return;
 
-        SGE.navigation.setupFilters();
+        const colabs = SGE.state.colaboradores || [];
+
+        // Count occurrences for each option
+        const countBy = (field) => {
+            const map = {};
+            colabs.forEach(c => {
+                const val = c[field] || '';
+                if (val) map[val] = (map[val] || 0) + 1;
+            });
+            return map;
+        };
+
+        const regimeCounts = countBy('regime');
+        const funcaoCounts = countBy('funcao');
+        const statusCounts = countBy('status');
+
+        const makeSection = (title, type, options) => {
+            return `
+                <div class="filter-section">
+                    <div class="filter-section-title">${title}</div>
+                    ${options.map(opt => {
+                const count = opt.count || 0;
+                return `
+                            <div class="filter-checkbox-item" data-type="${type}" data-value="${opt.value}">
+                                <div class="filter-checkbox"></div>
+                                <span class="filter-checkbox-label">${opt.label}</span>
+                                <span class="filter-checkbox-count">${count}</span>
+                            </div>
+                        `;
+            }).join('')}
+                </div>
+            `;
+        };
+
+        const regimeOptions = SGE.CONFIG.regimes.map(r => ({ value: r, label: r, count: regimeCounts[r] || 0 }));
+        const funcaoOptions = SGE.CONFIG.funcoes.map(f => ({ value: f, label: f, count: funcaoCounts[f] || 0 }));
+        const statusOptions = SGE.CONFIG.statuses.map(s => ({ value: s, label: s, count: statusCounts[s] || 0 }));
+
+        // Add special status options
+        statusOptions.push(
+            { value: 'FÉRIAS', label: '🏖 Férias', count: colabs.filter(c => SGE.helpers.isFerias(c)).length },
+            { value: 'SEM EQUIP', label: '⚠ Sem Equipamento', count: colabs.filter(c => SGE.helpers.isSemEquipamento(c)).length },
+            { value: 'SEM_ID', label: '❌ Sem ID', count: colabs.filter(c => SGE.helpers.isSemId(c)).length }
+        );
+
+        body.innerHTML = [
+            makeSection('Regime', 'regime', regimeOptions),
+            makeSection('Função', 'funcao', funcaoOptions),
+            makeSection('Status', 'status', statusOptions)
+        ].join('');
+
+        SGE.navigation.setupFilterDropdown();
         SGE.navigation.restoreFilters();
+    },
+
+    /* ---- Internal helpers ---- */
+
+    _persistFilters() {
+        try {
+            sessionStorage.setItem('SGE_FILTROS', JSON.stringify(SGE.state.filtros));
+        } catch (e) { /* ignore */ }
+    },
+
+    _updateFilterBadge() {
+        const total = (SGE.state.filtros.regime?.length || 0) +
+            (SGE.state.filtros.funcao?.length || 0) +
+            (SGE.state.filtros.status?.length || 0);
+        const badge = document.getElementById('filter-count-badge');
+        const btn = document.getElementById('filter-toggle-btn');
+        if (badge) {
+            badge.textContent = total;
+            badge.classList.toggle('hidden', total === 0);
+        }
+        if (btn) {
+            btn.classList.toggle('has-filters', total > 0);
+        }
+    },
+
+    _refreshViews() {
+        // Only refresh the currently active view (per-view filter behavior)
+        const activeView = SGE.state.activeView;
+        switch (activeView) {
+            case 'kanban': SGE.kanban.render(); break;
+            case 'viz': if (SGE.dashboard) SGE.dashboard.render(); break;
+            case 'tabela': SGE.viz.renderTable(); break;
+            case 'grupo': SGE.viz.renderGroups(); break;
+            case 'search': SGE.search.render(); break;
+            // equip has its own tipo/turno filters, skip global filter
+        }
     }
 };

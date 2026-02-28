@@ -150,9 +150,8 @@
 .equip-group-cards {
     display: flex;
     gap: 14px;
-    overflow-x: auto;
+    flex-wrap: wrap;
     padding: 4px 2px 8px;
-    scroll-behavior: smooth;
 }
 
 .equip-group-cards::-webkit-scrollbar {
@@ -175,8 +174,8 @@
 
 /* ===================== CARD (fixed size) ===================== */
 .equip-card {
-    width: 260px;
-    min-width: 260px;
+    width: 320px;
+    min-width: 320px;
     height: 340px;
     background: var(--bg-1);
     border: 1px solid var(--border);
@@ -313,6 +312,9 @@
     align-items: center;
     justify-content: space-between;
     width: 100%;
+    min-width: 0;
+    gap: 6px;
+    overflow: hidden;
 }
 
 .equip-member:hover {
@@ -327,6 +329,10 @@
     color: var(--text-3);
     font-size: 9px;
     flex-shrink: 0;
+    max-width: 45%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .equip-empty-turno {

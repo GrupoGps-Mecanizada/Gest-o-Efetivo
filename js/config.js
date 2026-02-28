@@ -19,6 +19,48 @@ SGE.CONFIG = {
   // Available functions
   funcoes: ['OP', 'MOT'],
 
+  // Function color map — distinct colors for each function across all views
+  funcaoColors: {
+    'OP': { bg: '#e6eef9', text: '#2c5ea8', border: '#b0c8e8' },
+    'MOT': { bg: '#e8f5ee', text: '#1a7a42', border: '#b5ddc5' },
+    'OPERADOR DE EQUIPAMENTOS': { bg: '#e6eef9', text: '#2c5ea8', border: '#b0c8e8' },
+    'MOTORISTA DE CAMINHAO': { bg: '#e8f5ee', text: '#1a7a42', border: '#b5ddc5' },
+    'SUPERVISOR DE AREA': { bg: '#fdf0e4', text: '#b06318', border: '#ecc9a0' },
+    'SUPERVISOR DE OBRA I': { bg: '#f3ecfb', text: '#7b49b0', border: '#d0b8e8' },
+    'MOTORISTA': { bg: '#e8f5ee', text: '#1a7a42', border: '#b5ddc5' },
+  },
+
+  // Fallback palette for dynamically added functions
+  _funcaoFallbackPalette: [
+    { bg: '#fce8e8', text: '#c43030', border: '#e8b0b0' },
+    { bg: '#fdf5e0', text: '#9a7510', border: '#e8d699' },
+    { bg: '#e0f7f7', text: '#0e7c7c', border: '#a6dede' },
+    { bg: '#fde8f4', text: '#a83279', border: '#e8b0d4' },
+    { bg: '#eef0f4', text: '#5a6676', border: '#c8ced8' },
+  ],
+
+  /**
+   * Get color style object for a function name
+   */
+  getFuncaoColor(funcao) {
+    if (!funcao) return { bg: '#eef0f4', text: '#5a6676', border: '#c8ced8' };
+    const key = funcao.toUpperCase().trim();
+    if (this.funcaoColors[key]) return this.funcaoColors[key];
+    // Dynamic fallback: hash the name to pick a consistent color
+    let hash = 0;
+    for (let i = 0; i < key.length; i++) hash = key.charCodeAt(i) + ((hash << 5) - hash);
+    const idx = Math.abs(hash) % this._funcaoFallbackPalette.length;
+    return this._funcaoFallbackPalette[idx];
+  },
+
+  /**
+   * Get inline style string for a function badge
+   */
+  getFuncaoBadgeStyle(funcao) {
+    const c = this.getFuncaoColor(funcao);
+    return `background:${c.bg};color:${c.text};border:1px solid ${c.border};`;
+  },
+
   // Available statuses
   statuses: ['ATIVO', 'INATIVO', 'FÉRIAS', 'AFASTADO', 'DESLIGADO', 'EM AVISO', 'EM CONTRATAÇÃO'],
 

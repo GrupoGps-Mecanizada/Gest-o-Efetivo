@@ -281,11 +281,11 @@ SGE.equip = {
 
             return `
                 <span class="equip-member" data-id="${c.id}" title="${c.nome} (${c.funcao}) - Status: ${c.status}" style="border-left: 3px solid ${color}; opacity: ${opacity};">
-                  <div style="display:flex; flex-direction:column; gap:1px; line-height:1.2;">
-                    <span style="text-decoration: ${textDecoration}">${SGE.equip.abbreviateName(c.nome)}</span>
+                  <div style="display:flex; flex-direction:column; gap:1px; line-height:1.2; min-width:0; flex:1; overflow:hidden;">
+                    <span style="text-decoration: ${textDecoration}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${SGE.equip.abbreviateName(c.nome)}</span>
                     <span style="font-size:8px; font-weight:700; color:${color}; letter-spacing:0.5px;">${statusStr}</span>
                   </div>
-                  <span class="equip-member-funcao">${c.funcao}</span>
+                  <span class="equip-member-funcao" title="${c.funcao}" style="color:${SGE.CONFIG.getFuncaoColor(c.funcao).text}">${c.funcao}</span>
                 </span>
               `}).join('')}
           </div>

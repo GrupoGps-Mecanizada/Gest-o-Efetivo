@@ -140,12 +140,16 @@ SGE.auth = {
 
         const topbarUser = document.getElementById('topbar-user');
         if (topbarUser && this.currentUser) {
-            topbarUser.innerHTML = `
-                <div style="display:flex; align-items:center; gap:4px; margin-right:12px; font-size:13px;">
-                    <span style="color:var(--text-3);">Bem-vindo(a),</span>
-                    <strong style="color:var(--text-1); font-weight:700;">${this.currentUser.usuario}</strong>
-                </div>
-                <button title="Sair do sistema" id="logout-btn" style="display:flex; align-items:center; gap:4px; font-weight:600; font-size:13px; background:none; border:none; color:var(--text-3); cursor:pointer; padding:4px 8px; border-radius:4px; transition: background 0.2s">
+            topbarUser.innerHTML = '';
+        }
+
+        // Populate menu user info
+        const menuUser = document.getElementById('nav-menu-user');
+        if (menuUser && this.currentUser) {
+            menuUser.innerHTML = `
+                <span style="color:var(--text-3);">Bem-vindo(a),</span>
+                <strong style="color:var(--text-1); font-weight:700;">${this.currentUser.usuario}</strong>
+                <button title="Sair do sistema" id="logout-btn" style="margin-left:auto; display:flex; align-items:center; gap:4px; font-weight:600; font-size:12px; background:none; border:none; color:var(--danger); cursor:pointer; padding:4px 8px; border-radius:4px; transition: background 0.2s">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
                     Sair
                 </button>

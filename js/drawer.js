@@ -29,7 +29,7 @@ SGE.drawer = {
       ${semIdAlert}
       <div class="section-title">Dados Cadastrais</div>
       <div class="drawer-fields-grid">
-        <div class="drawer-field"><div class="drawer-field-label">Função</div><div class="drawer-field-value">${col.funcao}</div></div>
+        <div class="drawer-field"><div class="drawer-field-label">Função</div><div class="drawer-field-value"><span class="badge" style="${SGE.CONFIG.getFuncaoBadgeStyle(col.funcao)}">${col.funcao}</span></div></div>
         <div class="drawer-field"><div class="drawer-field-label">CR</div><div class="drawer-field-value">${col.cr || '—'}</div></div>
         <div class="drawer-field"><div class="drawer-field-label">Regime</div><div class="drawer-field-value">${col.regime}</div></div>
         <div class="drawer-field"><div class="drawer-field-label">Supervisor</div><div class="drawer-field-value">${col.supervisor}</div></div>

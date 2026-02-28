@@ -44,7 +44,7 @@ SGE.search = {
             <div class="search-card-name" style="font-weight: 600; font-size: 13px; color: var(--text-1);">${c.nome}</div>
           </div>
           <div class="card-badges" style="margin-top: 4px; margin-bottom: 6px;">
-            <span class="badge ${c.funcao === 'MOT' ? 'badge-MOT' : 'badge-OP'}">${c.funcao}</span>
+            <span class="badge" style="${SGE.CONFIG.getFuncaoBadgeStyle(c.funcao)}">${c.funcao}</span>
             <span class="badge ${badgeClass}">${c.regime}</span>
           </div>
           <div class="search-card-sup" style="margin-bottom: 6px;">${c.supervisor || '—'}</div>

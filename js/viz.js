@@ -159,7 +159,7 @@ SGE.viz = {
                 <td class="name-cell">
                   <div>${c.nome}</div>
                 </td>
-                <td><span class="badge ${c.funcao === 'MOT' ? 'badge-MOT' : 'badge-OP'}">${c.funcao}</span></td>
+                <td><span class="badge" style="${SGE.CONFIG.getFuncaoBadgeStyle(c.funcao)}">${c.funcao}</span></td>
                 <td><span class="badge ${h.regimeBadgeClass(c.regime)}">${c.regime}</span></td>
                 <td>${c.supervisor || '—'}</td>
                 <td>${c.status}</td>
@@ -288,7 +288,7 @@ SGE.viz = {
             <div class="card-name">${c.nome}</div>
           </div>
           <div class="card-badges">
-            <span class="badge ${c.funcao === 'MOT' ? 'badge-MOT' : 'badge-OP'}">${c.funcao}</span>
+            <span class="badge" style="${SGE.CONFIG.getFuncaoBadgeStyle(c.funcao)}">${c.funcao}</span>
             <span class="badge ${h.regimeBadgeClass(c.regime)}">${c.regime}</span>
           </div>
         </div>

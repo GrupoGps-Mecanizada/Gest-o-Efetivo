@@ -368,6 +368,11 @@ SGE.dashboard = {
         var funcaoKeys = Object.keys(funcaoCounts);
         var funcaoVals = Object.values(funcaoCounts);
         var funcaoTotal = funcaoVals.reduce(function (a, b) { return a + b; }, 0);
+        // Use centralized function color system for chart colors
+        var funcaoChartColors = funcaoKeys.map(function (key, i) {
+            var c = SGE.CONFIG.getFuncaoColor(key);
+            return c.text || funcaoColors[i % funcaoColors.length];
+        });
 
         this.charts.funcao = new Chart(document.getElementById('chartFuncao'), {
             type: 'doughnut',
@@ -375,7 +380,7 @@ SGE.dashboard = {
                 labels: funcaoKeys,
                 datasets: [{
                     data: funcaoVals,
-                    backgroundColor: funcaoKeys.map(function (_, i) { return funcaoColors[i % funcaoColors.length]; }),
+                    backgroundColor: funcaoChartColors,
                     borderWidth: 2,
                     borderColor: '#ffffff',
                     hoverOffset: 4

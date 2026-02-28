@@ -102,127 +102,164 @@
     <!-- ==================== TOPBAR ==================== -->
     <div id="global-sync-bar"></div>
     <div id="topbar">
-      <div class="logo" id="logo-home" style="cursor:pointer; display:flex; flex-direction:column; gap:2px;"
-        title="Voltar ao Dashboard">
-        <span style="font-weight:800; font-size:15px; letter-spacing:0.5px; line-height:1;">Grupo GPS</span>
-        <span
-          style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-3); line-height:1;">Mecanizada</span>
-        <div style="height:1px; background:var(--border); width:100%; margin:2px 0;"></div>
-        <span style="font-weight:600; font-size:12px; color:var(--text-2); line-height:1;">Gestão De Efetivo</span>
+
+      <!-- LEFT: Menu Button -->
+      <div id="topbar-left">
+        <button id="nav-menu-btn" class="topbar-icon-btn" aria-label="Menu de Navegação" title="Menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+
+        <!-- SGE Hub Link -->
+        <a id="sge-hub-link" href="https://grupogps-mecanizada.github.io/SGE_GRUPOGPS/" class="topbar-icon-btn"
+          title="SGE Hub" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <path
+              d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+          </svg>
+        </a>
       </div>
 
-      <!-- Hamburger Button (Mobile Only) - Moved to left -->
-      <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Abrir Menu">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
-
-      <div id="nav" class="nav-modules">
-
-        <!-- Módulo: Dashboard -->
-        <div class="nav-module active">
-          <button class="module-title" data-view="viz">
-            Dashboard
-          </button>
-        </div>
-
-        <!-- Módulo: Operação -->
-        <div class="nav-module has-submenu">
-          <div class="module-title">
-            Operação
-            <svg class="submenu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              style="width:14px;height:14px;transition:transform 0.2s; display:none;">
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </div>
-          <div class="nav-sub-menu">
-            <button class="nav-btn active" data-view="kanban">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                <rect x="1" y="1" width="4" height="14" rx="1" />
-                <rect x="6" y="1" width="4" height="10" rx="1" />
-                <rect x="11" y="1" width="4" height="12" rx="1" />
-              </svg>
-              Kanban
-            </button>
-            <button class="nav-btn" data-view="tabela">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                <rect x="1" y="2" width="14" height="12" rx="2" />
-                <path d="M1 6h14M5 2v12M11 2v12" />
-              </svg>
-              Tabela
-            </button>
-            <button class="nav-btn" data-view="grupo">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                <circle cx="4" cy="4" r="2" />
-                <circle cx="12" cy="4" r="2" />
-                <circle cx="8" cy="11" r="2" />
-                <path d="M4 6v2a2 2 0 002 2h4a2 2 0 002-2V6" />
-              </svg>
-              Grupo
-            </button>
-            <button class="nav-btn" data-view="equip">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                <rect x="1" y="1" width="6" height="6" rx="1" />
-                <rect x="9" y="1" width="6" height="6" rx="1" />
-                <rect x="1" y="9" width="6" height="6" rx="1" />
-                <rect x="9" y="9" width="6" height="6" rx="1" />
-              </svg>
-              Equipamentos
-            </button>
-            <button class="nav-btn" data-view="ferias">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                style="width:14px;height:14px" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                <path
-                  d="M12 4v1M17.66 6.34l-.7.7M20 12h-1M17.66 17.66l-.7-.7M12 20v-1M6.34 17.66l.7-.7M4 12h1M6.34 6.34l.7.7" />
-              </svg>
-              Gestão de Férias
-            </button>
-            <button class="nav-btn" data-view="treinamentos">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                style="width:14px;height:14px" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                <path d="M6 12v5c3 3 9 3 12 0v-5" />
-              </svg>
-              Treinamentos
-            </button>
-          </div>
-        </div>
-
-        <!-- Módulo: Pesquisa -->
-        <div class="nav-module">
-          <button class="module-title" data-view="search">
-            Pesquisa
-          </button>
-        </div>
-
-        <!-- Módulo: Histórico -->
-        <div class="nav-module">
-          <button class="module-title" data-view="history">
-            Histórico
-          </button>
-        </div>
-
-        <!-- Módulo: Admin -->
-        <div class="nav-module">
-          <button class="module-title" data-view="settings">
-            Configurações
-          </button>
-        </div>
-
+      <!-- CENTER: Colorful Logo (matching login style) -->
+      <div class="logo" id="logo-home" style="cursor:pointer;" title="Voltar ao Dashboard">
+        <span class="logo-gps">Grupo GPS</span>
+        <span class="logo-mecanizada">Mecanizada</span>
+        <div class="logo-divider"></div>
+        <span class="logo-gestao">Gestão De Efetivo</span>
       </div>
 
+      <!-- Navigation Dropdown Overlay -->
+      <div id="nav-menu-overlay" class="nav-menu-overlay hidden">
+        <div class="nav-menu-panel">
+          <div class="nav-menu-header">
+            <span>Navegação</span>
+            <button id="nav-menu-close" class="topbar-icon-btn" aria-label="Fechar Menu">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div class="nav-menu-body">
+            <div class="nav-menu-section">
+              <div class="nav-menu-section-title">Dashboard</div>
+              <button class="nav-menu-item" data-view="viz">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="1" y="1" width="14" height="14" rx="2" />
+                  <path d="M1 6h14" />
+                  <path d="M5 6v9" />
+                </svg>
+                Dashboard Executivo
+              </button>
+            </div>
+            <div class="nav-menu-section">
+              <div class="nav-menu-section-title">Operação</div>
+              <button class="nav-menu-item" data-view="kanban">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="1" y="1" width="4" height="14" rx="1" />
+                  <rect x="6" y="1" width="4" height="10" rx="1" />
+                  <rect x="11" y="1" width="4" height="12" rx="1" />
+                </svg>
+                Kanban
+              </button>
+              <button class="nav-menu-item" data-view="tabela">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="1" y="2" width="14" height="12" rx="2" />
+                  <path d="M1 6h14M5 2v12M11 2v12" />
+                </svg>
+                Tabela
+              </button>
+              <button class="nav-menu-item" data-view="grupo">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <circle cx="4" cy="4" r="2" />
+                  <circle cx="12" cy="4" r="2" />
+                  <circle cx="8" cy="11" r="2" />
+                  <path d="M4 6v2a2 2 0 002 2h4a2 2 0 002-2V6" />
+                </svg>
+                Grupo
+              </button>
+              <button class="nav-menu-item" data-view="equip">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="1" y="1" width="6" height="6" rx="1" />
+                  <rect x="9" y="1" width="6" height="6" rx="1" />
+                  <rect x="1" y="9" width="6" height="6" rx="1" />
+                  <rect x="9" y="9" width="6" height="6" rx="1" />
+                </svg>
+                Equipamentos
+              </button>
+              <button class="nav-menu-item" data-view="ferias">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                  style="width:14px;height:14px" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                  <path
+                    d="M12 4v1M17.66 6.34l-.7.7M20 12h-1M17.66 17.66l-.7-.7M12 20v-1M6.34 17.66l.7-.7M4 12h1M6.34 6.34l.7.7" />
+                </svg>
+                Gestão de Férias
+              </button>
+              <button class="nav-menu-item" data-view="treinamentos">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                  style="width:14px;height:14px" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                  <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                </svg>
+                Treinamentos
+              </button>
+            </div>
+            <div class="nav-menu-section">
+              <div class="nav-menu-section-title">Geral</div>
+              <button class="nav-menu-item" data-view="search">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <circle cx="7" cy="7" r="5" />
+                  <path d="M11 11l3 3" />
+                </svg>
+                Pesquisa
+              </button>
+              <button class="nav-menu-item" data-view="history">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <circle cx="8" cy="8" r="6" />
+                  <path d="M8 4v4l3 2" />
+                </svg>
+                Histórico
+              </button>
+              <button class="nav-menu-item" data-view="settings">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <circle cx="8" cy="8" r="3" />
+                  <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.5 1.5M11.5 11.5L13 13M3 13l1.5-1.5M11.5 4.5L13 3" />
+                </svg>
+                Configurações
+              </button>
+            </div>
+          </div>
+          <!-- Menu Footer: User Info + Stats -->
+          <div class="nav-menu-footer">
+            <div class="nav-menu-stats">
+              <div class="nav-menu-stat">Total: <strong id="stat-total-menu">—</strong></div>
+              <div class="nav-menu-stat">Ativos: <strong id="stat-ativos-menu">—</strong></div>
+              <div class="nav-menu-stat">Sem ID: <strong id="stat-semid-menu">—</strong></div>
+            </div>
+            <div id="nav-menu-user" class="nav-menu-user-info">
+              <!-- Populated by auth.js -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Filter + Refresh -->
       <div id="topbar-right">
-        <!-- Injected by auth.js -->
-        <div id="topbar-user"
-          style="display:flex; align-items:center; border-right:1px solid var(--border); padding-right:12px; margin-right:4px;">
-        </div>
+        <div id="topbar-user" style="display:none;"></div>
 
-        <div class="stats-pill">Total: <strong id="stat-total">—</strong></div>
-        <div class="stats-pill">Ativos: <strong id="stat-ativos">—</strong></div>
-        <div class="stats-pill">Sem ID: <strong id="stat-semid">—</strong></div>
-        <button id="refresh-btn" title="Recarregar dados">
+        <!-- Filter Dropdown Button -->
+        <button id="filter-toggle-btn" class="topbar-icon-btn filter-btn" title="Filtros" aria-label="Abrir Filtros">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+          </svg>
+          <span id="filter-count-badge" class="filter-count-badge hidden">0</span>
+        </button>
+
+        <button id="refresh-btn" class="topbar-icon-btn" title="Recarregar dados">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M2 8a6 6 0 0111.47-2.4M14 8A6 6 0 012.53 10.4" />
             <path d="M14 2v4h-4M2 14v-4h4" />
@@ -231,9 +268,15 @@
       </div>
     </div>
 
-    <!-- ==================== FILTER BAR ==================== -->
-    <div id="filterbar">
-      <!-- Built dynamically by SGE.navigation.buildFilterChips() -->
+    <!-- ==================== FILTER DROPDOWN PANEL ==================== -->
+    <div id="filter-dropdown-panel" class="filter-dropdown-panel hidden">
+      <div class="filter-dropdown-header">
+        <span>Filtros</span>
+        <button id="filter-clear-all" class="filter-clear-btn">Limpar Tudo</button>
+      </div>
+      <div class="filter-dropdown-body" id="filter-dropdown-body">
+        <!-- Built dynamically by SGE.navigation.buildFilterDropdown() -->
+      </div>
     </div>
 
     <!-- ==================== MAIN CONTENT ==================== -->

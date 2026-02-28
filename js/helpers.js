@@ -48,11 +48,20 @@ SGE.helpers = {
     filtrarColaboradores() {
         const f = SGE.state.filtros;
         return SGE.state.colaboradores.filter(c => {
-            if (f.regime && c.regime !== f.regime) return false;
-            if (f.funcao && c.funcao !== f.funcao) return false;
-            if (f.status === 'FÉRIAS' && !SGE.helpers.isFerias(c)) return false;
-            if (f.status === 'SEM EQUIP' && !SGE.helpers.isSemEquipamento(c)) return false;
-            if (f.status === 'SEM_ID' && !SGE.helpers.isSemId(c)) return false;
+            // Regime filter (multi-select)
+            if (f.regime && f.regime.length > 0 && !f.regime.includes(c.regime)) return false;
+            // Funcao filter (multi-select)
+            if (f.funcao && f.funcao.length > 0 && !f.funcao.includes(c.funcao)) return false;
+            // Status filter (multi-select, with special cases)
+            if (f.status && f.status.length > 0) {
+                const matchesStatus = f.status.some(s => {
+                    if (s === 'FÉRIAS') return SGE.helpers.isFerias(c);
+                    if (s === 'SEM EQUIP') return SGE.helpers.isSemEquipamento(c);
+                    if (s === 'SEM_ID') return SGE.helpers.isSemId(c);
+                    return c.status === s;
+                });
+                if (!matchesStatus) return false;
+            }
             return true;
         });
     },
@@ -89,9 +98,11 @@ SGE.helpers = {
         const ativos = SGE.state.colaboradores.filter(c => c.status === 'ATIVO').length;
         const semId = SGE.state.colaboradores.filter(c => SGE.helpers.isSemId(c)).length;
 
-        document.getElementById('stat-total').textContent = total || '—';
-        document.getElementById('stat-ativos').textContent = ativos || '—';
-        document.getElementById('stat-semid').textContent = semId || '—';
+        // Menu stats (primary)
+        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || '—'; };
+        setVal('stat-total-menu', total);
+        setVal('stat-ativos-menu', ativos);
+        setVal('stat-semid-menu', semId);
     },
 
     /**
