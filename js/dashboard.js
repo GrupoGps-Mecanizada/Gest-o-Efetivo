@@ -34,10 +34,7 @@ SGE.dashboard = {
         const view = document.getElementById('viz-view');
         if (!view) return;
 
-        let data = SGE.state.colaboradores || [];
-
-        // Verifica se há filtro ativo para o dashboard (opcional, aplicaremos os filtros globais se necessário)
-        // No momento, refletimos todo o cenário.
+        let data = SGE.helpers.filtrarColaboradores();
 
         if (data.length === 0) {
             view.innerHTML = `
@@ -60,10 +57,7 @@ SGE.dashboard = {
                         </h2>
                         <p class="dashboard-subtitle">Visão geral do sistema atualizada em tempo real.</p>
                     </div>
-                    <button class="btn btn-primary" onclick="SGE.dashboard.render()" title="Recalcular Gráficos">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-                        Atualizar Telas
-                    </button>
+
                 </div>
 
                 <div class="kpi-grid" id="dashboard-kpis"></div>
@@ -195,7 +189,29 @@ SGE.dashboard = {
                 <div class="kpi-info">
                     <h4>Pendentes / Sem ID</h4>
                     <div class="kpi-val">${semId}</div>
-                    <div class="kpi-subtext">Aguardando matrícula GPS</div>
+                    <div class="kpi-subtext">Aguardando matricula GPS</div>
+                </div>
+            </div>
+            
+            <div class="kpi-card" style="border-left: 4px solid #0369a1;">
+                <div class="kpi-icon" style="color: #0369a1; background: rgba(3, 105, 161, 0.08);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                </div>
+                <div class="kpi-info">
+                    <h4>Operacional</h4>
+                    <div class="kpi-val">${data.filter(c => c.categoria === 'OPERACIONAL').length} <span style="font-size:14px;color:var(--text-3);font-weight:600;">(${(total > 0 ? (data.filter(c => c.categoria === 'OPERACIONAL').length / total * 100) : 0).toFixed(1)}%)</span></div>
+                    <div class="kpi-subtext">Equipamentos e Vagas</div>
+                </div>
+            </div>
+            
+            <div class="kpi-card" style="border-left: 4px solid #92400e;">
+                <div class="kpi-icon" style="color: #92400e; background: rgba(146, 64, 14, 0.08);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </div>
+                <div class="kpi-info">
+                    <h4>Gestao</h4>
+                    <div class="kpi-val">${data.filter(c => c.categoria === 'GESTAO').length} <span style="font-size:14px;color:var(--text-3);font-weight:600;">(${(total > 0 ? (data.filter(c => c.categoria === 'GESTAO').length / total * 100) : 0).toFixed(1)}%)</span></div>
+                    <div class="kpi-subtext">Setores e Supervisao</div>
                 </div>
             </div>
         `;

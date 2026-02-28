@@ -49,7 +49,7 @@ body {
 #main {
     flex: 1;
     overflow: hidden;
-    position: relative
+    position: relative;
 }
 
 .view {
@@ -247,6 +247,7 @@ body {
         opacity: 0;
         transform: translateY(6px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -268,10 +269,12 @@ body {
         width: 8%;
         margin-left: 0;
     }
+
     50% {
         width: 55%;
         margin-left: 25%;
     }
+
     100% {
         width: 8%;
         margin-left: 92%;
@@ -284,10 +287,21 @@ body {
 }
 
 @keyframes dots {
-    0% { content: ''; }
-    25% { content: '.'; }
-    50% { content: '..'; }
-    75% { content: '...'; }
+    0% {
+        content: '';
+    }
+
+    25% {
+        content: '.';
+    }
+
+    50% {
+        content: '..';
+    }
+
+    75% {
+        content: '...';
+    }
 }
 
 /* ===================== LOADING STATE (inline) ===================== */

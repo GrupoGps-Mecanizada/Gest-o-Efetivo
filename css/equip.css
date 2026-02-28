@@ -150,8 +150,10 @@
 .equip-group-cards {
     display: flex;
     gap: 14px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow-x: auto;
     padding: 4px 2px 8px;
+    scroll-snap-type: x proximity;
 }
 
 .equip-group-cards::-webkit-scrollbar {
@@ -382,6 +384,16 @@
     font-size: 11px;
     color: var(--text-3);
     margin-left: auto;
+}
+
+.equip-filter-summary {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--accent);
+    padding: 3px 10px;
+    background: var(--accent-glow, rgba(37, 99, 235, 0.08));
+    border-radius: 12px;
+    letter-spacing: 0.3px;
 }
 
 /* ===================== NO DATA ===================== */

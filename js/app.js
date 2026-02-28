@@ -169,7 +169,6 @@ SGE.app = {
         SGE.app.setupSearch();
         SGE.app.setupHistory();
         SGE.app.setupKanbanArrows();
-        SGE.app.setupRefresh();
 
         // Restore the view the user was on before the page reload (from URL hash)
         const initialView = SGE.navigation.getInitialView();
@@ -375,22 +374,6 @@ SGE.app = {
         if (kv) {
             kv.addEventListener('scroll', () => SGE.kanban.updateArrows());
             setTimeout(() => SGE.kanban.updateArrows(), 300);
-        }
-    },
-
-    setupRefresh() {
-        const btn = document.getElementById('refresh-btn');
-        if (btn) {
-            btn.addEventListener('click', async () => {
-                const icon = btn.querySelector('svg');
-                if (icon) icon.classList.add('loading-spinner');
-
-                // Force an immediate sync (bypasses debounce)
-                await SGE.api.syncBackground(true);
-
-                if (icon) icon.classList.remove('loading-spinner');
-                SGE.helpers.toast('Dados sincronizados!', 'success');
-            });
         }
     }
 };

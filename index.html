@@ -73,7 +73,7 @@
       <div class="login-error" id="login-error"></div>
     </div>
     <div class="login-footer">
-      Desenvolvido por Warlison Abreu
+      Desenvolvido por Warlison Abreu | Icaro Bernardo - Grupo GPS
     </div>
   </div>
 
@@ -144,7 +144,7 @@
           </div>
           <div class="nav-menu-body">
             <div class="nav-menu-section">
-              <div class="nav-menu-section-title">Dashboard</div>
+              <div class="nav-menu-section-title">Painel</div>
               <button class="nav-menu-item" data-view="viz">
                 <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
                   <rect x="1" y="1" width="14" height="14" rx="2" />
@@ -155,7 +155,7 @@
               </button>
             </div>
             <div class="nav-menu-section">
-              <div class="nav-menu-section-title">Operação</div>
+              <div class="nav-menu-section-title">Gestao de Efetivo</div>
               <button class="nav-menu-item" data-view="kanban">
                 <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
                   <rect x="1" y="1" width="4" height="14" rx="1" />
@@ -189,6 +189,9 @@
                 </svg>
                 Equipamentos
               </button>
+            </div>
+            <div class="nav-menu-section">
+              <div class="nav-menu-section-title">Seguranca e Documentacao</div>
               <button class="nav-menu-item" data-view="ferias">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
                   style="width:14px;height:14px" stroke-linecap="round" stroke-linejoin="round">
@@ -196,7 +199,7 @@
                   <path
                     d="M12 4v1M17.66 6.34l-.7.7M20 12h-1M17.66 17.66l-.7-.7M12 20v-1M6.34 17.66l.7-.7M4 12h1M6.34 6.34l.7.7" />
                 </svg>
-                Gestão de Férias
+                Gestao de Ferias
               </button>
               <button class="nav-menu-item" data-view="treinamentos">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
@@ -206,9 +209,16 @@
                 </svg>
                 Treinamentos
               </button>
+              <button class="nav-menu-item" data-view="history">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <circle cx="8" cy="8" r="6" />
+                  <path d="M8 4v4l3 2" />
+                </svg>
+                Historico
+              </button>
             </div>
             <div class="nav-menu-section">
-              <div class="nav-menu-section-title">Geral</div>
+              <div class="nav-menu-section-title">Pesquisa</div>
               <button class="nav-menu-item" data-view="search">
                 <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
                   <circle cx="7" cy="7" r="5" />
@@ -216,19 +226,15 @@
                 </svg>
                 Pesquisa
               </button>
-              <button class="nav-menu-item" data-view="history">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <circle cx="8" cy="8" r="6" />
-                  <path d="M8 4v4l3 2" />
-                </svg>
-                Histórico
-              </button>
+            </div>
+            <div class="nav-menu-section">
+              <div class="nav-menu-section-title">Configuracoes</div>
               <button class="nav-menu-item" data-view="settings">
                 <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
                   <circle cx="8" cy="8" r="3" />
                   <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.5 1.5M11.5 11.5L13 13M3 13l1.5-1.5M11.5 4.5L13 3" />
                 </svg>
-                Configurações
+                Configuracoes
               </button>
             </div>
           </div>
@@ -259,12 +265,7 @@
           <span id="filter-count-badge" class="filter-count-badge hidden">0</span>
         </button>
 
-        <button id="refresh-btn" class="topbar-icon-btn" title="Recarregar dados">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M2 8a6 6 0 0111.47-2.4M14 8A6 6 0 012.53 10.4" />
-            <path d="M14 2v4h-4M2 14v-4h4" />
-          </svg>
-        </button>
+
       </div>
     </div>
 
@@ -355,6 +356,12 @@
       <!-- EQUIPMENT VIEW -->
       <div id="equip-view" class="view"></div>
 
+      <!-- FERIAS VIEW -->
+      <div id="ferias-view" class="view"></div>
+
+      <!-- TREINAMENTOS VIEW -->
+      <div id="treinamentos-view" class="view"></div>
+
       <!-- SETTINGS VIEW -->
       <div id="settings-view" class="view"></div>
     </div>
@@ -390,7 +397,7 @@
       </div>
       <div
         style="text-align:center; padding: 12px; font-size: 10px; color: var(--text-3); border-top: 1px solid var(--border);">
-        Desenvolvido por Warlison Abreu
+        Desenvolvido por Warlison Abreu | Icaro Bernardo - Grupo GPS
       </div>
     </div>
 

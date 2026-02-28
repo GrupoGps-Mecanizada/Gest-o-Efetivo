@@ -17,7 +17,19 @@ SGE.CONFIG = {
   regimes: ['24HS-A', '24HS-B', '24HS-C', '24HS-D', 'ADM', '16HS-5X2', '16HS-6X3', 'SEM REGISTRO'],
 
   // Available functions
-  funcoes: ['OP', 'MOT'],
+  funcoes: [
+    'OPERADOR DE EQUIPAMENTOS',
+    'MOTORISTA DE CAMINHAO',
+    'MOTORISTA',
+    'SUPERVISOR DE AREA',
+    'SUPERVISOR DE OBRA I',
+    'PLANEJADOR DE MANUTENCAO',
+    'PROGRAMADOR DE MANUTENCAO',
+    'PROGRAMADOR DE MANUTENCAO I',
+    'COORDENADOR DE OPERACOES',
+    'ALMOXARIFE I',
+    'TECNICO DE SEGURANCA DO TRABALHO'
+  ],
 
   // Function color map — distinct colors for each function across all views
   funcaoColors: {

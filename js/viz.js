@@ -23,9 +23,10 @@ SGE.viz = {
     toolbar.innerHTML = `
       <span class="filter-label" style="margin-right:8px; font-weight:600">Agrupar por:</span>
       <button class="viz-btn ${v.groupBy === 'regime' ? 'active' : ''}" data-group="regime">Regime</button>
-      <button class="viz-btn ${v.groupBy === 'funcao' ? 'active' : ''}" data-group="funcao">Função</button>
+      <button class="viz-btn ${v.groupBy === 'funcao' ? 'active' : ''}" data-group="funcao">Funcao</button>
       <button class="viz-btn ${v.groupBy === 'status' ? 'active' : ''}" data-group="status">Status</button>
       <button class="viz-btn ${v.groupBy === 'supervisor' ? 'active' : ''}" data-group="supervisor">Supervisor</button>
+      <button class="viz-btn ${v.groupBy === 'categoria' ? 'active' : ''}" data-group="categoria">Categoria</button>
       <div style="flex:1"></div>
       <button class="viz-expand-all" id="viz-expand-all">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:11px;height:11px"><path d="M5 3l6 5-6 5"/></svg>
@@ -98,7 +99,8 @@ SGE.viz = {
     const columns = [
       { key: 'id', label: 'ID', filterable: false },
       { key: 'nome', label: 'Nome', filterable: false },
-      { key: 'funcao', label: 'Função', filterable: true, options: SGE.CONFIG.funcoes },
+      { key: 'categoria', label: 'Categoria', filterable: true, options: ['OPERACIONAL', 'GESTAO'] },
+      { key: 'funcao', label: 'Funcao', filterable: true, options: SGE.CONFIG.funcoes },
       { key: 'regime', label: 'Regime', filterable: true, options: SGE.CONFIG.regimes },
       { key: 'supervisor', label: 'Supervisor', filterable: true, options: SGE.state.supervisores.map(s => s.nome) },
       { key: 'status', label: 'Status', filterable: true, options: SGE.CONFIG.statuses },
@@ -159,6 +161,7 @@ SGE.viz = {
                 <td class="name-cell">
                   <div>${c.nome}</div>
                 </td>
+                <td><span class="badge" style="background:${c.categoria === 'OPERACIONAL' ? '#e0f2fe' : '#fef3c7'};color:${c.categoria === 'OPERACIONAL' ? '#0369a1' : '#92400e'};border:1px solid ${c.categoria === 'OPERACIONAL' ? '#bae6fd' : '#fde68a'};">${c.categoria === 'OPERACIONAL' ? 'Operacional' : 'Gestao'}</span></td>
                 <td><span class="badge" style="${SGE.CONFIG.getFuncaoBadgeStyle(c.funcao)}">${c.funcao}</span></td>
                 <td><span class="badge ${h.regimeBadgeClass(c.regime)}">${c.regime}</span></td>
                 <td>${c.supervisor || '—'}</td>
@@ -330,7 +333,8 @@ SGE.viz = {
       ID: c.matricula_gps || 'S/ MAT',
       CR: c.cr || '',
       Nome: c.nome,
-      Função: c.funcao,
+      Categoria: c.categoria || '',
+      Funcao: c.funcao,
       Regime: c.regime,
       Supervisor: c.supervisor || '',
       Status: c.status,

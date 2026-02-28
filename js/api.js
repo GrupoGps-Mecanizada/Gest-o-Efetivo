@@ -103,7 +103,7 @@ SGE.api = {
                 { data: equipment, error: errEq },
                 { data: configs, error: errCfg }
             ] = await Promise.all([
-                supabase.from('employees').select('*, supervisors(name), equipment(sigla, numero)'),
+                supabase.from('employees').select('id, name, function, cr, regime, status, telefone, matricula_usiminas, matricula_gps, category, supervisor_id, equipment_id, supervisors(name), equipment(sigla, numero)'),
                 supabase.from('supervisors').select('*').order('name'),
                 supabase.from('movements').select('*, employees(name, matricula_gps), from_sup:supervisors!movements_from_supervisor_id_fkey(name), to_sup:supervisors!movements_to_supervisor_id_fkey(name)').order('created_at', { ascending: false }).limit(100),
                 supabase.from('equipment').select('*'),
@@ -129,10 +129,18 @@ SGE.api = {
                 telefone: e.telefone,
                 matricula_usiminas: e.matricula_usiminas,
                 matricula_gps: e.matricula_gps,
+                categoria: e.category || 'OPERACIONAL',
                 supervisor: e.supervisors ? e.supervisors.name : 'SEM SUPERVISOR',
                 equipamento: e.equipment ? `${e.equipment.sigla}-${e.equipment.numero || ''}`.replace(/-$/, '') : 'SEM EQUIPAMENTO'
             }));
 
+            // DEBUG: log category distribution to verify DB mapping
+            const catDebug = {};
+            SGE.state.colaboradores.forEach(c => {
+                catDebug[c.categoria] = (catDebug[c.categoria] || 0) + 1;
+            });
+            console.log('[SGE DEBUG] Category distribution:', catDebug);
+            console.log('[SGE DEBUG] First employee raw:', employees[0]);
             SGE.state.supervisores = supervisors.map(s => ({
                 id: s.id,
                 nome: s.name,

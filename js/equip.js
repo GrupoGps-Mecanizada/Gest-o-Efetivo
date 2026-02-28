@@ -82,8 +82,9 @@ SGE.equip = {
       isVirtual: true
     };
 
-    // 2. Populate with active collaborators
-    SGE.state.colaboradores.forEach(c => {
+    // 2. Populate with active collaborators (use filtered data for global filter support)
+    const filteredColabs = SGE.helpers.filtrarColaboradores();
+    filteredColabs.forEach(c => {
       const parsed = SGE.equip.parseEquip(c.equipamento);
       const turno = SGE.equip.getTurno(c.regime);
 
@@ -116,14 +117,18 @@ SGE.equip = {
     if (!view) return;
 
     const equipData = SGE.equip.buildEquipData();
-    const state = SGE.state.equip;
     const tipos = SGE.CONFIG.equipTipos;
     const turnos = ['A', 'B', 'C', 'D', 'ADM', '16H', 'S/R'];
 
+    // Use global filters instead of local equip state
+    const filtroTipo = SGE.state.filtros.equipTipo || [];
+    const filtroTurno = SGE.state.filtros.equipTurno || [];
+    const activeTurnoFilter = filtroTurno.length === 1 ? filtroTurno[0] : (filtroTurno.length === 0 ? 'TODOS' : 'MULTI');
+
     // Filter by type
     let entries = Object.values(equipData);
-    if (state.filtroTipo !== 'TODOS') {
-      entries = entries.filter(e => e.sigla === state.filtroTipo);
+    if (filtroTipo.length > 0) {
+      entries = entries.filter(e => filtroTipo.includes(e.sigla));
     }
 
     // Sort: by sigla then numero numerically (Push UNALLOCATED to the bottom)
@@ -165,7 +170,7 @@ SGE.equip = {
             <div class="equip-group-line"></div>
           </div>
           <div class="equip-group-cards">
-            ${groupEntries.map(eq => SGE.equip.renderCard(eq, state.filtroTurno)).join('')}
+            ${groupEntries.map(eq => SGE.equip.renderCard(eq, activeTurnoFilter)).join('')}
           </div>
         </div>
       `;
@@ -174,22 +179,15 @@ SGE.equip = {
     const viewContainer = document.getElementById('equip-view');
     const savedScroll = viewContainer ? viewContainer.scrollTop : 0;
 
+    // Active filters summary
+    const activeFilterParts = [];
+    if (filtroTipo.length > 0) activeFilterParts.push(filtroTipo.join(', '));
+    if (filtroTurno.length > 0) activeFilterParts.push('Turno: ' + filtroTurno.join(', '));
+    const filterSummary = activeFilterParts.length > 0
+      ? `<span class="equip-filter-summary">Filtros: ${activeFilterParts.join(' | ')}</span>`
+      : '';
+
     view.innerHTML = `
-      <div class="equip-toolbar" id="equip-toolbar">
-        <button class="equip-type-btn ${state.filtroTipo === 'TODOS' ? 'active' : ''}" data-tipo="TODOS">TODOS</button>
-        ${Object.entries(tipos).map(([sigla, info]) => `
-          <button class="equip-type-btn ${state.filtroTipo === sigla ? 'active' : ''}" data-tipo="${sigla}">
-            <span class="equip-type-dot" style="background:${info.cor}"></span>
-            ${sigla}
-          </button>
-        `).join('')}
-        <div class="filter-sep"></div>
-        <span style="font-size:10px;color:var(--text-3);font-weight:600;letter-spacing:.5px">TURNO</span>
-        <button class="equip-turno-btn ${state.filtroTurno === 'TODOS' ? 'active' : ''}" data-turno="TODOS">Todos</button>
-        ${turnos.filter(t => t !== 'S/R').map(t => `
-          <button class="equip-turno-btn ${state.filtroTurno === t ? 'active' : ''}" data-turno="${t}">${t}</button>
-        `).join('')}
-      </div>
       <div class="equip-groups-container" id="equip-grid">
         ${entries.length === 0 ? `
           <div class="no-data-message" style="width:100%">
@@ -202,13 +200,7 @@ SGE.equip = {
         ` : groupsHtml}
       </div>
       <div class="equip-action-bar">
-        <button class="equip-action-btn" id="equip-normalize-btn">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M2 8a6 6 0 0111.47-2.4M14 8A6 6 0 012.53 10.4"/>
-            <path d="M14 2v4h-4M2 14v-4h4"/>
-          </svg>
-          Normalizar Equipamentos
-        </button>
+        ${filterSummary}
         <span class="equip-stats">${totalEquip} equipamentos · ${totalColab} colaboradores alocados</span>
       </div>
     `;
@@ -251,18 +243,22 @@ SGE.equip = {
       turnosOfThisEquip.sort((a, b) => (sortOrder[a] || 99) - (sortOrder[b] || 99));
     }
 
-    // If a specific UI filter is set ("A", "ADM"), only show that specific shift-drawer, if this equip covers it
-    if (filtroTurno !== 'TODOS' && !eq.isVirtual) {
-      turnosOfThisEquip = turnosOfThisEquip.filter(t => t === filtroTurno);
+    // If a specific UI filter is set, only show matching shift-drawers
+    const globalTurnoFilter = SGE.state.filtros.equipTurno || [];
+    if (globalTurnoFilter.length > 0 && !eq.isVirtual) {
+      turnosOfThisEquip = turnosOfThisEquip.filter(t => globalTurnoFilter.includes(t));
     }
 
     // For virtual, only show the drawers that actually have people inside
     if (eq.isVirtual) {
       turnosOfThisEquip = turnosOfThisEquip.filter(t => eq.turnos[t] && eq.turnos[t].length > 0);
+      if (globalTurnoFilter.length > 0) {
+        turnosOfThisEquip = turnosOfThisEquip.filter(t => globalTurnoFilter.includes(t));
+      }
     }
 
     // Hide the equipment altogether if it doesn't have the user's selected shift inside its skeleton
-    if (filtroTurno !== 'TODOS' && turnosOfThisEquip.length === 0) return '';
+    if (globalTurnoFilter.length > 0 && turnosOfThisEquip.length === 0) return '';
 
     const turnoRows = turnosOfThisEquip.map(t => {
       const members = eq.turnos[t] || [];
@@ -344,22 +340,6 @@ SGE.equip = {
    * Setup event listeners
    */
   setupListeners() {
-    // Type filter buttons
-    document.querySelectorAll('.equip-type-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        SGE.state.equip.filtroTipo = btn.dataset.tipo;
-        SGE.equip.render();
-      });
-    });
-
-    // Turno filter buttons
-    document.querySelectorAll('.equip-turno-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        SGE.state.equip.filtroTurno = btn.dataset.turno;
-        SGE.equip.render();
-      });
-    });
-
     // Member click → open drawer
     document.querySelectorAll('.equip-member').forEach(el => {
       el.addEventListener('click', () => {
@@ -367,20 +347,5 @@ SGE.equip = {
         if (col) SGE.drawer.open(col);
       });
     });
-
-    // Normalize button
-    const normalizeBtn = document.getElementById('equip-normalize-btn');
-    if (normalizeBtn) {
-      normalizeBtn.addEventListener('click', async () => {
-        SGE.helpers.toast('Normalizando equipamentos...', 'info');
-        const result = await SGE.api.syncNormalizeEquipments();
-        if (result) {
-          SGE.helpers.toast(`${result.updated} equipamentos normalizados`, 'success');
-          SGE.equip.render();
-        } else {
-          SGE.helpers.toast('Erro ao normalizar', 'error');
-        }
-      });
-    }
   }
 };

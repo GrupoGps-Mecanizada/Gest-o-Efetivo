@@ -139,6 +139,73 @@
     font-family: var(--font-mono);
 }
 
+/* ===================== ACCORDION SECTIONS ===================== */
+.filter-accordion {
+    border-bottom: 1px solid var(--border);
+}
+
+.filter-accordion:last-child {
+    border-bottom: none;
+}
+
+.filter-accordion-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background .12s;
+    user-select: none;
+}
+
+.filter-accordion-header:hover {
+    background: var(--bg-3);
+}
+
+.filter-accordion-chevron {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    transition: transform .2s ease;
+    color: var(--text-3);
+}
+
+.filter-accordion.open .filter-accordion-chevron {
+    transform: rotate(180deg);
+}
+
+.filter-accordion-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-2);
+    flex: 1;
+}
+
+.filter-accordion-badge {
+    background: var(--accent);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-family: var(--font-mono);
+    line-height: 1.4;
+}
+
+.filter-accordion-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height .25s ease, padding .25s ease;
+    padding: 0;
+}
+
+.filter-accordion.open .filter-accordion-body {
+    max-height: 500px;
+    padding: 0 0 6px;
+}
+
 /* ===================== RESPONSIVE ===================== */
 @media (max-width: 480px) {
     .filter-dropdown-panel {

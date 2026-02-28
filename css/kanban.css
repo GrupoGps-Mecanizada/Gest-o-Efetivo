@@ -257,18 +257,6 @@
     border: 1px solid #e8b0b0
 }
 
-/* funcao badges */
-.badge-OP {
-    background: #e6eef9;
-    color: #2c5ea8;
-    border: 1px solid #b0c8e8
-}
-
-.badge-MOT {
-    background: #e8f5ee;
-    color: #1a7a42;
-    border: 1px solid #b5ddc5
-}
 
 /* alert */
 .card-alert {

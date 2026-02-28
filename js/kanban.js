@@ -241,10 +241,9 @@ SGE.kanban = {
         Object.assign(cardEl.dataset, next);
 
         const badgeRegime = h.regimeBadgeClass(col.regime);
-        const badgeFuncao = col.funcao === 'MOT' ? 'badge-MOT' : 'badge-OP';
         const funcaoStyle = SGE.CONFIG.getFuncaoBadgeStyle(col.funcao);
         const alertHtml = semId ? '<div class="card-alert" title="Sem ID definitivo"></div>' : '';
-        const feriasHtml = isFerias ? '<span class="badge badge-SEM">🏖 Férias</span>' : '';
+        const feriasHtml = isFerias ? '<span class="badge badge-SEM">Ferias</span>' : '';
 
         // Update inner HTML (preserves the card element and its drag listeners)
         cardEl.innerHTML = `
@@ -255,9 +254,10 @@ SGE.kanban = {
       <div class="card-badges" style="margin-bottom: 6px;">
         <span class="badge" style="${funcaoStyle}">${col.funcao}</span>
         <span class="badge ${badgeRegime}">${col.regime}</span>
+        <span class="badge" style="background:${col.categoria === 'OPERACIONAL' ? '#e0f2fe' : '#fef3c7'};color:${col.categoria === 'OPERACIONAL' ? '#0369a1' : '#92400e'};border:1px solid ${col.categoria === 'OPERACIONAL' ? '#bae6fd' : '#fde68a'};font-size:9px;">${col.categoria === 'OPERACIONAL' ? 'OP' : 'GES'}</span>
         ${feriasHtml}
       </div>
-      <div class="card-vaga" style="margin-bottom: 6px;">${h.equipamentoIconSvg()} ${col.equipamento || 'Sem equipamento'}</div>
+      <div class="card-vaga" style="margin-bottom: 6px;">${h.equipamentoIconSvg()} ${col.categoria === 'GESTAO' ? (col.supervisor || 'Sem Setor') : (col.equipamento || 'Sem equipamento')}</div>
       <div class="card-id" style="font-size: 11px; color: var(--text-3); border-top: 1px solid var(--border-color); padding-top: 6px; margin-top: auto;">
         MAT: <strong style="color: var(--text-2);">${col.matricula_gps || 'S/ MAT'}</strong>
         ${col.cr ? `<span style="margin-left:8px;">CR: <strong style="color: var(--text-2);">${col.cr}</strong></span>` : ''}
@@ -339,10 +339,9 @@ SGE.kanban = {
         const h = SGE.helpers;
         const semId = h.isSemId(colaborador);
         const badgeRegime = h.regimeBadgeClass(colaborador.regime);
-        const badgeFuncao = colaborador.funcao === 'MOT' ? 'badge-MOT' : 'badge-OP';
         const funcaoStyle = SGE.CONFIG.getFuncaoBadgeStyle(colaborador.funcao);
         const alertHtml = semId ? '<div class="card-alert" title="Sem ID definitivo"></div>' : '';
-        const feriasHtml = h.isFerias(colaborador) ? '<span class="badge badge-SEM">🏖 Férias</span>' : '';
+        const feriasHtml = h.isFerias(colaborador) ? '<span class="badge badge-SEM">Ferias</span>' : '';
 
         el.innerHTML = `
       ${alertHtml}
@@ -352,9 +351,10 @@ SGE.kanban = {
       <div class="card-badges" style="margin-bottom: 6px;">
         <span class="badge" style="${funcaoStyle}">${colaborador.funcao}</span>
         <span class="badge ${badgeRegime}">${colaborador.regime}</span>
+        <span class="badge" style="background:${colaborador.categoria === 'OPERACIONAL' ? '#e0f2fe' : '#fef3c7'};color:${colaborador.categoria === 'OPERACIONAL' ? '#0369a1' : '#92400e'};border:1px solid ${colaborador.categoria === 'OPERACIONAL' ? '#bae6fd' : '#fde68a'};font-size:9px;">${colaborador.categoria === 'OPERACIONAL' ? 'OP' : 'GES'}</span>
         ${feriasHtml}
       </div>
-      <div class="card-vaga" style="margin-bottom: 6px;">${h.equipamentoIconSvg()} ${colaborador.equipamento || 'Sem equipamento'}</div>
+      <div class="card-vaga" style="margin-bottom: 6px;">${h.equipamentoIconSvg()} ${colaborador.categoria === 'GESTAO' ? (colaborador.supervisor || 'Sem Setor') : (colaborador.equipamento || 'Sem equipamento')}</div>
       <div class="card-id" style="font-size: 11px; color: var(--text-3); border-top: 1px solid var(--border-color); padding-top: 6px; margin-top: auto;">
         MAT: <strong style="color: var(--text-2);">${colaborador.matricula_gps || 'S/ MAT'}</strong>
         ${colaborador.cr ? `<span style="margin-left:8px;">CR: <strong style="color: var(--text-2);">${colaborador.cr}</strong></span>` : ''}

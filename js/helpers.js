@@ -62,6 +62,20 @@ SGE.helpers = {
                 });
                 if (!matchesStatus) return false;
             }
+            // Supervisor filter
+            if (f.supervisor && f.supervisor.length > 0 && !f.supervisor.includes(c.supervisor)) return false;
+            // Categoria filter (OPERACIONAL / GESTAO)
+            if (f.categoria && f.categoria.length > 0 && !f.categoria.includes(c.categoria)) return false;
+            // EquipTipo filter
+            if (f.equipTipo && f.equipTipo.length > 0) {
+                const parsed = SGE.equip ? SGE.equip.parseEquip(c.equipamento) : null;
+                if (!parsed || !f.equipTipo.includes(parsed.sigla)) return false;
+            }
+            // EquipTurno filter
+            if (f.equipTurno && f.equipTurno.length > 0) {
+                const turno = SGE.equip ? SGE.equip.getTurno(c.regime) : null;
+                if (!turno || !f.equipTurno.includes(turno)) return false;
+            }
             return true;
         });
     },

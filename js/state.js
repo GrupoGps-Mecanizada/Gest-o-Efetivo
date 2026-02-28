@@ -12,7 +12,7 @@ SGE.state = {
     movimentacoes: [],
     equipamentos: [],
     usuarios: [],
-    filtros: { regime: [], funcao: [], status: [] },
+    filtros: { regime: [], funcao: [], status: [], equipTipo: [], equipTurno: [], supervisor: [], categoria: [] },
     activeView: 'kanban',
     drawerColaborador: null,
     pendingMove: null,

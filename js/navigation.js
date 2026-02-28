@@ -181,8 +181,15 @@ SGE.navigation = {
         const body = document.getElementById('filter-dropdown-body');
         if (!panel || !body) return;
 
-        // Checkbox click handler (event delegation)
+        // Accordion toggle handler (event delegation)
         body.addEventListener('click', (e) => {
+            const header = e.target.closest('.filter-accordion-header');
+            if (header) {
+                const accordion = header.closest('.filter-accordion');
+                if (accordion) accordion.classList.toggle('open');
+                return;
+            }
+
             const item = e.target.closest('.filter-checkbox-item');
             if (!item) return;
 
@@ -210,7 +217,7 @@ SGE.navigation = {
         const clearBtn = document.getElementById('filter-clear-all');
         if (clearBtn) {
             clearBtn.addEventListener('click', () => {
-                SGE.state.filtros = { regime: [], funcao: [], status: [] };
+                SGE.state.filtros = { regime: [], funcao: [], status: [], equipTipo: [], equipTurno: [], supervisor: [], categoria: [] };
                 body.querySelectorAll('.filter-checkbox').forEach(cb => cb.classList.remove('checked'));
                 SGE.navigation._persistFilters();
                 SGE.navigation._updateFilterBadge();
@@ -243,6 +250,11 @@ SGE.navigation = {
                             const item = body.querySelector(`.filter-checkbox-item[data-type="${type}"][data-value="${val}"]`);
                             if (item) {
                                 item.querySelector('.filter-checkbox').classList.add('checked');
+                                // Auto-open the accordion for this active filter
+                                const accordion = item.closest('.filter-accordion');
+                                if (accordion && !accordion.classList.contains('open')) {
+                                    accordion.classList.add('open');
+                                }
                             }
                         });
                     });
@@ -266,6 +278,8 @@ SGE.navigation = {
         if (!body) return;
 
         const colabs = SGE.state.colaboradores || [];
+        const tipos = SGE.CONFIG.equipTipos;
+        const turnos = ['A', 'B', 'C', 'D', 'ADM', '16H'];
 
         // Count occurrences for each option
         const countBy = (field) => {
@@ -280,24 +294,66 @@ SGE.navigation = {
         const regimeCounts = countBy('regime');
         const funcaoCounts = countBy('funcao');
         const statusCounts = countBy('status');
+        const supervisorCounts = countBy('supervisor');
 
-        const makeSection = (title, type, options) => {
+        // Count equipment types
+        const equipTipoCounts = {};
+        colabs.forEach(c => {
+            if (c.equipamento) {
+                const parsed = SGE.equip.parseEquip(c.equipamento);
+                if (parsed && tipos[parsed.sigla]) {
+                    equipTipoCounts[parsed.sigla] = (equipTipoCounts[parsed.sigla] || 0) + 1;
+                }
+            }
+        });
+
+        // Count turnos
+        const turnoCounts = {};
+        colabs.forEach(c => {
+            const t = SGE.equip.getTurno(c.regime);
+            if (t) turnoCounts[t] = (turnoCounts[t] || 0) + 1;
+        });
+
+        const chevronSvg = '<svg class="filter-accordion-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>';
+
+        const makeAccordion = (title, type, options, defaultOpen) => {
+            const activeCount = (SGE.state.filtros[type] || []).length;
+            const badgeHtml = activeCount > 0 ? `<span class="filter-accordion-badge">${activeCount}</span>` : '';
             return `
-                <div class="filter-section">
-                    <div class="filter-section-title">${title}</div>
-                    ${options.map(opt => {
+                <div class="filter-accordion${defaultOpen ? ' open' : ''}">
+                    <div class="filter-accordion-header">
+                        ${chevronSvg}
+                        <span class="filter-accordion-title">${title}</span>
+                        ${badgeHtml}
+                    </div>
+                    <div class="filter-accordion-body">
+                        ${options.map(opt => {
                 const count = opt.count || 0;
                 return `
-                            <div class="filter-checkbox-item" data-type="${type}" data-value="${opt.value}">
-                                <div class="filter-checkbox"></div>
-                                <span class="filter-checkbox-label">${opt.label}</span>
-                                <span class="filter-checkbox-count">${count}</span>
-                            </div>
-                        `;
+                                <div class="filter-checkbox-item" data-type="${type}" data-value="${opt.value}">
+                                    <div class="filter-checkbox"></div>
+                                    <span class="filter-checkbox-label">${opt.label}</span>
+                                    <span class="filter-checkbox-count">${count}</span>
+                                </div>
+                            `;
             }).join('')}
+                    </div>
                 </div>
             `;
         };
+
+        // Build options for each category
+        const equipTipoOptions = Object.entries(tipos).map(([sigla, info]) => ({
+            value: sigla, label: `${sigla} — ${info.nome}`, count: equipTipoCounts[sigla] || 0
+        }));
+
+        const turnoOptions = turnos.map(t => ({
+            value: t, label: t, count: turnoCounts[t] || 0
+        }));
+
+        const supervisorOptions = SGE.state.supervisores
+            .filter(s => s.ativo)
+            .map(s => ({ value: s.nome, label: s.nome, count: supervisorCounts[s.nome] || 0 }));
 
         const regimeOptions = SGE.CONFIG.regimes.map(r => ({ value: r, label: r, count: regimeCounts[r] || 0 }));
         const funcaoOptions = SGE.CONFIG.funcoes.map(f => ({ value: f, label: f, count: funcaoCounts[f] || 0 }));
@@ -305,15 +361,25 @@ SGE.navigation = {
 
         // Add special status options
         statusOptions.push(
-            { value: 'FÉRIAS', label: '🏖 Férias', count: colabs.filter(c => SGE.helpers.isFerias(c)).length },
-            { value: 'SEM EQUIP', label: '⚠ Sem Equipamento', count: colabs.filter(c => SGE.helpers.isSemEquipamento(c)).length },
-            { value: 'SEM_ID', label: '❌ Sem ID', count: colabs.filter(c => SGE.helpers.isSemId(c)).length }
+            { value: 'FÉRIAS', label: 'Ferias', count: colabs.filter(c => SGE.helpers.isFerias(c)).length },
+            { value: 'SEM EQUIP', label: 'Sem Equipamento', count: colabs.filter(c => SGE.helpers.isSemEquipamento(c)).length },
+            { value: 'SEM_ID', label: 'Sem ID', count: colabs.filter(c => SGE.helpers.isSemId(c)).length }
         );
 
+        // Categoria options
+        const categoriaCounts = countBy('categoria');
+        const categoriaOptions = ['OPERACIONAL', 'GESTAO'].map(cat => ({
+            value: cat, label: cat === 'OPERACIONAL' ? 'Operacional' : 'Gestao', count: categoriaCounts[cat] || 0
+        }));
+
         body.innerHTML = [
-            makeSection('Regime', 'regime', regimeOptions),
-            makeSection('Função', 'funcao', funcaoOptions),
-            makeSection('Status', 'status', statusOptions)
+            makeAccordion('Categoria', 'categoria', categoriaOptions, false),
+            makeAccordion('Equipamentos', 'equipTipo', equipTipoOptions, false),
+            makeAccordion('Turno', 'equipTurno', turnoOptions, false),
+            makeAccordion('Supervisores', 'supervisor', supervisorOptions, false),
+            makeAccordion('Regime', 'regime', regimeOptions, false),
+            makeAccordion('Funcao', 'funcao', funcaoOptions, false),
+            makeAccordion('Status', 'status', statusOptions, false)
         ].join('');
 
         SGE.navigation.setupFilterDropdown();
@@ -329,9 +395,14 @@ SGE.navigation = {
     },
 
     _updateFilterBadge() {
-        const total = (SGE.state.filtros.regime?.length || 0) +
-            (SGE.state.filtros.funcao?.length || 0) +
-            (SGE.state.filtros.status?.length || 0);
+        const f = SGE.state.filtros;
+        const total = (f.regime?.length || 0) +
+            (f.funcao?.length || 0) +
+            (f.status?.length || 0) +
+            (f.equipTipo?.length || 0) +
+            (f.equipTurno?.length || 0) +
+            (f.supervisor?.length || 0) +
+            (f.categoria?.length || 0);
         const badge = document.getElementById('filter-count-badge');
         const btn = document.getElementById('filter-toggle-btn');
         if (badge) {
@@ -344,7 +415,7 @@ SGE.navigation = {
     },
 
     _refreshViews() {
-        // Only refresh the currently active view (per-view filter behavior)
+        // Refresh the currently active view with new filter state
         const activeView = SGE.state.activeView;
         switch (activeView) {
             case 'kanban': SGE.kanban.render(); break;
@@ -352,7 +423,9 @@ SGE.navigation = {
             case 'tabela': SGE.viz.renderTable(); break;
             case 'grupo': SGE.viz.renderGroups(); break;
             case 'search': SGE.search.render(); break;
-            // equip has its own tipo/turno filters, skip global filter
+            case 'equip': SGE.equip.render(); break;
+            case 'history': SGE.history.render(); break;
+            case 'settings': SGE.settings.render(); break;
         }
     }
 };
