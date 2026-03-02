@@ -100,38 +100,38 @@ SGE.ferias = {
                 <div class="ferias-filter-bar">
                     <input type="text" class="ferias-filter-input" id="ferias-filter" placeholder="Filtrar por colaborador..." value="${this._filterText}" />
                 </div>
-                <div class="ferias-table-wrap">
-                    <table class="ferias-table">
-                        <thead>
-                            <tr>
-                                <th>Colaborador</th>
-                                <th>Matrícula</th>
-                                <th>Início</th>
-                                <th>Qtd Dias</th>
-                                <th>Retorno</th>
-                                <th>Status</th>
-                                <th>Obs</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${filteredHistorico.length === 0 ?
-                '<tr><td colspan="7" style="text-align:center;color:var(--text-3);padding:24px">Nenhum registro encontrado</td></tr>' :
+                <div class="ferias-list">
+                    ${filteredHistorico.length === 0 ?
+                '<div class="no-data-message"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-18a8 8 0 100 16 8 8 0 000-16z"/><path d="M9 9l6 6m0-6l-6 6"/></svg><h3>Nenhum registro</h3><p>Não há histórico para o filtro atual.</p></div>' :
                 filteredHistorico.map(f => {
                     const stClass = f.status === 'CONCLUIDA' ? 'ferias-badge-done' : 'ferias-badge-cancelled';
                     return `
-                                    <tr>
-                                        <td>${f.employee_name}</td>
-                                        <td>${f.employee_matricula}</td>
-                                        <td>${this._formatDateBR(f.data_inicio)}</td>
-                                        <td>${f.quantidade_dias}</td>
-                                        <td>${this._formatDateBR(f.data_retorno)}</td>
-                                        <td><span class="ferias-status-badge ${stClass}">${f.status || 'CONCLUIDA'}</span></td>
-                                        <td>${f.observacao || '—'}</td>
-                                    </tr>`;
+                                <div class="ferias-row">
+                                    <div class="ferias-row-main">
+                                        <div class="ferias-row-title">
+                                            ${f.employee_name} 
+                                            <span class="ferias-status-badge ${stClass}">${f.status || 'CONCLUIDA'}</span>
+                                        </div>
+                                        <div class="ferias-row-desc">ID: ${f.employee_matricula} ${f.observacao && f.observacao !== '—' ? '• ' + f.observacao : ''}</div>
+                                    </div>
+                                    <div class="ferias-row-meta">
+                                        <div class="ferias-meta-item">
+                                            <span class="ferias-meta-label">Início</span>
+                                            <span class="ferias-meta-val">${this._formatDateBR(f.data_inicio)}</span>
+                                        </div>
+                                        <div class="ferias-meta-item">
+                                            <span class="ferias-meta-label">Termino</span>
+                                            <span class="ferias-meta-val">${this._formatDateBR(f.data_retorno)}</span>
+                                        </div>
+                                        <div class="ferias-meta-item">
+                                            <span class="ferias-meta-label">Dias</span>
+                                            <span class="ferias-meta-val" style="color:var(--accent)">${f.quantidade_dias} dias</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
                 }).join('')
             }
-                        </tbody>
-                    </table>
                 </div>
             </div>
         `;

@@ -359,16 +359,25 @@ SGE.modal = {
       ${subtitle ? `<div class="modal-subtitle">${subtitle}</div>` : ''}
     `;
 
-    // Generate fields DHTML
     const fieldsHtml = fields.map((f, i) => {
       let inputHtml = '';
       if (f.type === 'select') {
         inputHtml = `<select id="dyn-field-${i}">
           ${f.options.map(opt => `<option value="${opt.value}" ${opt.value === f.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
         </select>`;
+      } else if (f.type === 'multiselect') {
+        inputHtml = `<div class="multiselect-container" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:12px;background:var(--bg-2)">
+          <input type="text" placeholder="Filtrar..." style="margin-bottom:8px;padding:6px;width:100%;font-size:12px;border:1px solid var(--border);border-radius:4px;" onkeyup="
+            const q = this.value.toLowerCase();
+            this.parentElement.querySelectorAll('label').forEach(lbl => {
+               lbl.style.display = lbl.innerText.toLowerCase().includes(q) ? 'flex' : 'none';
+            })
+          "/>
+          ${f.options.map(opt => `<label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer;font-size:13px;color:var(--text-1)"><input type="checkbox" class="dyn-multi-${i}" value="${opt.value}" ${f.values && f.values.includes(opt.value) ? 'checked' : ''} /> ${opt.label}</label>`).join('')}
+        </div>`;
       } else {
-        // text, color, number
-        inputHtml = `<input type="${f.type || 'text'}" id="dyn-field-${i}" value="${f.value || ''}" placeholder="${f.placeholder || ''}" ${f.uppercase ? 'style="text-transform:uppercase"' : ''} />`;
+        // text, color, number, date
+        inputHtml = `<input type="${f.type || 'text'}" id="dyn-field-${i}" value="${f.value || ''}" placeholder="${f.placeholder || ''}" ${f.uppercase ? 'style="text-transform:uppercase"' : ''} ${f.min !== undefined ? `min="${f.min}"` : ''} ${f.max !== undefined ? `max="${f.max}"` : ''} />`;
       }
       return `
         <div>
@@ -395,26 +404,58 @@ SGE.modal = {
     document.getElementById('modal-cancel').addEventListener('click', SGE.modal.close);
 
     if (onDelete) {
-      document.getElementById('modal-delete').addEventListener('click', () => {
-        if (onDelete() !== false) {
-          SGE.modal.close();
+      document.getElementById('modal-delete').addEventListener('click', async () => {
+        const btn = document.getElementById('modal-delete');
+        btn.disabled = true;
+        btn.textContent = 'Excluindo...';
+
+        try {
+          const res = await onDelete();
+          if (res !== false) {
+            SGE.modal.close();
+          } else {
+            btn.disabled = false;
+            btn.textContent = 'Excluir';
+          }
+        } catch (e) {
+          btn.disabled = false;
+          btn.textContent = 'Excluir';
         }
       });
     }
 
-    document.getElementById('modal-confirm').addEventListener('click', () => {
+    document.getElementById('modal-confirm').addEventListener('click', async () => {
       // Collect values
       const values = fields.reduce((acc, f, i) => {
-        let val = document.getElementById(`dyn-field-${i}`).value;
-        if (f.uppercase) val = val.toUpperCase();
-        acc[f.id] = val;
+        if (f.type === 'multiselect') {
+          const checked = Array.from(document.querySelectorAll(`.dyn-multi-${i}:checked`)).map(cb => cb.value);
+          acc[f.id] = checked;
+        } else {
+          let val = document.getElementById(`dyn-field-${i}`).value;
+          if (f.uppercase) val = val.toUpperCase();
+          acc[f.id] = val;
+        }
         return acc;
       }, {});
 
       if (onConfirm) {
-        // If onConfirm returns explicit false, don't close
-        if (onConfirm(values) !== false) {
-          SGE.modal.close();
+        const btn = document.getElementById('modal-confirm');
+        const oldText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Aguarde...';
+
+        try {
+          // If onConfirm returns explicit false, don't close
+          const res = await onConfirm(values);
+          if (res !== false) {
+            SGE.modal.close();
+          } else {
+            btn.disabled = false;
+            btn.textContent = oldText;
+          }
+        } catch (e) {
+          btn.disabled = false;
+          btn.textContent = oldText;
         }
       } else {
         SGE.modal.close();

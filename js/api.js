@@ -628,13 +628,18 @@ SGE.api = {
         try {
             let result;
             if (action === 'create') {
-                const { data: ins, error } = await supabase.from('treinamentos_catalogo').insert({ nome: data.nome, descricao: data.descricao || null }).select();
+                const { data: ins, error } = await supabase.from('treinamentos_catalogo').insert({
+                    nome: data.nome,
+                    descricao: data.descricao || null,
+                    validade_meses: data.validade_meses ? parseInt(data.validade_meses) : null
+                }).select();
                 if (error) throw error;
                 result = ins?.[0];
             } else if (action === 'update') {
                 const patch = {};
                 if (data.nome !== undefined) patch.nome = data.nome;
                 if (data.descricao !== undefined) patch.descricao = data.descricao;
+                if (data.validade_meses !== undefined) patch.validade_meses = data.validade_meses ? parseInt(data.validade_meses) : null;
                 patch.updated_at = new Date();
                 const { error } = await supabase.from('treinamentos_catalogo').update(patch).eq('id', data.id);
                 if (error) throw error;
@@ -644,6 +649,13 @@ SGE.api = {
                 await supabase.from('colaborador_treinamentos').delete().eq('treinamento_id', data.id);
                 const { error } = await supabase.from('treinamentos_catalogo').delete().eq('id', data.id);
                 if (error) throw error;
+                // Synchronously update local state for instant feedback
+                if (SGE.state.treinamentosCatalogo) {
+                    SGE.state.treinamentosCatalogo = SGE.state.treinamentosCatalogo.filter(t => t.id !== data.id);
+                }
+                if (SGE.state.colaboradorTreinamentos) {
+                    SGE.state.colaboradorTreinamentos = SGE.state.colaboradorTreinamentos.filter(v => v.treinamento_id !== data.id);
+                }
                 result = true;
             }
             this.updateSyncBar(false);
@@ -672,6 +684,10 @@ SGE.api = {
             } else if (action === 'delete') {
                 const { error } = await supabase.from('colaborador_treinamentos').delete().eq('id', data.id);
                 if (error) throw error;
+                // Synchronously update local state for instant feedback
+                if (SGE.state.colaboradorTreinamentos) {
+                    SGE.state.colaboradorTreinamentos = SGE.state.colaboradorTreinamentos.filter(v => v.id !== data.id);
+                }
                 result = true;
             }
             this.updateSyncBar(false);
@@ -679,6 +695,29 @@ SGE.api = {
         } catch (e) {
             this.updateSyncBar(false);
             return this._handleError(e, `Vínculo Treinamento (${action})`);
+        }
+    },
+
+    async syncColaboradorTreinamentoLote(data) {
+        if (!window.supabase) return null;
+        this.updateSyncBar(true);
+        try {
+            const inserts = data.employee_ids.map(id => ({
+                employee_id: id,
+                treinamento_id: data.treinamento_id,
+                data_conclusao: data.data_conclusao || null,
+                validade: data.validade || null,
+                anexo_url: data.anexo_url || null
+            }));
+
+            const { data: ins, error } = await supabase.from('colaborador_treinamentos').insert(inserts).select();
+            if (error) throw error;
+
+            this.updateSyncBar(false);
+            return ins;
+        } catch (e) {
+            this.updateSyncBar(false);
+            return this._handleError(e, `Vínculo Treinamento em Lote`);
         }
     },
 

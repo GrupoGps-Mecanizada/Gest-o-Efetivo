@@ -81,49 +81,48 @@ SGE.advertencias = {
                         <option value="SUSPENSAO" ${filterTipo === 'SUSPENSAO' ? 'selected' : ''}>Suspensão</option>
                     </select>
                 </div>
-                <div class="advertencias-table-wrap">
-                    <table class="advertencias-table">
-                        <thead>
-                            <tr>
-                                <th>Data</th>
-                                <th>Colaborador</th>
-                                <th>Matrícula</th>
-                                <th>Tipo</th>
-                                <th>Motivo</th>
-                                <th>Dias Susp.</th>
-                                <th>Aplicador</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${filtered.length === 0 ?
-                '<tr><td colspan="8" style="text-align:center;color:var(--text-3);padding:24px">Nenhuma advertência encontrada</td></tr>' :
+                <div class="advertencias-list">
+                    ${filtered.length === 0 ?
+                '<div class="no-data-message"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-18a8 8 0 100 16 8 8 0 000-16z"/><path d="M9 9l6 6m0-6l-6 6"/></svg><h3>Nenhum registro</h3><p>Não há advertências para o filtro atual.</p></div>' :
                 filtered.map(a => {
                     const tipoBadge = this._getTipoBadge(a.tipo);
                     return `
-                                    <tr>
-                                        <td>${this._formatDateBR(a.data_aplicacao)}</td>
-                                        <td><strong>${a.employee_name}</strong></td>
-                                        <td>${a.employee_matricula}</td>
-                                        <td><span class="advertencias-tipo-badge ${tipoBadge.class}">${tipoBadge.label}</span></td>
-                                        <td class="advertencias-motivo-cell">${a.motivo}</td>
-                                        <td>${a.tipo === 'SUSPENSAO' ? (a.dias_suspensao || 0) + ' dias' : '—'}</td>
-                                        <td>${a.aplicador || '—'}</td>
-                                        <td>
-                                            <div class="advertencias-row-actions">
-                                                ${a.anexo_url ? `<a href="${a.anexo_url}" target="_blank" class="advertencias-icon-btn" title="Ver Anexo">
-                                                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 2H3a1 1 0 00-1 1v10a1 1 0 001 1h10a1 1 0 001-1V9"/><path d="M9 2h5v5M14 2L7 9"/></svg>
-                                                </a>` : ''}
-                                                <button class="advertencias-icon-btn advertencias-icon-btn-danger" data-action="delete" data-id="${a.id}" title="Excluir">
-                                                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M5 4V2h6v2M6 7v5M10 7v5"/></svg>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>`;
+                                <div class="advertencias-row">
+                                    <div class="adv-row-main">
+                                        <div class="adv-row-title">
+                                            ${a.employee_name} 
+                                            <span class="advertencias-tipo-badge ${tipoBadge.class}">${tipoBadge.label}</span>
+                                        </div>
+                                        <div class="adv-row-desc">ID: ${a.employee_matricula} • ${a.motivo}</div>
+                                    </div>
+                                    <div class="adv-row-meta">
+                                        <div class="adv-meta-item">
+                                            <span class="adv-meta-label">Data</span>
+                                            <span class="adv-meta-val">${this._formatDateBR(a.data_aplicacao)}</span>
+                                        </div>
+                                        ${a.tipo === 'SUSPENSAO' ? `
+                                        <div class="adv-meta-item">
+                                            <span class="adv-meta-label">Dias</span>
+                                            <span class="adv-meta-val" style="color:var(--red)">${a.dias_suspensao || 0} dias</span>
+                                        </div>
+                                        ` : ''}
+                                        <div class="adv-meta-item">
+                                            <span class="adv-meta-label">Aplicador</span>
+                                            <span class="adv-meta-val">${a.aplicador || '—'}</span>
+                                        </div>
+                                        <div class="advertencias-row-actions">
+                                            ${a.anexo_url ? `<a href="${a.anexo_url}" target="_blank" class="advertencias-icon-btn" title="Ver Anexo">
+                                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 2H3a1 1 0 00-1 1v10a1 1 0 001 1h10a1 1 0 001-1V9"/><path d="M9 2h5v5M14 2L7 9"/></svg>
+                                            </a>` : ''}
+                                            <button class="advertencias-icon-btn advertencias-icon-btn-danger" data-action="delete" data-id="${a.id}" title="Excluir">
+                                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M5 4V2h6v2M6 7v5M10 7v5"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
                 }).join('')
             }
-                        </tbody>
-                    </table>
                 </div>
             </div>
         `;

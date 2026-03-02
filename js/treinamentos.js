@@ -79,21 +79,8 @@ SGE.treinamentos = {
                 <div class="treinamentos-filter-bar">
                     <input type="text" class="treinamentos-filter-input" id="treinamentos-filter" placeholder="Filtrar por colaborador ou treinamento..." value="${this._filterText}" />
                 </div>
-                <div class="treinamentos-table-wrap">
-                    <table class="treinamentos-table">
-                        <thead>
-                            <tr>
-                                <th>Colaborador</th>
-                                <th>Matrícula</th>
-                                <th>Treinamento</th>
-                                <th>Data Conclusão</th>
-                                <th>Validade</th>
-                                <th>Status</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${filtered.length === 0 ? '<tr><td colspan="7" style="text-align:center;color:var(--text-3);padding:24px">Nenhum vínculo encontrado</td></tr>' :
+                <div class="treinamentos-list">
+                    ${filtered.length === 0 ? '<div class="no-data-message"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-18a8 8 0 100 16 8 8 0 000-16z"/><path d="M9 9l6 6m0-6l-6 6"/></svg><h3>Nenhum registro</h3><p>Não há vínculos para o filtro atual.</p></div>' :
                 filtered.map(v => {
                     const hoje = new Date();
                     const validade = v.validade ? new Date(v.validade + 'T00:00:00') : null;
@@ -113,22 +100,33 @@ SGE.treinamentos = {
                         }
                     }
                     return `
-                                    <tr>
-                                        <td>${v.employee_name}</td>
-                                        <td>${v.employee_matricula}</td>
-                                        <td>${v.treinamento_nome}</td>
-                                        <td>${v.data_conclusao ? SGE.helpers.formatDate(v.data_conclusao).split(',')[0] : '—'}</td>
-                                        <td>${v.validade ? SGE.helpers.formatDate(v.validade).split(',')[0] : '—'}</td>
-                                        <td><span class="treinamentos-status-badge ${statusClass}">${statusLabel}</span></td>
-                                        <td>
+                                <div class="treinamentos-row">
+                                    <div class="treinamentos-row-main">
+                                        <div class="treinamentos-row-title">
+                                            ${v.employee_name} 
+                                            <span class="treinamentos-status-badge ${statusClass}">${statusLabel}</span>
+                                        </div>
+                                        <div class="treinamentos-row-desc">ID: ${v.employee_matricula} • ${v.treinamento_nome}</div>
+                                    </div>
+                                    <div class="treinamentos-row-meta">
+                                        <div class="treinamentos-meta-item">
+                                            <span class="treinamentos-meta-label">Conclusão</span>
+                                            <span class="treinamentos-meta-val">${v.data_conclusao ? SGE.helpers.formatDate(v.data_conclusao).split(',')[0] : '—'}</span>
+                                        </div>
+                                        <div class="treinamentos-meta-item">
+                                            <span class="treinamentos-meta-label">Validade</span>
+                                            <span class="treinamentos-meta-val">${v.validade ? SGE.helpers.formatDate(v.validade).split(',')[0] : '—'}</span>
+                                        </div>
+                                        <div class="treinamentos-row-actions">
                                             <button class="treinamentos-icon-btn treinamentos-icon-btn-danger" data-action="delete-vinculo" data-id="${v.id}" title="Remover">
                                                 <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M5 4V2h6v2M6 7v5M10 7v5"/></svg>
                                             </button>
-                                        </td>
-                                    </tr>`;
-                }).join('')}
-                        </tbody>
-                    </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                }).join('')
+            }
                 </div>
             </div>
         `;
@@ -179,6 +177,7 @@ SGE.treinamentos = {
             subtitle: 'Adicionar ao catálogo',
             fields: [
                 { id: 'nome', label: 'Nome do Treinamento', type: 'text', value: '', placeholder: 'Ex: NR-35 Trabalho em Altura', uppercase: true },
+                { id: 'validade_meses', label: 'Validade (em meses) - Opcional', type: 'number', value: '', placeholder: 'Ex: 24 (para 2 anos)' },
                 { id: 'descricao', label: 'Descrição (opcional)', type: 'text', value: '', placeholder: 'Breve descrição do treinamento' }
             ],
             okText: 'Criar Treinamento',
@@ -187,7 +186,11 @@ SGE.treinamentos = {
                     SGE.helpers.toast('Nome do treinamento é obrigatório', 'error');
                     return false;
                 }
-                const result = await SGE.api.syncTreinamentoCatalogo('create', { nome: vals.nome.trim(), descricao: vals.descricao.trim() });
+                const result = await SGE.api.syncTreinamentoCatalogo('create', {
+                    nome: vals.nome.trim(),
+                    descricao: vals.descricao.trim(),
+                    validade_meses: vals.validade_meses
+                });
                 if (result) {
                     SGE.helpers.toast('Treinamento criado com sucesso');
                     await SGE.api.loadTreinamentos();
@@ -205,6 +208,7 @@ SGE.treinamentos = {
             title: 'Editar Treinamento',
             fields: [
                 { id: 'nome', label: 'Nome', type: 'text', value: item.nome, uppercase: true },
+                { id: 'validade_meses', label: 'Validade (em meses) - Opcional', type: 'number', value: item.validade_meses || '' },
                 { id: 'descricao', label: 'Descrição', type: 'text', value: item.descricao || '' }
             ],
             okText: 'Salvar',
@@ -213,7 +217,12 @@ SGE.treinamentos = {
                     SGE.helpers.toast('Nome é obrigatório', 'error');
                     return false;
                 }
-                await SGE.api.syncTreinamentoCatalogo('update', { id, nome: vals.nome.trim(), descricao: vals.descricao.trim() });
+                await SGE.api.syncTreinamentoCatalogo('update', {
+                    id,
+                    nome: vals.nome.trim(),
+                    descricao: vals.descricao.trim(),
+                    validade_meses: vals.validade_meses
+                });
                 SGE.helpers.toast('Treinamento atualizado');
                 await SGE.api.loadTreinamentos();
                 this.render();
@@ -224,18 +233,24 @@ SGE.treinamentos = {
         });
     },
 
-    async _deleteCatalogo(id) {
-        SGE.modal.confirm({
-            title: 'Excluir Treinamento',
-            message: 'Isso removerá o treinamento e todos os vínculos associados. Continuar?',
-            confirmText: 'Excluir',
-            confirmColor: 'danger',
-            onConfirm: async () => {
-                await SGE.api.syncTreinamentoCatalogo('delete', { id });
-                SGE.helpers.toast('Treinamento excluído');
-                await SGE.api.loadTreinamentos();
-                this.render();
-            }
+    _deleteCatalogo(id) {
+        return new Promise((resolve) => {
+            SGE.modal.confirm({
+                title: 'Excluir Treinamento',
+                message: 'Isso removerá o treinamento e todos os vínculos associados. Continuar?',
+                confirmText: 'Excluir',
+                confirmColor: 'danger',
+                onConfirm: async () => {
+                    await SGE.api.syncTreinamentoCatalogo('delete', { id });
+                    SGE.helpers.toast('Treinamento excluído');
+                    await SGE.api.loadTreinamentos();
+                    this.render();
+                    resolve(true); // Tell the caller (edit modal) that delete succeeded
+                },
+                onCancel: () => {
+                    resolve(false); // Action was cancelled, handle properly
+                }
+            });
         });
     },
 
@@ -250,10 +265,10 @@ SGE.treinamentos = {
 
         SGE.modal.openDynamic({
             title: 'Vincular Treinamento',
-            subtitle: 'Associar treinamento a um colaborador',
+            subtitle: 'Associar treinamento a 1 ou mais colaboradores',
             fields: [
                 {
-                    id: 'employee_id', label: 'Colaborador', type: 'select',
+                    id: 'employee_ids', label: 'Colaboradores', type: 'multiselect',
                     options: colabs.map(c => ({ value: c.id, label: `${c.nome} (${c.matricula_gps || 'S/MAT'})` }))
                 },
                 {
@@ -264,16 +279,49 @@ SGE.treinamentos = {
                 { id: 'validade', label: 'Validade (opcional)', type: 'date', value: '' },
                 { id: 'anexo_url', label: 'URL do Anexo (opcional)', type: 'text', value: '', placeholder: 'https://...' }
             ],
-            okText: 'Vincular',
+            okText: 'Vincular a todos',
             onConfirm: async (vals) => {
-                const result = await SGE.api.syncColaboradorTreinamento('create', vals);
+                if (!vals.employee_ids || vals.employee_ids.length === 0) {
+                    SGE.helpers.toast('Selecione ao menos um colaborador', 'error');
+                    return false;
+                }
+                const result = await SGE.api.syncColaboradorTreinamentoLote(vals);
                 if (result) {
-                    SGE.helpers.toast('Treinamento vinculado com sucesso');
+                    SGE.helpers.toast(`Treinamento vinculado a ${vals.employee_ids.length} colaborador(es)`);
                     await SGE.api.loadTreinamentos();
                     this.render();
                 }
             }
         });
+
+        // Set up reactive auto-calculation in the DOM
+        setTimeout(() => {
+            const trSelect = document.getElementById('dyn-field-1'); // treinamento_id
+            const dtConcInput = document.getElementById('dyn-field-2'); // data_conclusao
+            const valInput = document.getElementById('dyn-field-3'); // validade
+
+            const autoCalc = () => {
+                if (!trSelect || !dtConcInput || !valInput) return;
+                const tId = trSelect.value;
+                const dC = dtConcInput.value;
+                if (tId && dC) {
+                    const treinamento = catalogo.find(t => t.id === tId);
+                    if (treinamento && treinamento.validade_meses) {
+                        const dateObj = new Date(dC + 'T00:00:00');
+                        dateObj.setMonth(dateObj.getMonth() + treinamento.validade_meses);
+                        valInput.value = dateObj.toISOString().split('T')[0];
+                    } else {
+                        valInput.value = '';
+                    }
+                }
+            };
+
+            if (trSelect) trSelect.addEventListener('change', autoCalc);
+            if (dtConcInput) dtConcInput.addEventListener('change', autoCalc);
+
+            // Trigger initially
+            autoCalc();
+        }, 100); // give the modal DOM a moment to be rendered
     },
 
     async _deleteVinculo(id) {
