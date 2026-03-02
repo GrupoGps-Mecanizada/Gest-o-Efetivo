@@ -8,6 +8,7 @@ window.SGE = window.SGE || {};
 
 SGE.dashboard = {
     charts: {},
+    activeTab: 'geral',
     colors: {
         primary: '#0f3868',
         secondary: '#38bdf8',
@@ -34,15 +35,15 @@ SGE.dashboard = {
         const view = document.getElementById('viz-view');
         if (!view) return;
 
-        let data = SGE.helpers.filtrarColaboradores();
+        let colabs = SGE.helpers.filtrarColaboradores();
 
-        if (data.length === 0) {
+        if (colabs.length === 0) {
             view.innerHTML = `
                 <div class="no-data-message" style="width:100%;padding-top:80px;text-align:center">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;color:var(--text-3);margin-bottom:16px;">
                         <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
                     </svg>
-                    <h3 style="color:var(--text-2);margin:0">Nenhum dado de Efetivo disponível.</h3>
+                    <h3 style="color:var(--text-2);margin:0">Nenhum dado de Efetivo disponível para análise.</h3>
                 </div>`;
             return;
         }
@@ -53,168 +54,43 @@ SGE.dashboard = {
                     <div>
                         <h2 class="dashboard-title">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
-                            Análise Executiva
+                            Análise Executiva Premium
                         </h2>
-                        <p class="dashboard-subtitle">Visão geral do sistema atualizada em tempo real.</p>
-                    </div>
-
-                </div>
-
-                <div class="kpi-grid" id="dashboard-kpis"></div>
-
-                <div class="charts-grid">
-                    <!-- Esquerda Superior (Rosca) -->
-                    <div class="chart-card span-4">
-                        <div class="chart-header">
-                            <h3 class="chart-title">Distribuição por Status</h3>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="chartStatus"></canvas>
-                        </div>
-                    </div>
-                    
-                    <!-- Centro Superior (Radar ou Pie) -->
-                    <div class="chart-card span-4">
-                        <div class="chart-header">
-                            <h3 class="chart-title">Efetivo por Função</h3>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="chartFuncao"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Direita Superior (Doughnut) -->
-                    <div class="chart-card span-4">
-                        <div class="chart-header">
-                            <h3 class="chart-title">Alocação de Equipamento</h3>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="chartEquipamento"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Esquerda Central (Barras Agrupadas) -->
-                    <div class="chart-card span-6">
-                        <div class="chart-header">
-                            <h3 class="chart-title">Distribuição por Regime de Trabalho</h3>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="chartRegime"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Direita Central (Barras Empilhadas) -->
-                    <div class="chart-card span-6">
-                        <div class="chart-header">
-                            <h3 class="chart-title">Composição de Status por Regime</h3>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="chartStatusRegime"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Inferior Total (Barras Horizontais) -->
-                    <div class="chart-card span-12 horizontal-bar">
-                        <div class="chart-header">
-                            <h3 class="chart-title">Lotação por Supervisor</h3>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="chartSupervisor"></canvas>
-                        </div>
+                        <p class="dashboard-subtitle">Visão panorâmica cruzando Efetivo, Treinamentos e Histórico (Atualizado em RT).</p>
                     </div>
                 </div>
+
+                <div class="dashboard-tabs">
+                    <button class="dash-tab-btn ${this.activeTab === 'geral' ? 'active' : ''}" data-tab="geral">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                        Visão Geral
+                    </button>
+                    <button class="dash-tab-btn ${this.activeTab === 'capacitacao' ? 'active' : ''}" data-tab="capacitacao">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></svg>
+                        Capacitação (NRs)
+                    </button>
+                    <button class="dash-tab-btn ${this.activeTab === 'saude' ? 'active' : ''}" data-tab="saude">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                        Saúde & Disciplina
+                    </button>
+                </div>
+
+                <div id="dashboard-content"></div>
             </div>
         `;
 
-        this.renderKPIs(data);
-        this.renderCharts(data);
-    },
+        // Add listeners
+        view.querySelectorAll('.dash-tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.activeTab = e.currentTarget.dataset.tab;
+                this.render(); // re-render core
+            });
+        });
 
-    renderKPIs(data) {
-        const total = data.length;
-        const ativos = data.filter(c => c.status === 'ATIVO').length;
-        const ferias = data.filter(c => c.status === 'FÉRIAS' || c.status === 'FERIAS').length;
-        const semId = data.filter(c => c.status === 'SEM_ID' || !c.matricula_gps).length;
-        const faltas = data.filter(c => c.status === 'FALTA' || c.status === 'AFASTADO').length;
-
-        document.getElementById('dashboard-kpis').innerHTML = `
-            <div class="kpi-card" style="border-left: 4px solid var(--primary);">
-                <div class="kpi-icon" style="color: var(--primary); background: rgba(15, 56, 104, 0.08);">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                </div>
-                <div class="kpi-info">
-                    <h4>Efetivo Total</h4>
-                    <div class="kpi-val">${total}</div>
-                    <div class="kpi-subtext">Todos cadastrados no sistema</div>
-                </div>
-            </div>
-            
-            <div class="kpi-card" style="border-left: 4px solid var(--success);">
-                <div class="kpi-icon" style="color: var(--success); background: rgba(16, 185, 129, 0.1);">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                </div>
-                <div class="kpi-info">
-                    <h4>Operação Ativa</h4>
-                    <div class="kpi-val">${ativos} <span style="font-size:14px;color:var(--text-3);font-weight:600;">(${(total > 0 ? (ativos / total * 100) : 0).toFixed(1)}%)</span></div>
-                    <div class="kpi-subtext">Trabalhando ou folgando</div>
-                </div>
-            </div>
-
-            <div class="kpi-card" style="border-left: 4px solid var(--warning);">
-                <div class="kpi-icon" style="color: var(--warning); background: rgba(245, 158, 11, 0.1);">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                </div>
-                <div class="kpi-info">
-                    <h4>Em Férias</h4>
-                    <div class="kpi-val">${ferias} <span style="font-size:14px;color:var(--text-3);font-weight:600;">(${(total > 0 ? (ferias / total * 100) : 0).toFixed(1)}%)</span></div>
-                    <div class="kpi-subtext">Licenças e férias</div>
-                </div>
-            </div>
-
-            <div class="kpi-card" style="border-left: 4px solid var(--amber);">
-                <div class="kpi-icon" style="color: var(--amber); background: rgba(217, 119, 6, 0.1);">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                </div>
-                <div class="kpi-info">
-                    <h4>Afastamentos</h4>
-                    <div class="kpi-val">${faltas} <span style="font-size:14px;color:var(--text-3);font-weight:600;">(${(total > 0 ? (faltas / total * 100) : 0).toFixed(1)}%)</span></div>
-                    <div class="kpi-subtext">Atestados físicos e mentais</div>
-                </div>
-            </div>
-            
-            <div class="kpi-card" style="border-left: 4px solid var(--danger);">
-                <div class="kpi-icon" style="color: var(--danger); background: rgba(239, 68, 68, 0.1);">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M15 11l-6 6"></path><path d="M9 11l6 6"></path></svg>
-                </div>
-                <div class="kpi-info">
-                    <h4>Pendentes / Sem ID</h4>
-                    <div class="kpi-val">${semId}</div>
-                    <div class="kpi-subtext">Aguardando matricula GPS</div>
-                </div>
-            </div>
-            
-            <div class="kpi-card" style="border-left: 4px solid #0369a1;">
-                <div class="kpi-icon" style="color: #0369a1; background: rgba(3, 105, 161, 0.08);">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
-                </div>
-                <div class="kpi-info">
-                    <h4>Operacional</h4>
-                    <div class="kpi-val">${data.filter(c => c.categoria === 'OPERACIONAL').length} <span style="font-size:14px;color:var(--text-3);font-weight:600;">(${(total > 0 ? (data.filter(c => c.categoria === 'OPERACIONAL').length / total * 100) : 0).toFixed(1)}%)</span></div>
-                    <div class="kpi-subtext">Equipamentos e Vagas</div>
-                </div>
-            </div>
-            
-            <div class="kpi-card" style="border-left: 4px solid #92400e;">
-                <div class="kpi-icon" style="color: #92400e; background: rgba(146, 64, 14, 0.08);">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                </div>
-                <div class="kpi-info">
-                    <h4>Gestao</h4>
-                    <div class="kpi-val">${data.filter(c => c.categoria === 'GESTAO').length} <span style="font-size:14px;color:var(--text-3);font-weight:600;">(${(total > 0 ? (data.filter(c => c.categoria === 'GESTAO').length / total * 100) : 0).toFixed(1)}%)</span></div>
-                    <div class="kpi-subtext">Setores e Supervisao</div>
-                </div>
-            </div>
-        `;
+        // Initialize proper content
+        if (this.activeTab === 'geral') this.renderGeral(colabs);
+        if (this.activeTab === 'capacitacao') this.renderCapacitacao(colabs);
+        if (this.activeTab === 'saude') this.renderSaude(colabs);
     },
 
     destroyAllCharts() {
@@ -226,427 +102,431 @@ SGE.dashboard = {
         this.charts = {};
     },
 
-    renderCharts(data) {
-        if (!window.Chart) {
-            console.error('SGE: Chart.js library is not loaded');
-            return;
-        }
-
-        this.destroyAllCharts();
-
-        if (window.ChartDataLabels) {
-            Chart.register(ChartDataLabels);
-        }
-
+    setupChartDefaults() {
+        if (!window.Chart) return false;
+        if (window.ChartDataLabels) Chart.register(ChartDataLabels);
         Chart.defaults.font.family = "'Inter', sans-serif";
         Chart.defaults.color = '#64748b';
         Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 56, 104, 0.9)';
         Chart.defaults.plugins.tooltip.padding = 10;
         Chart.defaults.plugins.tooltip.cornerRadius = 6;
-
-        // Desativar datalabels globalmente — cada gráfico configura os seus
         Chart.defaults.plugins.datalabels = { display: false };
+        return true;
+    },
 
-        var self = this;
-        var palette = this.getPalette();
+    /* -------------------------------------------------------------
+       TAB 1: VISÃO GERAL (EFETIVO PURAMENTE)
+       ------------------------------------------------------------- */
+    renderGeral(data) {
+        const content = document.getElementById('dashboard-content');
 
-        // ── Helper: legenda com quantidade (dataset único) ──
-        function legendWithQty(chart) {
-            var d = chart.data;
-            return d.labels.map(function (label, i) {
-                var val = d.datasets[0].data[i];
-                return {
-                    text: label + '   ' + val,
-                    fillStyle: d.datasets[0].backgroundColor[i],
-                    strokeStyle: d.datasets[0].backgroundColor[i],
-                    pointStyle: 'circle',
-                    hidden: false,
-                    index: i
-                };
-            });
-        }
+        const total = data.length;
+        const ativos = data.filter(c => c.status === 'ATIVO').length;
+        const semId = data.filter(c => c.status === 'SEM_ID' || !c.matricula_gps).length;
+        const opCount = data.filter(c => c.categoria === 'OPERACIONAL').length;
 
-        // ── Helper: legenda com total (multi-dataset) ──
-        function legendMultiTotal(chart) {
-            return chart.data.datasets.map(function (ds, i) {
-                var total = ds.data.reduce(function (a, b) { return a + b; }, 0);
-                return {
-                    text: ds.label + '   ' + total,
-                    fillStyle: ds.backgroundColor,
-                    strokeStyle: ds.backgroundColor,
-                    pointStyle: 'circle',
-                    hidden: false,
-                    datasetIndex: i
-                };
-            });
-        }
+        content.innerHTML = `
+            <div class="kpi-grid" style="margin-bottom: 24px;">
+                <div class="kpi-card" style="border-left: 4px solid var(--primary);">
+                    <div class="kpi-icon" style="color: var(--primary); background: rgba(15, 56, 104, 0.08);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    </div>
+                    <div class="kpi-info">
+                        <h4>Efetivo Total</h4>
+                        <div class="kpi-val">${total}</div>
+                        <div class="kpi-subtext">Base filtrada selecionada</div>
+                    </div>
+                </div>
+                
+                <div class="kpi-card" style="border-left: 4px solid var(--success);">
+                    <div class="kpi-icon" style="color: var(--success); background: rgba(16, 185, 129, 0.1);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    </div>
+                    <div class="kpi-info">
+                        <h4>Operação Ativa</h4>
+                        <div class="kpi-val">${ativos} <span style="font-size:14px;color:var(--text-3);font-weight:600;">(${(total > 0 ? (ativos / total * 100) : 0).toFixed(1)}%)</span></div>
+                        <div class="kpi-subtext">Nas frentes de trabalho ou folga</div>
+                    </div>
+                </div>
 
-        var legendBottom = {
-            position: 'bottom',
-            labels: {
-                boxWidth: 10,
-                usePointStyle: true,
-                padding: 16,
-                font: { size: 11 }
-            }
-        };
+                <div class="kpi-card" style="border-left: 4px solid var(--danger);">
+                    <div class="kpi-icon" style="color: var(--danger); background: rgba(239, 68, 68, 0.1);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M15 11l-6 6"></path><path d="M9 11l6 6"></path></svg>
+                    </div>
+                    <div class="kpi-info">
+                        <h4>Pendências ID</h4>
+                        <div class="kpi-val">${semId}</div>
+                        <div class="kpi-subtext">Aguardando matrícula GPS</div>
+                    </div>
+                </div>
 
-        var legendBottomWithQty = {
-            position: 'bottom',
-            labels: {
-                boxWidth: 10,
-                usePointStyle: true,
-                padding: 16,
-                font: { size: 11 },
-                generateLabels: legendWithQty
-            }
-        };
+                <div class="kpi-card" style="border-left: 4px solid #0369a1;">
+                    <div class="kpi-icon" style="color: #0369a1; background: rgba(3, 105, 161, 0.08);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                    </div>
+                    <div class="kpi-info">
+                        <h4>Força Operacional</h4>
+                        <div class="kpi-val">${opCount}</div>
+                        <div class="kpi-subtext">Equipamentos e Chão de fábrica</div>
+                    </div>
+                </div>
+            </div>
 
-        // ────────────────────────────────────────────────────────────
-        // 1. Distribuição por Status (Doughnut)
-        //    Labels: BRANCO CENTRADO DENTRO DA FATIA (apenas se ≥ 8% do total)
-        //    Valores menores ficam apenas na legenda.
-        // ────────────────────────────────────────────────────────────
-        var statusColorMap = {
-            'ATIVO': self.colors.success,
-            'FÉRIAS': self.colors.warning,
-            'FERIAS': self.colors.warning,
-            'AFASTADO': self.colors.amber,
-            'DESLIGADO': self.colors.purple,
-            'INATIVO': self.colors.danger,
-            'EM AVISO': self.colors.indigo,
-            'EM CONTRATAÇÃO': self.colors.teal,
-            'FALTA': self.colors.rose,
-            'SEM_ID': self.colors.danger,
-            'OUTROS': self.colors.slate
-        };
+            <div class="charts-grid">
+                <div class="chart-card span-4">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Distribuição por Status</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chartStatusG"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card span-8">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Efetivo por Função</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chartFuncaoG"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card span-12 horizontal-bar">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Lotação (Escala x Regime)</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chartRegimeG"></canvas>
+                    </div>
+                </div>
+            </div>
+        `;
 
-        var statusMap = {};
-        data.forEach(function (c) {
-            var s = (c.status || '').toUpperCase();
-            if (!s) return;
+        this.destroyAllCharts();
+        if (!this.setupChartDefaults()) return;
+
+        // --- Status Chart ---
+        const statusMap = {};
+        data.forEach(c => {
+            const s = (c.status || 'OUTROS').toUpperCase();
             statusMap[s] = (statusMap[s] || 0) + 1;
         });
 
-        var statusLabels = Object.keys(statusMap);
-        var statusValues = Object.values(statusMap);
-        var statusTotal = statusValues.reduce(function (a, b) { return a + b; }, 0);
-        var statusColors = statusLabels.map(function (lbl) {
-            return statusColorMap[lbl] || '#64748b';
-        });
+        const statusColorMap = {
+            'ATIVO': this.colors.success,
+            'FÉRIAS': this.colors.warning,
+            'FERIAS': this.colors.warning,
+            'AFASTADO': this.colors.amber,
+            'DESLIGADO': this.colors.purple,
+            'INATIVO': this.colors.danger,
+            'EM AVISO': this.colors.indigo,
+            'EM CONTRATAÇÃO': this.colors.teal,
+            'FALTA': this.colors.rose,
+            'SEM_ID': this.colors.danger,
+            'OUTROS': this.colors.slate
+        };
 
-        this.charts.status = new Chart(document.getElementById('chartStatus'), {
+        this.charts.status = new Chart(document.getElementById('chartStatusG'), {
             type: 'doughnut',
             data: {
-                labels: statusLabels,
+                labels: Object.keys(statusMap),
                 datasets: [{
-                    data: statusValues,
-                    backgroundColor: statusColors,
+                    data: Object.values(statusMap),
+                    backgroundColor: Object.keys(statusMap).map(k => statusColorMap[k] || '#ccc'),
                     borderWidth: 2,
                     borderColor: '#ffffff',
-                    hoverOffset: 4
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '62%',
                 plugins: {
-                    legend: legendBottomWithQty,
-                    datalabels: {
-                        // Mostrar APENAS em fatias com pelo menos 8% do total
-                        display: function (ctx) {
-                            var val = ctx.dataset.data[ctx.dataIndex];
-                            return statusTotal > 0 && (val / statusTotal) >= 0.08;
-                        },
-                        // Branco, centrado dentro da fatia
-                        color: '#ffffff',
-                        anchor: 'center',
-                        align: 'center',
-                        font: { weight: 'bold', size: 13 },
-                        formatter: function (val) { return val; }
-                    }
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } }
                 }
             }
         });
 
-        // ────────────────────────────────────────────────────────────
-        // 2. Efetivo por Função (Polar Area -> Doughnut Custom)
-        //    Labels: apenas na legenda. Interno removido para evitar sobreposição.
-        // ────────────────────────────────────────────────────────────
-        var funcaoCounts = {};
-        data.forEach(function (c) {
-            var f = c.funcao || 'N/A';
-            funcaoCounts[f] = (funcaoCounts[f] || 0) + 1;
+        // --- Funções Chart ---
+        const funcaoMap = {};
+        data.forEach(c => {
+            const f = c.funcao || 'Outros';
+            funcaoMap[f] = (funcaoMap[f] || 0) + 1;
         });
 
-        var funcaoColors = ['#0f3868', '#38bdf8', '#10b981', '#8b5cf6', '#f43f5e', '#d97706', '#14b8a6', '#6366f1', '#f59e0b', '#ef4444'];
-        var funcaoKeys = Object.keys(funcaoCounts);
-        var funcaoVals = Object.values(funcaoCounts);
-        var funcaoTotal = funcaoVals.reduce(function (a, b) { return a + b; }, 0);
-        // Use centralized function color system for chart colors
-        var funcaoChartColors = funcaoKeys.map(function (key, i) {
-            var c = SGE.CONFIG.getFuncaoColor(key);
-            return c.text || funcaoColors[i % funcaoColors.length];
-        });
-
-        this.charts.funcao = new Chart(document.getElementById('chartFuncao'), {
-            type: 'doughnut',
-            data: {
-                labels: funcaoKeys,
-                datasets: [{
-                    data: funcaoVals,
-                    backgroundColor: funcaoChartColors,
-                    borderWidth: 2,
-                    borderColor: '#ffffff',
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '70%',
-                plugins: {
-                    legend: legendBottomWithQty,
-                    datalabels: {
-                        // Branco centrado apenas se ≥ 15% do total
-                        display: function (ctx) {
-                            var val = ctx.dataset.data[ctx.dataIndex];
-                            return funcaoTotal > 0 && (val / funcaoTotal) >= 0.15;
-                        },
-                        color: '#ffffff',
-                        anchor: 'center',
-                        align: 'center',
-                        font: { weight: 'bold', size: 12 },
-                        formatter: function (val) { return val; }
-                    }
-                }
-            }
-        });
-
-        // ────────────────────────────────────────────────────────────
-        // 3. Alocação de Equipamento (Pie)
-        //    Labels: BRANCO CENTRADO DENTRO DA FATIA
-        // ────────────────────────────────────────────────────────────
-        var comEquip = 0;
-        var semEquip = 0;
-        data.forEach(function (c) {
-            if (c.equipamento && c.equipamento.trim().length > 0 && c.equipamento.toUpperCase() !== 'N/A') comEquip++;
-            else semEquip++;
-        });
-
-        var equipTotal = comEquip + semEquip;
-        var equipColors = [self.colors.primary, self.colors.slate];
-
-        this.charts.equipamento = new Chart(document.getElementById('chartEquipamento'), {
-            type: 'pie',
-            data: {
-                labels: ['Com Equipamento', 'Sem Equipamento'],
-                datasets: [{
-                    data: [comEquip, semEquip],
-                    backgroundColor: equipColors,
-                    borderWidth: 2,
-                    borderColor: '#ffffff',
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: legendBottomWithQty,
-                    datalabels: {
-                        display: function (ctx) {
-                            var val = ctx.dataset.data[ctx.dataIndex];
-                            return equipTotal > 0 && (val / equipTotal) >= 0.08;
-                        },
-                        color: '#ffffff',
-                        anchor: 'center',
-                        align: 'center',
-                        font: { weight: 'bold', size: 14 },
-                        formatter: function (val) { return val; }
-                    }
-                }
-            }
-        });
-
-        // ────────────────────────────────────────────────────────────
-        // 4. Distribuição por Regime (Bar Vertical)
-        //    Labels: BRANCO CENTRADO DENTRO DA BARRA
-        //    Acima da barra (azul escuro) quando barra for muito pequena
-        // ────────────────────────────────────────────────────────────
-        var regimeCounts = {};
-        data.forEach(function (c) {
-            var r = c.regime || 'Sem Registro';
-            regimeCounts[r] = (regimeCounts[r] || 0) + 1;
-        });
-
-        var sortedRegimes = Object.entries(regimeCounts).sort(function (a, b) { return b[1] - a[1]; });
-        var regimeMax = sortedRegimes.length > 0 ? sortedRegimes[0][1] : 1;
-
-        this.charts.regime = new Chart(document.getElementById('chartRegime'), {
+        const sortedF = Object.entries(funcaoMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
+        this.charts.funcoes = new Chart(document.getElementById('chartFuncaoG'), {
             type: 'bar',
             data: {
-                labels: sortedRegimes.map(function (i) { return i[0]; }),
+                labels: sortedF.map(i => i[0]),
                 datasets: [{
-                    label: 'Quantidade',
-                    data: sortedRegimes.map(function (i) { return i[1]; }),
-                    backgroundColor: self.colors.secondary,
+                    label: 'Colaboradores',
+                    data: sortedF.map(i => i[1]),
+                    backgroundColor: this.colors.secondary,
                     borderRadius: 4
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    datalabels: {
-                        display: true,
-                        // Dentro da barra se ≥ 15% do máximo, senão acima
-                        anchor: function (ctx) {
-                            var val = ctx.dataset.data[ctx.dataIndex];
-                            return (val / regimeMax) >= 0.15 ? 'center' : 'end';
-                        },
-                        align: function (ctx) {
-                            var val = ctx.dataset.data[ctx.dataIndex];
-                            return (val / regimeMax) >= 0.15 ? 'center' : 'top';
-                        },
-                        color: function (ctx) {
-                            var val = ctx.dataset.data[ctx.dataIndex];
-                            return (val / regimeMax) >= 0.15 ? '#ffffff' : self.colors.primary;
-                        },
-                        font: { weight: 'bold', size: 12 },
-                        formatter: function (val) { return val; }
-                    }
-                },
-                scales: {
-                    y: { beginAtZero: true, ticks: { precision: 0 } }
-                }
+                plugins: { legend: { display: false } }
             }
         });
 
-        // ────────────────────────────────────────────────────────────
-        // 5. Composição de Status por Regime (Stacked Bar)
-        //    Labels: BRANCO CENTRADO DENTRO DO SEGMENTO
-        //    Só exibe se o segmento for ≥ 15% do total da barra (evita sobreposição)
-        // ────────────────────────────────────────────────────────────
-        var regimesParaStatus = Object.keys(regimeCounts);
-        var datasetAtivo = [];
-        var datasetFerias = [];
-        var datasetOutros = [];
-
-        regimesParaStatus.forEach(function (r) {
-            var colsInR = data.filter(function (c) { return (c.regime || 'Sem Registro') === r; });
-            datasetAtivo.push(colsInR.filter(function (c) { return c.status === 'ATIVO'; }).length);
-            datasetFerias.push(colsInR.filter(function (c) { return c.status === 'FÉRIAS' || c.status === 'FERIAS'; }).length);
-            datasetOutros.push(colsInR.filter(function (c) {
-                return c.status !== 'ATIVO' && c.status !== 'FÉRIAS' && c.status !== 'FERIAS';
-            }).length);
+        // --- Regime ---
+        const regimeMap = {};
+        data.forEach(c => {
+            const r = c.regime || 'Sem Registro';
+            regimeMap[r] = (regimeMap[r] || 0) + 1;
         });
 
-        this.charts.statusRegime = new Chart(document.getElementById('chartStatusRegime'), {
+        const sortedReg = Object.entries(regimeMap).sort((a, b) => b[1] - a[1]);
+        this.charts.regimes = new Chart(document.getElementById('chartRegimeG'), {
             type: 'bar',
             data: {
-                labels: regimesParaStatus,
-                datasets: [
-                    { label: 'Ativos', data: datasetAtivo, backgroundColor: self.colors.success },
-                    { label: 'Férias', data: datasetFerias, backgroundColor: self.colors.warning },
-                    { label: 'Outros', data: datasetOutros, backgroundColor: self.colors.slate }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            boxWidth: 10,
-                            usePointStyle: true,
-                            padding: 16,
-                            font: { size: 11 },
-                            generateLabels: legendMultiTotal
-                        }
-                    },
-                    datalabels: {
-                        display: function (ctx) {
-                            var val = ctx.dataset.data[ctx.dataIndex];
-                            if (!val || val <= 0) return false;
-                            // Total desta coluna (soma de todos os datasets)
-                            var colTotal = 0;
-                            ctx.chart.data.datasets.forEach(function (ds) {
-                                colTotal += (ds.data[ctx.dataIndex] || 0);
-                            });
-                            // Mostrar apenas se o segmento ≥ 15% da coluna
-                            return colTotal > 0 && (val / colTotal) >= 0.15;
-                        },
-                        color: '#ffffff',
-                        anchor: 'center',
-                        align: 'center',
-                        font: { weight: 'bold', size: 11 },
-                        formatter: function (val) { return val; }
-                    }
-                },
-                scales: {
-                    x: { stacked: true },
-                    y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } }
-                }
-            }
-        });
-
-        // ────────────────────────────────────────────────────────────
-        // 6. Lotação por Supervisor (Horizontal Bar)
-        //    Labels: BRANCO DENTRO DA BARRA (início direito) ou azul fora quando pequena
-        // ────────────────────────────────────────────────────────────
-        var supCounts = {};
-        data.forEach(function (c) {
-            var s = c.supervisor || 'Não Atribuído';
-            supCounts[s] = (supCounts[s] || 0) + 1;
-        });
-
-        var sortedSup = Object.entries(supCounts).sort(function (a, b) { return b[1] - a[1]; });
-        var supMax = sortedSup.length > 0 ? sortedSup[0][1] : 1;
-        var barColors = sortedSup.map(function (_, i) { return palette[i % palette.length]; });
-
-        this.charts.supervisor = new Chart(document.getElementById('chartSupervisor'), {
-            type: 'bar',
-            data: {
-                labels: sortedSup.map(function (s) { return s[0]; }),
+                labels: sortedReg.map(i => i[0]),
                 datasets: [{
-                    label: 'Colaboradores',
-                    data: sortedSup.map(function (s) { return s[1]; }),
-                    backgroundColor: barColors,
+                    label: 'Quantidade',
+                    data: sortedReg.map(i => i[1]),
+                    backgroundColor: this.colors.primary,
                     borderRadius: 4
                 }]
             },
             options: {
                 indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    datalabels: {
-                        display: true,
-                        anchor: function (ctx) {
-                            var val = ctx.dataset.data[ctx.dataIndex];
-                            return (val / supMax) >= 0.2 ? 'end' : 'end';
-                        },
-                        align: function (ctx) {
-                            var val = ctx.dataset.data[ctx.dataIndex];
-                            return (val / supMax) >= 0.2 ? 'start' : 'right';
-                        },
-                        color: function (ctx) {
-                            var val = ctx.dataset.data[ctx.dataIndex];
-                            return (val / supMax) >= 0.2 ? '#ffffff' : self.colors.primary;
-                        },
-                        font: { weight: 'bold', size: 12 },
-                        formatter: function (val) { return val; }
-                    }
-                },
-                scales: {
-                    x: { beginAtZero: true, ticks: { precision: 0 } }
-                }
+                plugins: { legend: { display: false } }
             }
+        });
+    },
+
+    /* -------------------------------------------------------------
+       TAB 2: CAPACITAÇÃO (NRs e Cursos)
+       ------------------------------------------------------------- */
+    renderCapacitacao(data) {
+        const content = document.getElementById('dashboard-content');
+
+        const binds = (SGE.state.colaboradorTreinamentos || []);
+
+        // Match filtered users
+        const activeIds = new Set(data.map(c => c.id));
+        const activeBinds = binds.filter(b => activeIds.has(b.employee_id));
+
+        let expired = 0;
+        let valid = 0;
+        const now = new Date();
+
+        activeBinds.forEach(b => {
+            if (!b.validade) return;
+            const vDate = new Date(b.validade);
+            if (vDate < now) expired++;
+            else valid++;
+        });
+
+        // Total of unique employees that have AT LEAST ONE training
+        const trainedIds = new Set(activeBinds.map(b => b.employee_id));
+        const coverRate = data.length > 0 ? (trainedIds.size / data.length) * 100 : 0;
+
+        content.innerHTML = `
+            <div class="kpi-grid" style="margin-bottom: 24px;">
+                <div class="kpi-card" style="border-left: 4px solid var(--indigo);">
+                    <div class="kpi-icon" style="color: var(--indigo); background: rgba(99, 102, 241, 0.1);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></svg>
+                    </div>
+                    <div class="kpi-info">
+                        <h4>Cobertura de Treinamento</h4>
+                        <div class="kpi-val">${coverRate.toFixed(1)}%</div>
+                        <div class="kpi-subtext">${trainedIds.size} de ${data.length} colabs possuem histórico</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card" style="border-left: 4px solid var(--success);">
+                    <div class="kpi-icon" style="color: var(--success); background: rgba(16, 185, 129, 0.1);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                    <div class="kpi-info">
+                        <h4>Certificados Válidos</h4>
+                        <div class="kpi-val">${valid}</div>
+                        <div class="kpi-subtext">Cursos dentro do prazo atestados</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card" style="border-left: 4px solid var(--danger);">
+                    <div class="kpi-icon" style="color: var(--danger); background: rgba(239, 68, 68, 0.1);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    </div>
+                    <div class="kpi-info">
+                        <h4>Certificados Vencidos</h4>
+                        <div class="kpi-val">${expired}</div>
+                        <div class="kpi-subtext">Necessitam reciclagem urgente</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-card span-6">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Status dos Certificados Presentes</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chartTValidade"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card span-6">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Top 5 Cursos mais Realizados</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chartTTop"></canvas>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        this.destroyAllCharts();
+        if (!this.setupChartDefaults()) return;
+
+        // Chart Válidos x Vencidos
+        this.charts.tValidade = new Chart(document.getElementById('chartTValidade'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Válidos', 'Vencidos / Irregulares'],
+                datasets: [{
+                    data: [valid, expired],
+                    backgroundColor: [this.colors.success, this.colors.danger]
+                }]
+            },
+            options: { cutout: '65%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true } } } }
+        });
+
+        // Top 5 cursos
+        const courseCount = {};
+        const catMap = {};
+        (SGE.state.treinamentosCatalogo || []).forEach(t => catMap[t.id] = t.nome);
+
+        activeBinds.forEach(b => {
+            const name = catMap[b.treinamento_id] || 'Desconhecido';
+            courseCount[name] = (courseCount[name] || 0) + 1;
+        });
+        const sortedCourses = Object.entries(courseCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+        this.charts.tTop = new Chart(document.getElementById('chartTTop'), {
+            type: 'bar',
+            data: {
+                labels: sortedCourses.map(i => i[0]),
+                datasets: [{
+                    data: sortedCourses.map(i => i[1]),
+                    backgroundColor: this.colors.indigo,
+                    borderRadius: 4
+                }]
+            },
+            options: { plugins: { legend: { display: false } } }
+        });
+    },
+
+    /* -------------------------------------------------------------
+       TAB 3: SAÚDE (Afastamentos, Férias, Advertências)
+       ------------------------------------------------------------- */
+    renderSaude(data) {
+        const content = document.getElementById('dashboard-content');
+
+        // Match filtered users
+        const activeIds = new Set(data.map(c => c.id));
+
+        const ferias = (SGE.state.ferias || []).filter(f => activeIds.has(f.employee_id));
+        const advs = (SGE.state.advertencias || []).filter(a => activeIds.has(a.employee_id));
+
+        const fAtivas = ferias.filter(f => f.status === 'ATIVA').length;
+        const fAgendadas = ferias.filter(f => f.status === 'AGENDADA').length;
+
+        const aVerbal = advs.filter(a => a.tipo === 'VERBAL').length;
+        const aEscrita = advs.filter(a => a.tipo === 'ESCRITA').length;
+        const aSusp = advs.filter(a => a.tipo === 'SUSPENSAO').length;
+
+        content.innerHTML = `
+           <div class="kpi-grid" style="margin-bottom: 24px;">
+               <div class="kpi-card" style="border-left: 4px solid var(--warning);">
+                   <div class="kpi-icon" style="color: var(--warning); background: rgba(245, 158, 11, 0.1);">
+                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                   </div>
+                   <div class="kpi-info">
+                       <h4>Férias Ativas</h4>
+                       <div class="kpi-val">${fAtivas}</div>
+                       <div class="kpi-subtext">Pessoal atualmente repousando</div>
+                   </div>
+               </div>
+
+               <div class="kpi-card" style="border-left: 4px solid var(--teal);">
+                   <div class="kpi-icon" style="color: var(--teal); background: rgba(20, 184, 166, 0.1);">
+                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                   </div>
+                   <div class="kpi-info">
+                       <h4>Férias Agendadas</h4>
+                       <div class="kpi-val">${fAgendadas}</div>
+                       <div class="kpi-subtext">Próximos períodos concedidos</div>
+                   </div>
+               </div>
+
+               <div class="kpi-card" style="border-left: 4px solid var(--rose);">
+                   <div class="kpi-icon" style="color: var(--rose); background: rgba(244, 63, 94, 0.1);">
+                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                   </div>
+                   <div class="kpi-info">
+                       <h4>Total de Advertências</h4>
+                       <div class="kpi-val">${advs.length}</div>
+                       <div class="kpi-subtext">Base histórica</div>
+                   </div>
+               </div>
+           </div>
+
+           <div class="charts-grid">
+               <div class="chart-card span-6">
+                   <div class="chart-header">
+                       <h3 class="chart-title">Gravidade Disciplinar</h3>
+                   </div>
+                   <div class="chart-container">
+                       <canvas id="chartSDAdvs"></canvas>
+                   </div>
+               </div>
+               
+               <div class="chart-card span-6">
+                   <div class="chart-header">
+                       <h3 class="chart-title">Status de Férias</h3>
+                   </div>
+                   <div class="chart-container">
+                       <canvas id="chartSDFerias"></canvas>
+                   </div>
+               </div>
+           </div>
+       `;
+
+        this.destroyAllCharts();
+        if (!this.setupChartDefaults()) return;
+
+        // Gravidade
+        this.charts.sdAdvs = new Chart(document.getElementById('chartSDAdvs'), {
+            type: 'bar',
+            data: {
+                labels: ['Verbal', 'Escrita', 'Suspensão'],
+                datasets: [{
+                    data: [aVerbal, aEscrita, aSusp],
+                    backgroundColor: [this.colors.warning, this.colors.orange || '#f97316', this.colors.danger],
+                    borderRadius: 4
+                }]
+            },
+            options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+        });
+
+        // Férias
+        this.charts.sdFerias = new Chart(document.getElementById('chartSDFerias'), {
+            type: 'polarArea',
+            data: {
+                labels: ['Ativas', 'Agendadas', 'Concluídas'],
+                datasets: [{
+                    data: [fAtivas, fAgendadas, ferias.filter(f => f.status === 'CONCLUIDA').length],
+                    backgroundColor: [
+                        'rgba(245, 158, 11, 0.7)',
+                        'rgba(20, 184, 166, 0.7)',
+                        'rgba(100, 116, 139, 0.7)'
+                    ]
+                }]
+            },
+            options: { plugins: { legend: { position: 'right' } } }
         });
     }
 };

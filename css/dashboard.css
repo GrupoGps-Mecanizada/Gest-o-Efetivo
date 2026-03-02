@@ -244,3 +244,52 @@
 .chart-card.horizontal-bar .chart-container {
     min-height: 440px;
 }
+
+/* Dashboard Tabs */
+.dashboard-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+}
+
+.dash-tab-btn {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-3);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: -1px;
+    /* Overlap border */
+}
+
+.dash-tab-btn:hover {
+    color: var(--text-2);
+}
+
+.dash-tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+.dash-tab-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+.dash-tab-content {
+    display: none;
+    animation: fadeIn 0.4s ease;
+}
+
+.dash-tab-content.active {
+    display: block;
+}
