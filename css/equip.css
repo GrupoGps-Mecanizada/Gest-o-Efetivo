@@ -1,9 +1,6 @@
 /* ===================== EQUIPMENT VIEW ===================== */
 #equip-view {
     padding: 0;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
 }
 
 /* ===================== TOOLBAR ===================== */

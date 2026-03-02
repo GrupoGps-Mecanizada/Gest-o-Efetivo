@@ -9,7 +9,7 @@ window.SGE = window.SGE || {};
 SGE.navigation = {
 
     // Valid view names for hash restoration
-    _validViews: ['viz', 'kanban', 'search', 'history', 'tabela', 'grupo', 'equip', 'settings', 'ferias', 'treinamentos'],
+    _validViews: ['viz', 'kanban', 'search', 'history', 'tabela', 'grupo', 'equip', 'settings', 'ferias', 'treinamentos', 'advertencias'],
 
     /**
      * Save scroll position for current active view before leaving
@@ -143,6 +143,15 @@ SGE.navigation = {
                 break;
             case 'settings':
                 SGE.settings.render();
+                break;
+            case 'ferias':
+                if (SGE.ferias) SGE.ferias.render();
+                break;
+            case 'treinamentos':
+                if (SGE.treinamentos) SGE.treinamentos.render();
+                break;
+            case 'advertencias':
+                if (SGE.advertencias) SGE.advertencias.render();
                 break;
         }
 
@@ -426,6 +435,9 @@ SGE.navigation = {
             case 'equip': SGE.equip.render(); break;
             case 'history': SGE.history.render(); break;
             case 'settings': SGE.settings.render(); break;
+            case 'ferias': if (SGE.ferias) SGE.ferias.render(); break;
+            case 'treinamentos': if (SGE.treinamentos) SGE.treinamentos.render(); break;
+            case 'advertencias': if (SGE.advertencias) SGE.advertencias.render(); break;
         }
     }
 };

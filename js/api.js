@@ -206,6 +206,9 @@ SGE.api = {
         if (v === 'history' && SGE.history) SGE.history.render();
         if (v === 'tabela' && SGE.viz) SGE.viz.renderTable();
         if (v === 'grupo' && SGE.viz) SGE.viz.renderGroups();
+        if (v === 'ferias' && SGE.ferias) SGE.ferias.render();
+        if (v === 'treinamentos' && SGE.treinamentos) SGE.treinamentos.render();
+        if (v === 'advertencias' && SGE.advertencias) SGE.advertencias.render();
     },
 
     /**
@@ -235,7 +238,12 @@ SGE.api = {
      * Kept for signature compatibility but does nothing
      */
     syncBackground(immediate = false) {
-        if (immediate) this.loadData(true);
+        if (immediate) {
+            this.loadData(true);
+            this.loadFerias();
+            this.loadTreinamentos();
+            this.loadAdvertencias();
+        }
     },
 
     /**
@@ -576,6 +584,204 @@ SGE.api = {
         } catch (e) {
             this.updateSyncBar(false);
             return this._handleError(e, 'Normalizar Equipamentos');
+        }
+    },
+
+    /* ──────── TREINAMENTOS API ──────── */
+
+    async loadTreinamentos() {
+        if (!window.supabase) return;
+        try {
+            const [
+                { data: catalogo, error: e1 },
+                { data: vinculos, error: e2 }
+            ] = await Promise.all([
+                supabase.from('treinamentos_catalogo').select('*').order('nome'),
+                supabase.from('colaborador_treinamentos').select('*, employees(name, matricula_gps), treinamentos_catalogo(nome)').order('created_at', { ascending: false })
+            ]);
+            if (e1) return this._handleError(e1, 'Carregar Catálogo Treinamentos');
+            if (e2) return this._handleError(e2, 'Carregar Vínculos Treinamentos');
+            SGE.state.treinamentosCatalogo = catalogo || [];
+            SGE.state.colaboradorTreinamentos = (vinculos || []).map(v => ({
+                ...v,
+                employee_name: v.employees ? v.employees.name : 'Desconhecido',
+                employee_matricula: v.employees ? (v.employees.matricula_gps || 'S/ MAT') : 'S/ MAT',
+                treinamento_nome: v.treinamentos_catalogo ? v.treinamentos_catalogo.nome : 'Desconhecido'
+            }));
+        } catch (e) {
+            console.error('SGE loadTreinamentos failed:', e);
+        }
+    },
+
+    async syncTreinamentoCatalogo(action, data) {
+        if (!window.supabase) return null;
+        this.updateSyncBar(true);
+        try {
+            let result;
+            if (action === 'create') {
+                const { data: ins, error } = await supabase.from('treinamentos_catalogo').insert({ nome: data.nome, descricao: data.descricao || null }).select();
+                if (error) throw error;
+                result = ins?.[0];
+            } else if (action === 'update') {
+                const patch = {};
+                if (data.nome !== undefined) patch.nome = data.nome;
+                if (data.descricao !== undefined) patch.descricao = data.descricao;
+                patch.updated_at = new Date();
+                const { error } = await supabase.from('treinamentos_catalogo').update(patch).eq('id', data.id);
+                if (error) throw error;
+                result = true;
+            } else if (action === 'delete') {
+                // Delete related associations first
+                await supabase.from('colaborador_treinamentos').delete().eq('treinamento_id', data.id);
+                const { error } = await supabase.from('treinamentos_catalogo').delete().eq('id', data.id);
+                if (error) throw error;
+                result = true;
+            }
+            this.updateSyncBar(false);
+            return result;
+        } catch (e) {
+            this.updateSyncBar(false);
+            return this._handleError(e, `Treinamento Catálogo (${action})`);
+        }
+    },
+
+    async syncColaboradorTreinamento(action, data) {
+        if (!window.supabase) return null;
+        this.updateSyncBar(true);
+        try {
+            let result;
+            if (action === 'create') {
+                const { data: ins, error } = await supabase.from('colaborador_treinamentos').insert({
+                    employee_id: data.employee_id,
+                    treinamento_id: data.treinamento_id,
+                    data_conclusao: data.data_conclusao || null,
+                    validade: data.validade || null,
+                    anexo_url: data.anexo_url || null
+                }).select();
+                if (error) throw error;
+                result = ins?.[0];
+            } else if (action === 'delete') {
+                const { error } = await supabase.from('colaborador_treinamentos').delete().eq('id', data.id);
+                if (error) throw error;
+                result = true;
+            }
+            this.updateSyncBar(false);
+            return result;
+        } catch (e) {
+            this.updateSyncBar(false);
+            return this._handleError(e, `Vínculo Treinamento (${action})`);
+        }
+    },
+
+    /* ──────── FÉRIAS API ──────── */
+
+    async loadFerias() {
+        if (!window.supabase) return;
+        try {
+            const { data, error } = await supabase.from('ferias').select('*, employees(name, matricula_gps)').order('data_inicio', { ascending: false });
+            if (error) return this._handleError(error, 'Carregar Férias');
+            SGE.state.ferias = (data || []).map(f => ({
+                ...f,
+                employee_name: f.employees ? f.employees.name : 'Desconhecido',
+                employee_matricula: f.employees ? (f.employees.matricula_gps || 'S/ MAT') : 'S/ MAT'
+            }));
+        } catch (e) {
+            console.error('SGE loadFerias failed:', e);
+        }
+    },
+
+    async syncFerias(action, data) {
+        if (!window.supabase) return null;
+        this.updateSyncBar(true);
+        try {
+            let result;
+            if (action === 'create') {
+                // Auto-calc return date
+                const inicio = new Date(data.data_inicio + 'T00:00:00');
+                inicio.setDate(inicio.getDate() + parseInt(data.quantidade_dias));
+                const retorno = inicio.toISOString().split('T')[0];
+
+                const { data: ins, error } = await supabase.from('ferias').insert({
+                    employee_id: data.employee_id,
+                    data_inicio: data.data_inicio,
+                    quantidade_dias: parseInt(data.quantidade_dias),
+                    data_retorno: retorno,
+                    observacao: data.observacao || null,
+                    status: data.status || 'AGENDADA'
+                }).select();
+                if (error) throw error;
+                result = ins?.[0];
+            } else if (action === 'update') {
+                const patch = { updated_at: new Date() };
+                if (data.status !== undefined) patch.status = data.status;
+                if (data.observacao !== undefined) patch.observacao = data.observacao;
+                if (data.data_inicio && data.quantidade_dias) {
+                    patch.data_inicio = data.data_inicio;
+                    patch.quantidade_dias = parseInt(data.quantidade_dias);
+                    const d = new Date(data.data_inicio + 'T00:00:00');
+                    d.setDate(d.getDate() + parseInt(data.quantidade_dias));
+                    patch.data_retorno = d.toISOString().split('T')[0];
+                }
+                const { error } = await supabase.from('ferias').update(patch).eq('id', data.id);
+                if (error) throw error;
+                result = true;
+            } else if (action === 'delete') {
+                const { error } = await supabase.from('ferias').delete().eq('id', data.id);
+                if (error) throw error;
+                result = true;
+            }
+            this.updateSyncBar(false);
+            return result;
+        } catch (e) {
+            this.updateSyncBar(false);
+            return this._handleError(e, `Férias (${action})`);
+        }
+    },
+
+    /* ──────── ADVERTÊNCIAS API ──────── */
+
+    async loadAdvertencias() {
+        if (!window.supabase) return;
+        try {
+            const { data, error } = await supabase.from('advertencias').select('*, employees(name, matricula_gps)').order('data_aplicacao', { ascending: false });
+            if (error) return this._handleError(error, 'Carregar Advertências');
+            SGE.state.advertencias = (data || []).map(a => ({
+                ...a,
+                employee_name: a.employees ? a.employees.name : 'Desconhecido',
+                employee_matricula: a.employees ? (a.employees.matricula_gps || 'S/ MAT') : 'S/ MAT'
+            }));
+        } catch (e) {
+            console.error('SGE loadAdvertencias failed:', e);
+        }
+    },
+
+    async syncAdvertencia(action, data) {
+        if (!window.supabase) return null;
+        this.updateSyncBar(true);
+        try {
+            let result;
+            if (action === 'create') {
+                const { data: ins, error } = await supabase.from('advertencias').insert({
+                    employee_id: data.employee_id,
+                    tipo: data.tipo,
+                    data_aplicacao: data.data_aplicacao || new Date().toISOString().split('T')[0],
+                    motivo: data.motivo,
+                    dias_suspensao: data.tipo === 'SUSPENSAO' ? (parseInt(data.dias_suspensao) || 0) : 0,
+                    anexo_url: data.anexo_url || null,
+                    aplicador: data.aplicador || (SGE.auth.currentUser ? (SGE.auth.currentUser.nome || SGE.auth.currentUser.usuario) : 'Sistema')
+                }).select();
+                if (error) throw error;
+                result = ins?.[0];
+            } else if (action === 'delete') {
+                const { error } = await supabase.from('advertencias').delete().eq('id', data.id);
+                if (error) throw error;
+                result = true;
+            }
+            this.updateSyncBar(false);
+            return result;
+        } catch (e) {
+            this.updateSyncBar(false);
+            return this._handleError(e, `Advertência (${action})`);
         }
     }
 };

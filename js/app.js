@@ -152,7 +152,12 @@ SGE.app = {
         // 2. If no cache, do the network load blocking the screen
         if (!usedCache) {
             setStatus('Conectando ao banco de dados Supabase...');
-            await SGE.api.loadData();
+            await Promise.all([
+                SGE.api.loadData(),
+                SGE.api.loadFerias(),
+                SGE.api.loadTreinamentos(),
+                SGE.api.loadAdvertencias()
+            ]);
             setStatus('Montando interface');
         }
 

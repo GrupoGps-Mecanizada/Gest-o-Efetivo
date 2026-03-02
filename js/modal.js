@@ -309,6 +309,45 @@ SGE.modal = {
   },
 
   /**
+   * Universal Confirm Modal
+   */
+  confirm({ title, message, confirmText = 'Confirmar', cancelText = 'Cancelar', confirmColor = 'accent', onConfirm, onCancel }) {
+    SGE.state.modalContext = 'confirm';
+
+    const header = document.querySelector('.modal-header');
+    header.innerHTML = `
+      <div class="modal-title">${title}</div>
+    `;
+
+    const body = document.querySelector('.modal-body');
+    body.innerHTML = `
+      <div style="font-size: 14px; color: var(--text-2); margin-top: 10px; line-height: 1.5;">
+        ${message}
+      </div>
+    `;
+
+    const confirmBg = confirmColor === 'danger' ? 'var(--red)' : `var(--${confirmColor})`;
+
+    const footer = document.querySelector('.modal-footer');
+    footer.innerHTML = `
+      <button class="btn-cancel" id="modal-cancel">${cancelText}</button>
+      <button class="btn-confirm" id="modal-confirm" style="background: ${confirmBg}">${confirmText}</button>
+    `;
+
+    document.getElementById('modal-cancel').addEventListener('click', () => {
+      if (onCancel) onCancel();
+      SGE.modal.close();
+    });
+
+    document.getElementById('modal-confirm').addEventListener('click', () => {
+      if (onConfirm) onConfirm();
+      SGE.modal.close();
+    });
+
+    document.getElementById('modal-overlay').classList.add('open');
+  },
+
+  /**
    * Universal Dynamic Form Modal (Replaces window.prompt)
    */
   openDynamic({ title, subtitle = '', fields, okText = 'Salvar', onConfirm, onDelete }) {
