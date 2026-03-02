@@ -143,7 +143,14 @@ SGE.ferias = {
         // Filter
         view.querySelector('#ferias-filter')?.addEventListener('input', (e) => {
             this._filterText = e.target.value;
+            const start = e.target.selectionStart;
+            const end = e.target.selectionEnd;
             this.render();
+            const newInput = view.querySelector('#ferias-filter');
+            if (newInput) {
+                newInput.focus();
+                newInput.setSelectionRange(start, end);
+            }
         });
 
         // Register button

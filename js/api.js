@@ -64,7 +64,11 @@ SGE.api = {
             { table: 'employees', event: '*' },
             { table: 'supervisors', event: '*' },
             { table: 'equipment', event: '*' },
-            { table: 'movements', event: 'INSERT' }
+            { table: 'movements', event: 'INSERT' },
+            { table: 'ferias', event: '*' },
+            { table: 'advertencias', event: '*' },
+            { table: 'treinamentos_catalogo', event: '*' },
+            { table: 'colaborador_treinamentos', event: '*' }
         ];
 
         channels.forEach(ch => {
@@ -221,7 +225,11 @@ SGE.api = {
                 colaboradores: SGE.state.colaboradores,
                 supervisores: SGE.state.supervisores,
                 movimentacoes: SGE.state.movimentacoes,
-                equipamentos: SGE.state.equipamentos
+                equipamentos: SGE.state.equipamentos,
+                treinamentosCatalogo: SGE.state.treinamentosCatalogo,
+                colaboradorTreinamentos: SGE.state.colaboradorTreinamentos,
+                ferias: SGE.state.ferias,
+                advertencias: SGE.state.advertencias
             };
             localStorage.setItem('SGE_CACHE', JSON.stringify(cachePayload));
         } catch (e) {
@@ -234,15 +242,16 @@ SGE.api = {
     },
 
     /**
-     * syncBackground is now obsolete thanks to Real-time
-     * Kept for signature compatibility but does nothing
+     * syncBackground triggers a silent fetch of all data and refreshes UI if loaded
      */
-    syncBackground(immediate = false) {
+    async syncBackground(immediate = false) {
         if (immediate) {
-            this.loadData(true);
-            this.loadFerias();
-            this.loadTreinamentos();
-            this.loadAdvertencias();
+            await Promise.all([
+                this.loadData(true),
+                this.loadFerias(),
+                this.loadTreinamentos(),
+                this.loadAdvertencias()
+            ]);
         }
     },
 

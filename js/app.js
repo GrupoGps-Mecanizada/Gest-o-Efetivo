@@ -134,13 +134,17 @@ SGE.app = {
                 if (parsed.supervisores) SGE.state.supervisores = parsed.supervisores;
                 if (parsed.movimentacoes) SGE.state.movimentacoes = parsed.movimentacoes;
                 if (parsed.equipamentos) SGE.state.equipamentos = parsed.equipamentos;
+                if (parsed.treinamentosCatalogo) SGE.state.treinamentosCatalogo = parsed.treinamentosCatalogo;
+                if (parsed.colaboradorTreinamentos) SGE.state.colaboradorTreinamentos = parsed.colaboradorTreinamentos;
+                if (parsed.ferias) SGE.state.ferias = parsed.ferias;
+                if (parsed.advertencias) SGE.state.advertencias = parsed.advertencias;
 
                 SGE.state.dataLoaded = true;
                 usedCache = true;
                 setStatus('Carregando offline (instanciado do cache)...');
 
                 // Trigger background sync after UI is ready
-                setTimeout(() => { SGE.api.syncBackground(); }, 1500);
+                setTimeout(() => { SGE.api.syncBackground(true); }, 1500);
             }
         } catch (e) {
             console.warn('Cache load failed:', e);

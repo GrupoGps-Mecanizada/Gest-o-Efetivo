@@ -135,13 +135,21 @@ SGE.advertencias = {
         // Text filter
         view.querySelector('#advertencias-filter')?.addEventListener('input', (e) => {
             this._filterText = e.target.value;
+            const start = e.target.selectionStart;
+            const end = e.target.selectionEnd;
             this.render();
+            const newInput = view.querySelector('#advertencias-filter');
+            if (newInput) {
+                newInput.focus();
+                newInput.setSelectionRange(start, end);
+            }
         });
 
         // Type filter
         view.querySelector('#advertencias-filter-tipo')?.addEventListener('change', (e) => {
             this._filterTipo = e.target.value;
             this.render();
+            view.querySelector('#advertencias-filter-tipo')?.focus();
         });
 
         // Register button
