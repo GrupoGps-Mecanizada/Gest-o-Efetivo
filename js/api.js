@@ -61,21 +61,22 @@ SGE.api = {
         };
 
         const channels = [
-            { table: 'employees', event: '*' },
-            { table: 'supervisors', event: '*' },
-            { table: 'equipment', event: '*' },
-            { table: 'movements', event: 'INSERT' },
-            { table: 'ferias', event: '*' },
-            { table: 'advertencias', event: '*' },
-            { table: 'treinamentos_catalogo', event: '*' },
-            { table: 'colaborador_treinamentos', event: '*' }
+            { schema: 'gps_mec', table: 'efetivo_gps_mec_colaboradores', event: '*' },
+            { schema: 'gps_mec', table: 'efetivo_gps_mec_supervisores', event: '*' },
+            { schema: 'gps_mec', table: 'efetivo_gps_mec_equipamentos', event: '*' },
+            { schema: 'gps_mec', table: 'efetivo_gps_mec_movimentacoes', event: 'INSERT' },
+            { schema: 'gps_mec', table: 'efetivo_gps_mec_ferias', event: '*' },
+            { schema: 'gps_mec', table: 'efetivo_gps_mec_advertencias', event: '*' },
+            { schema: 'gps_mec', table: 'efetivo_gps_mec_catalogo_treinamentos', event: '*' },
+            { schema: 'gps_mec', table: 'efetivo_gps_mec_colaborador_treinamentos', event: '*' },
+            { schema: 'gps_compartilhado', table: 'gps_configuracoes_sistema', event: '*' }
         ];
 
         channels.forEach(ch => {
             const subscription = supabase
-                .channel(`public:${ch.table}`)
-                .on('postgres_changes', { event: ch.event, schema: 'public', table: ch.table }, (payload) => {
-                    console.info(`SGE Real-time: Change in ${ch.table}`, payload);
+                .channel(`realtime:${ch.schema}:${ch.table}`)
+                .on('postgres_changes', { event: ch.event, schema: ch.schema, table: ch.table }, (payload) => {
+                    console.info(`SGE Real-time: Change in ${ch.schema}.${ch.table}`, payload);
                     debouncedReload();
                 })
                 .subscribe();
@@ -107,11 +108,11 @@ SGE.api = {
                 { data: equipment, error: errEq },
                 { data: configs, error: errCfg }
             ] = await Promise.all([
-                supabase.from('employees').select('id, name, function, cr, regime, status, telefone, matricula_usiminas, matricula_gps, category, supervisor_id, equipment_id, supervisors(name), equipment(sigla, numero)'),
-                supabase.from('supervisors').select('*').order('name'),
-                supabase.from('movements').select('*, employees(name, matricula_gps), from_sup:supervisors!movements_from_supervisor_id_fkey(name), to_sup:supervisors!movements_to_supervisor_id_fkey(name)').order('created_at', { ascending: false }).limit(100),
-                supabase.from('equipment').select('*'),
-                supabase.from('app_config').select('*')
+                supabase.schema('gps_mec').from('efetivo_gps_mec_colaboradores').select('id, name, function, cr, regime, status, telefone, matricula_usiminas, matricula_gps, category, supervisor_id, equipment_id, supervisors:efetivo_gps_mec_supervisores(name), equipment:efetivo_gps_mec_equipamentos(sigla, numero)'),
+                supabase.schema('gps_mec').from('efetivo_gps_mec_supervisores').select('*').order('name'),
+                supabase.schema('gps_mec').from('efetivo_gps_mec_movimentacoes').select('*, employees:efetivo_gps_mec_colaboradores(name, matricula_gps), from_sup:efetivo_gps_mec_supervisores!movements_from_supervisor_id_fkey(name), to_sup:efetivo_gps_mec_supervisores!movements_to_supervisor_id_fkey(name)').order('created_at', { ascending: false }).limit(100),
+                supabase.schema('gps_mec').from('efetivo_gps_mec_equipamentos').select('*'),
+                supabase.schema('gps_compartilhado').from('gps_configuracoes_sistema').select('*').eq('sistema', 'EFETIVO').eq('setor', 'MEC')
             ]);
 
             if (!silent) this.updateSyncBar(false);
@@ -178,7 +179,18 @@ SGE.api = {
             // Load configurations
             if (configs) {
                 configs.forEach(cfg => {
-                    if (SGE.CONFIG[cfg.key]) SGE.CONFIG[cfg.key] = cfg.value;
+                    // Mapeia de volta para as chaves antigas para não quebrar o frontend
+                    const legacyKeys = {
+                        'tipos_equipamento': 'equipTipos',
+                        'funcoes': 'funcoes',
+                        'motivos_movimentacao': 'motivos',
+                        'regimes': 'regimes',
+                        'status_colaborador': 'statuses',
+                        'mapa_turnos': 'turnoMap',
+                        'ordem_kanban': 'ordemKanban'
+                    };
+                    const mappedKey = legacyKeys[cfg.chave] || cfg.chave;
+                    if (SGE.CONFIG[mappedKey] !== undefined) SGE.CONFIG[mappedKey] = cfg.valor;
                 });
             }
 
@@ -268,9 +280,9 @@ SGE.api = {
             const targetSup = SGE.state.supervisores.find(s => s.nome === movData.supervisor_destino);
             const sourceSup = SGE.state.supervisores.find(s => s.nome === movData.supervisor_origem);
 
-            // 1. Update Employee
             const { error: errEmp } = await supabase
-                .from('employees')
+                .schema('gps_mec')
+                .from('efetivo_gps_mec_colaboradores')
                 .update({
                     supervisor_id: targetSup ? targetSup.id : null,
                     regime: movData.regime_destino,
@@ -286,7 +298,8 @@ SGE.api = {
                 || 'Sistema';
 
             const { error: errMov } = await supabase
-                .from('movements')
+                .schema('gps_mec')
+                .from('efetivo_gps_mec_movimentacoes')
                 .insert({
                     employee_id: movData.colaborador_id,
                     from_supervisor_id: sourceSup ? sourceSup.id : null,
@@ -315,7 +328,8 @@ SGE.api = {
 
         try {
             const { data, error } = await supabase
-                .from('employees')
+                .schema('gps_mec')
+                .from('efetivo_gps_mec_colaboradores')
                 .insert({
                     name: colData.nome,
                     function: colData.funcao,
@@ -341,7 +355,8 @@ SGE.api = {
 
         try {
             const { error } = await supabase
-                .from('employees')
+                .schema('gps_mec')
+                .from('efetivo_gps_mec_colaboradores')
                 .update({
                     name: colData.nome,
                     function: colData.funcao,
@@ -400,7 +415,7 @@ SGE.api = {
                     patch.supervisor_id = sup ? sup.id : null;
                 }
 
-                return supabase.from('employees').update(patch).eq('id', u.id);
+                return supabase.schema('gps_mec').from('efetivo_gps_mec_colaboradores').update(patch).eq('id', u.id);
             });
 
             const results = await Promise.all(promises);
@@ -426,9 +441,22 @@ SGE.api = {
         if (!window.supabase) return null;
 
         try {
+            // Mapear chave antiga para a nova para persistência
+            const newKeys = {
+                'equipTipos': 'tipos_equipamento',
+                'funcoes': 'funcoes',
+                'motivos': 'motivos_movimentacao',
+                'regimes': 'regimes',
+                'statuses': 'status_colaborador',
+                'turnoMap': 'mapa_turnos',
+                'ordemKanban': 'ordem_kanban'
+            };
+            const mappedKey = newKeys[configKey] || configKey;
+
             const { error } = await supabase
-                .from('app_config')
-                .upsert({ key: configKey, value }, { onConflict: 'key' });
+                .schema('gps_compartilhado')
+                .from('gps_configuracoes_sistema')
+                .upsert({ sistema: 'EFETIVO', setor: 'MEC', chave: mappedKey, valor: value });
 
             if (error) throw error;
             return true;
@@ -451,7 +479,8 @@ SGE.api = {
 
             if (action === 'create') {
                 const { data: inserted, error } = await supabase
-                    .from('supervisors')
+                    .schema('gps_mec')
+                    .from('efetivo_gps_mec_supervisores')
                     .insert({
                         name: data.nome,
                         default_regime: data.regime_padrao || 'Misto',
@@ -468,7 +497,8 @@ SGE.api = {
 
                 if (Object.keys(patch).length > 0) {
                     const { error } = await supabase
-                        .from('supervisors')
+                        .schema('gps_mec')
+                        .from('efetivo_gps_mec_supervisores')
                         .update(patch)
                         .eq('id', data.id);
                     if (error) throw error;
@@ -476,7 +506,8 @@ SGE.api = {
                 result = true;
             } else if (action === 'delete') {
                 const { error } = await supabase
-                    .from('supervisors')
+                    .schema('gps_mec')
+                    .from('efetivo_gps_mec_supervisores')
                     .delete()
                     .eq('id', data.id);
                 if (error) throw error;
@@ -505,7 +536,8 @@ SGE.api = {
 
             if (action === 'create') {
                 const { data: inserted, error } = await supabase
-                    .from('equipment')
+                    .schema('gps_mec')
+                    .from('efetivo_gps_mec_equipamentos')
                     .insert({
                         sigla: data.sigla,
                         numero: data.numero || null,
@@ -524,7 +556,8 @@ SGE.api = {
 
                 if (Object.keys(patch).length > 0) {
                     const { error } = await supabase
-                        .from('equipment')
+                        .schema('gps_mec')
+                        .from('efetivo_gps_mec_equipamentos')
                         .update(patch)
                         .eq('id', data.id);
                     if (error) throw error;
@@ -532,7 +565,8 @@ SGE.api = {
                 result = true;
             } else if (action === 'delete') {
                 const { error } = await supabase
-                    .from('equipment')
+                    .schema('gps_mec')
+                    .from('efetivo_gps_mec_equipamentos')
                     .delete()
                     .eq('id', data.id);
                 if (error) throw error;
@@ -580,7 +614,8 @@ SGE.api = {
 
             if (rows.length > 0) {
                 const { error } = await supabase
-                    .from('equipment')
+                    .schema('gps_mec')
+                    .from('efetivo_gps_mec_equipamentos')
                     .upsert(rows, { onConflict: 'sigla,numero' });
                 if (error) throw error;
                 updated = rows.length;
@@ -605,8 +640,8 @@ SGE.api = {
                 { data: catalogo, error: e1 },
                 { data: vinculos, error: e2 }
             ] = await Promise.all([
-                supabase.from('treinamentos_catalogo').select('*').order('nome'),
-                supabase.from('colaborador_treinamentos').select('*, employees(name, matricula_gps), treinamentos_catalogo(nome)').order('created_at', { ascending: false })
+                supabase.schema('gps_mec').from('efetivo_gps_mec_catalogo_treinamentos').select('*').order('nome'),
+                supabase.schema('gps_mec').from('efetivo_gps_mec_colaborador_treinamentos').select('*, employees:efetivo_gps_mec_colaboradores(name, matricula_gps), treinamentos_catalogo:efetivo_gps_mec_catalogo_treinamentos(nome)').order('created_at', { ascending: false })
             ]);
             if (e1) return this._handleError(e1, 'Carregar Catálogo Treinamentos');
             if (e2) return this._handleError(e2, 'Carregar Vínculos Treinamentos');
@@ -628,7 +663,7 @@ SGE.api = {
         try {
             let result;
             if (action === 'create') {
-                const { data: ins, error } = await supabase.from('treinamentos_catalogo').insert({
+                const { data: ins, error } = await supabase.schema('gps_mec').from('efetivo_gps_mec_catalogo_treinamentos').insert({
                     nome: data.nome,
                     descricao: data.descricao || null,
                     validade_meses: data.validade_meses ? parseInt(data.validade_meses) : null
@@ -641,13 +676,13 @@ SGE.api = {
                 if (data.descricao !== undefined) patch.descricao = data.descricao;
                 if (data.validade_meses !== undefined) patch.validade_meses = data.validade_meses ? parseInt(data.validade_meses) : null;
                 patch.updated_at = new Date();
-                const { error } = await supabase.from('treinamentos_catalogo').update(patch).eq('id', data.id);
+                const { error } = await supabase.schema('gps_mec').from('efetivo_gps_mec_catalogo_treinamentos').update(patch).eq('id', data.id);
                 if (error) throw error;
                 result = true;
             } else if (action === 'delete') {
                 // Delete related associations first
-                await supabase.from('colaborador_treinamentos').delete().eq('treinamento_id', data.id);
-                const { error } = await supabase.from('treinamentos_catalogo').delete().eq('id', data.id);
+                await supabase.schema('gps_mec').from('efetivo_gps_mec_colaborador_treinamentos').delete().eq('treinamento_id', data.id);
+                const { error } = await supabase.schema('gps_mec').from('efetivo_gps_mec_catalogo_treinamentos').delete().eq('id', data.id);
                 if (error) throw error;
                 // Synchronously update local state for instant feedback
                 if (SGE.state.treinamentosCatalogo) {
@@ -672,7 +707,7 @@ SGE.api = {
         try {
             let result;
             if (action === 'create') {
-                const { data: ins, error } = await supabase.from('colaborador_treinamentos').insert({
+                const { data: ins, error } = await supabase.schema('gps_mec').from('efetivo_gps_mec_colaborador_treinamentos').insert({
                     employee_id: data.employee_id,
                     treinamento_id: data.treinamento_id,
                     data_conclusao: data.data_conclusao || null,
@@ -682,7 +717,7 @@ SGE.api = {
                 if (error) throw error;
                 result = ins?.[0];
             } else if (action === 'delete') {
-                const { error } = await supabase.from('colaborador_treinamentos').delete().eq('id', data.id);
+                const { error } = await supabase.schema('gps_mec').from('efetivo_gps_mec_colaborador_treinamentos').delete().eq('id', data.id);
                 if (error) throw error;
                 // Synchronously update local state for instant feedback
                 if (SGE.state.colaboradorTreinamentos) {
@@ -710,7 +745,7 @@ SGE.api = {
                 anexo_url: data.anexo_url || null
             }));
 
-            const { data: ins, error } = await supabase.from('colaborador_treinamentos').insert(inserts).select();
+            const { data: ins, error } = await supabase.schema('gps_mec').from('efetivo_gps_mec_colaborador_treinamentos').insert(inserts).select();
             if (error) throw error;
 
             this.updateSyncBar(false);
@@ -726,7 +761,7 @@ SGE.api = {
     async loadFerias() {
         if (!window.supabase) return;
         try {
-            const { data, error } = await supabase.from('ferias').select('*, employees(name, matricula_gps)').order('data_inicio', { ascending: false });
+            const { data, error } = await supabase.schema('gps_mec').from('efetivo_gps_mec_ferias').select('*, employees:efetivo_gps_mec_colaboradores(name, matricula_gps)').order('data_inicio', { ascending: false });
             if (error) return this._handleError(error, 'Carregar Férias');
             SGE.state.ferias = (data || []).map(f => ({
                 ...f,
@@ -749,7 +784,7 @@ SGE.api = {
                 inicio.setDate(inicio.getDate() + parseInt(data.quantidade_dias));
                 const retorno = inicio.toISOString().split('T')[0];
 
-                const { data: ins, error } = await supabase.from('ferias').insert({
+                const { data: ins, error } = await supabase.schema('gps_mec').from('efetivo_gps_mec_ferias').insert({
                     employee_id: data.employee_id,
                     data_inicio: data.data_inicio,
                     quantidade_dias: parseInt(data.quantidade_dias),
@@ -770,11 +805,11 @@ SGE.api = {
                     d.setDate(d.getDate() + parseInt(data.quantidade_dias));
                     patch.data_retorno = d.toISOString().split('T')[0];
                 }
-                const { error } = await supabase.from('ferias').update(patch).eq('id', data.id);
+                const { error } = await supabase.schema('gps_mec').from('efetivo_gps_mec_ferias').update(patch).eq('id', data.id);
                 if (error) throw error;
                 result = true;
             } else if (action === 'delete') {
-                const { error } = await supabase.from('ferias').delete().eq('id', data.id);
+                const { error } = await supabase.schema('gps_mec').from('efetivo_gps_mec_ferias').delete().eq('id', data.id);
                 if (error) throw error;
                 result = true;
             }
@@ -791,7 +826,7 @@ SGE.api = {
     async loadAdvertencias() {
         if (!window.supabase) return;
         try {
-            const { data, error } = await supabase.from('advertencias').select('*, employees(name, matricula_gps)').order('data_aplicacao', { ascending: false });
+            const { data, error } = await supabase.schema('gps_mec').from('efetivo_gps_mec_advertencias').select('*, employees:efetivo_gps_mec_colaboradores(name, matricula_gps)').order('data_aplicacao', { ascending: false });
             if (error) return this._handleError(error, 'Carregar Advertências');
             SGE.state.advertencias = (data || []).map(a => ({
                 ...a,
@@ -809,7 +844,7 @@ SGE.api = {
         try {
             let result;
             if (action === 'create') {
-                const { data: ins, error } = await supabase.from('advertencias').insert({
+                const { data: ins, error } = await supabase.schema('gps_mec').from('efetivo_gps_mec_advertencias').insert({
                     employee_id: data.employee_id,
                     tipo: data.tipo,
                     data_aplicacao: data.data_aplicacao || new Date().toISOString().split('T')[0],
@@ -821,7 +856,7 @@ SGE.api = {
                 if (error) throw error;
                 result = ins?.[0];
             } else if (action === 'delete') {
-                const { error } = await supabase.from('advertencias').delete().eq('id', data.id);
+                const { error } = await supabase.schema('gps_mec').from('efetivo_gps_mec_advertencias').delete().eq('id', data.id);
                 if (error) throw error;
                 result = true;
             }
