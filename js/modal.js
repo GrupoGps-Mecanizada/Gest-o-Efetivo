@@ -169,7 +169,13 @@ SGE.modal = {
         </div>
         <div class="form-field" style="grid-column:1/-1">
           <label>Equipamento</label>
-          <input type="text" id="edit-equipamento" value="${colaborador.equipamento || ''}" />
+          <select id="edit-equipamento">
+            <option value="">Sem Equipamento</option>
+            ${(SGE.state.equipamentos || []).map(e => {
+      const equipName = `${e.sigla}-${e.numero || ''}`.replace(/-$/, '');
+      return `<option value="${equipName}" ${equipName === colaborador.equipamento ? 'selected' : ''}>${equipName}</option>`;
+    }).join('')}
+          </select>
         </div>
         <div class="form-field">
           <label>Telefone</label>

@@ -19,119 +19,71 @@ SGE.ferias = {
 
         const hoje = new Date();
         const historico = SGE.state.ferias || [];
-        const filteredHistorico = this._filterText ?
+        const filtered = this._filterText ?
             historico.filter(f =>
                 (f.employee_name || '').toUpperCase().includes(this._filterText.toUpperCase()) ||
                 (f.employee_matricula || '').toUpperCase().includes(this._filterText.toUpperCase())
             ) : historico;
 
-        const ativas = historico.filter(f => f.status !== 'CONCLUIDA' && f.status !== 'CANCELADA');
-
         view.innerHTML = `
-            <div class="ferias-header">
-                <h2 class="ferias-title">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px">
-                        <path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
-                        <path d="M12 4v1M17.66 6.34l-.7.7M20 12h-1M17.66 17.66l-.7-.7M12 20v-1M6.34 17.66l.7-.7M4 12h1M6.34 6.34l.7.7"/>
-                    </svg>
-                    Gestão de Férias
-                </h2>
-                <button class="ferias-btn ferias-btn-primary" id="btn-registrar-ferias">
-                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v14M1 8h14"/></svg>
-                    Registrar Férias
-                </button>
-            </div>
+            <div id="history-view" style="display:flex; flex-direction:column; height:100%;">
+                <div class="history-filters">
+                    <input type="text" class="history-filter-input" id="ferias-filter" placeholder="Filtrar por colaborador..." value="${this._filterText}" style="width: 280px;" />
+                    
+                    <button id="btn-registrar-ferias" style="margin-left: auto; padding: 7px 14px; background: var(--accent); border: none; border-radius: 6px; color: #fff; font-family: var(--font-display); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width: 14px; height: 14px;"><path d="M8 1v14M1 8h14"/></svg>
+                        Registrar Férias
+                    </button>
+                </div>
 
-            <!-- Active Vacations Panel -->
-            <div class="ferias-section">
-                <div class="ferias-section-title">Férias Ativas & Agendadas (${ativas.length})</div>
-                <div class="ferias-active-grid">
-                    ${ativas.length === 0 ? '<div class="ferias-empty">Nenhuma férias ativa ou agendada no momento</div>' :
-                ativas.map(f => {
-                    const inicio = new Date(f.data_inicio + 'T00:00:00');
-                    const retorno = new Date(f.data_retorno + 'T00:00:00');
-                    const diffMs = retorno - hoje;
-                    const diasRestantes = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
-                    const totalDias = f.quantidade_dias;
-                    const diasUsados = Math.max(0, totalDias - diasRestantes);
-                    const progresso = totalDias > 0 ? Math.min(100, Math.round((diasUsados / totalDias) * 100)) : 0;
-
-                    const isActive = f.status === 'EM_ANDAMENTO' || (inicio <= hoje && retorno >= hoje);
-                    const statusLabel = isActive ? 'Em Andamento' : 'Agendada';
-                    const statusClass = isActive ? 'ferias-card-status-active' : 'ferias-card-status-scheduled';
+                <div id="history-table-wrap">
+                    <table id="history-table">
+                        <thead>
+                            <tr>
+                                <th>Colaborador</th>
+                                <th>ID Efetivo</th>
+                                <th>Início</th>
+                                <th>Retorno</th>
+                                <th>Dias</th>
+                                <th>Status</th>
+                                <th style="text-align: center;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filtered.length === 0 ? '<tr><td colspan="7" style="text-align: center; color: var(--text-3); padding: 20px;">Nenhum registro encontrado.</td></tr>' :
+                filtered.map(f => {
+                    const stClass = f.status === 'CONCLUIDA' ? 'ferias-badge-done' : (f.status === 'CANCELADA' ? 'ferias-badge-cancelled' : (f.status === 'EM_ANDAMENTO' ? 'ferias-badge-active' : 'ferias-badge-scheduled'));
+                    const isAtiva = f.status === 'EM_ANDAMENTO' || f.status === 'AGENDADA';
 
                     return `
-                            <div class="ferias-card ${isActive ? 'ferias-card-active' : 'ferias-card-scheduled'}">
-                                <div class="ferias-card-top">
-                                    <div class="ferias-card-name">${f.employee_name}</div>
-                                    <span class="ferias-card-status ${statusClass}">${statusLabel}</span>
-                                </div>
-                                <div class="ferias-card-dates">
-                                    <div class="ferias-card-date-item">
-                                        <span class="ferias-card-date-label">Início</span>
-                                        <span class="ferias-card-date-value">${this._formatDateBR(f.data_inicio)}</span>
-                                    </div>
-                                    <div class="ferias-card-date-arrow">→</div>
-                                    <div class="ferias-card-date-item">
-                                        <span class="ferias-card-date-label">Retorno</span>
-                                        <span class="ferias-card-date-value">${this._formatDateBR(f.data_retorno)}</span>
-                                    </div>
-                                </div>
-                                <div class="ferias-card-progress-bar">
-                                    <div class="ferias-card-progress-fill" style="width:${progresso}%"></div>
-                                </div>
-                                <div class="ferias-card-bottom">
-                                    <span class="ferias-card-days">${totalDias} dias</span>
-                                    <span class="ferias-card-countdown">${diasRestantes > 0 ? `${diasRestantes} dias restantes` : 'Retorno hoje!'}</span>
-                                </div>
-                                <div class="ferias-card-actions">
-                                    ${isActive && f.status !== 'EM_ANDAMENTO' ? `<button class="ferias-mini-btn" data-action="start" data-id="${f.id}" title="Marcar como em andamento">▶ Iniciar</button>` : ''}
-                                    <button class="ferias-mini-btn" data-action="complete" data-id="${f.id}" title="Concluir férias">✓ Concluir</button>
-                                    <button class="ferias-mini-btn ferias-mini-btn-danger" data-action="delete" data-id="${f.id}" title="Excluir">✕</button>
-                                </div>
-                            </div>`;
-                }).join('')}
-                </div>
-            </div>
-
-            <!-- History Table -->
-            <div class="ferias-section">
-                <div class="ferias-section-title">Histórico de Férias (${historico.length})</div>
-                <div class="ferias-filter-bar">
-                    <input type="text" class="ferias-filter-input" id="ferias-filter" placeholder="Filtrar por colaborador..." value="${this._filterText}" />
-                </div>
-                <div class="ferias-list">
-                    ${filteredHistorico.length === 0 ?
-                '<div class="no-data-message"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-18a8 8 0 100 16 8 8 0 000-16z"/><path d="M9 9l6 6m0-6l-6 6"/></svg><h3>Nenhum registro</h3><p>Não há histórico para o filtro atual.</p></div>' :
-                filteredHistorico.map(f => {
-                    const stClass = f.status === 'CONCLUIDA' ? 'ferias-badge-done' : 'ferias-badge-cancelled';
-                    return `
-                                <div class="ferias-row">
-                                    <div class="ferias-row-main">
-                                        <div class="ferias-row-title">
-                                            ${f.employee_name} 
-                                            <span class="ferias-status-badge ${stClass}">${f.status || 'CONCLUIDA'}</span>
+                                <tr>
+                                    <td style="font-weight: 500; color: var(--text-1);">${f.employee_name}</td>
+                                    <td>${f.employee_matricula || 'N/A'}</td>
+                                    <td>${this._formatDateBR(f.data_inicio)}</td>
+                                    <td>${this._formatDateBR(f.data_retorno)}</td>
+                                    <td>${f.quantidade_dias}</td>
+                                    <td><span class="ferias-status-badge ${stClass}" style="font-size: 10px; padding: 3px 8px; border-radius: 12px;">${f.status.replace('_', ' ')}</span></td>
+                                    <td style="text-align: center;">
+                                        <div style="display: flex; gap: 8px; justify-content: center;">
+                                            ${(f.status === 'AGENDADA') ?
+                            `<button class="ferias-icon-btn" data-action="start" data-id="${f.id}" title="Iniciar" style="padding: 4px; background:var(--bg-2); border-radius:6px; cursor:pointer; border:none; color:var(--text-2);">
+                                                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px;"><path d="M4 2v12l10-6z"/></svg>
+                                                </button>` : ''}
+                                            ${isAtiva ?
+                            `<button class="ferias-icon-btn" data-action="complete" data-id="${f.id}" title="Concluir" style="padding: 4px; background:var(--bg-2); border-radius:6px; cursor:pointer; border:none; color:var(--text-2);">
+                                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px;"><path d="M13 4L6 11 3 8"/></svg>
+                                            </button>` : ''}
+                                            
+                                            <button class="ferias-icon-btn ferias-icon-btn-danger" data-action="delete" data-id="${f.id}" title="Excluir" style="padding: 4px; background:var(--bg-2); border-radius:6px; cursor:pointer; border:none; color:var(--red);">
+                                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px;"><path d="M4 12V3h8v9a2 2 0 01-2 2H6a2 2 0 01-2-2z"/><path d="M2 3h12M6 1v2M10 1v2M6 7v6M10 7v6"/></svg>
+                                            </button>
                                         </div>
-                                        <div class="ferias-row-desc">ID: ${f.employee_matricula} ${f.observacao && f.observacao !== '—' ? '• ' + f.observacao : ''}</div>
-                                    </div>
-                                    <div class="ferias-row-meta">
-                                        <div class="ferias-meta-item">
-                                            <span class="ferias-meta-label">Início</span>
-                                            <span class="ferias-meta-val">${this._formatDateBR(f.data_inicio)}</span>
-                                        </div>
-                                        <div class="ferias-meta-item">
-                                            <span class="ferias-meta-label">Termino</span>
-                                            <span class="ferias-meta-val">${this._formatDateBR(f.data_retorno)}</span>
-                                        </div>
-                                        <div class="ferias-meta-item">
-                                            <span class="ferias-meta-label">Dias</span>
-                                            <span class="ferias-meta-val" style="color:var(--accent)">${f.quantidade_dias} dias</span>
-                                        </div>
-                                    </div>
-                                </div>
+                                    </td>
+                                </tr>
                             `;
-                }).join('')
-            }
+                }).join('')}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         `;

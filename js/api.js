@@ -354,6 +354,20 @@ SGE.api = {
         this.updateSyncBar(true);
 
         try {
+            // Handle supervisor name → ID lookup
+            const sup = SGE.state.supervisores.find(s => s.nome === colData.supervisor);
+            const supId = sup ? sup.id : (colData.supervisor_id || null);
+
+            // Handle equipment string → ID lookup
+            let equipId = null;
+            if (colData.equipamento && colData.equipamento !== 'SEM EQUIPAMENTO') {
+                const parsed = SGE.equip ? SGE.equip.parseEquip(colData.equipamento) : null;
+                if (parsed) {
+                    const eqObj = SGE.state.equipamentos.find(eq => eq.sigla === parsed.sigla && eq.numero === parsed.numero);
+                    if (eqObj) equipId = eqObj.id;
+                }
+            }
+
             const { error } = await supabase
                 .schema('gps_mec')
                 .from('efetivo_gps_mec_colaboradores')
@@ -366,8 +380,8 @@ SGE.api = {
                     telefone: colData.telefone,
                     matricula_usiminas: colData.matricula_usiminas,
                     matricula_gps: colData.matricula_gps,
-                    supervisor_id: colData.supervisor_id,
-                    equipment_id: colData.equipment_id,
+                    supervisor_id: supId,
+                    equipment_id: equipId,
                     updated_at: new Date()
                 })
                 .eq('id', colData.id);
@@ -413,6 +427,19 @@ SGE.api = {
                 if (u.supervisor !== undefined) {
                     const sup = SGE.state.supervisores.find(s => s.nome === u.supervisor);
                     patch.supervisor_id = sup ? sup.id : null;
+                }
+
+                // Handle equipment string → ID lookup
+                if (u.equipamento !== undefined) {
+                    if (u.equipamento === 'SEM EQUIPAMENTO' || !u.equipamento) {
+                        patch.equipment_id = null;
+                    } else {
+                        const parsed = SGE.equip ? SGE.equip.parseEquip(u.equipamento) : null;
+                        if (parsed) {
+                            const eqObj = SGE.state.equipamentos.find(eq => eq.sigla === parsed.sigla && eq.numero === parsed.numero);
+                            if (eqObj) patch.equipment_id = eqObj.id;
+                        }
+                    }
                 }
 
                 return supabase.schema('gps_mec').from('efetivo_gps_mec_colaboradores').update(patch).eq('id', u.id);
@@ -716,6 +743,19 @@ SGE.api = {
                 }).select();
                 if (error) throw error;
                 result = ins?.[0];
+            } else if (action === 'update' || action === 'renovar') {
+                const patch = {
+                    updated_at: new Date()
+                };
+                if (data.data_conclusao !== undefined) patch.data_conclusao = data.data_conclusao;
+                if (data.validade !== undefined) patch.validade = data.validade;
+                if (data.revogado !== undefined) patch.revogado = data.revogado;
+                if (data.data_revogacao !== undefined) patch.data_revogacao = data.data_revogacao;
+                if (data.motivo_revogacao !== undefined) patch.motivo_revogacao = data.motivo_revogacao;
+
+                const { error } = await supabase.schema('gps_mec').from('efetivo_gps_mec_colaborador_treinamentos').update(patch).eq('id', data.id);
+                if (error) throw error;
+                result = true;
             } else if (action === 'delete') {
                 const { error } = await supabase.schema('gps_mec').from('efetivo_gps_mec_colaborador_treinamentos').delete().eq('id', data.id);
                 if (error) throw error;

@@ -8,24 +8,24 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
   <!-- CSS Modules -->
-  <link rel="stylesheet" href="css/variables.css" />
-  <link rel="stylesheet" href="css/base.css" />
-  <link rel="stylesheet" href="css/auth.css" />
-  <link rel="stylesheet" href="css/topbar.css" />
-  <link rel="stylesheet" href="css/filterbar.css" />
-  <link rel="stylesheet" href="css/kanban.css" />
-  <link rel="stylesheet" href="css/search.css" />
-  <link rel="stylesheet" href="css/history.css" />
-  <link rel="stylesheet" href="css/settings.css?v=3" />
-  <link rel="stylesheet" href="css/viz.css" />
-  <link rel="stylesheet" href="css/dashboard.css" />
-  <link rel="stylesheet" href="css/equip.css?v=3" />
-  <link rel="stylesheet" href="css/drawer.css" />
-  <link rel="stylesheet" href="css/modal.css" />
-  <link rel="stylesheet" href="css/toast.css" />
-  <link rel="stylesheet" href="css/ferias.css?v=2" />
-  <link rel="stylesheet" href="css/treinamentos.css?v=2" />
-  <link rel="stylesheet" href="css/advertencias.css?v=2" />
+  <link rel="stylesheet" href="css/variables.css?v=1.0.1" />
+  <link rel="stylesheet" href="css/base.css?v=1.0.1" />
+  <link rel="stylesheet" href="css/auth.css?v=1.0.1" />
+  <link rel="stylesheet" href="css/topbar.css?v=1.0.1" />
+  <link rel="stylesheet" href="css/filterbar.css?v=1.0.1" />
+  <link rel="stylesheet" href="css/kanban.css?v=1.0.1" />
+  <link rel="stylesheet" href="css/search.css?v=1.0.1" />
+  <link rel="stylesheet" href="css/history.css?v=1.0.1" />
+  <link rel="stylesheet" href="css/settings.css?v=1.0.1" />
+  <link rel="stylesheet" href="css/viz.css?v=1.0.1" />
+  <link rel="stylesheet" href="css/dashboard.css?v=1.0.1" />
+  <link rel="stylesheet" href="css/equip.css?v=1.0.1" />
+  <link rel="stylesheet" href="css/drawer.css?v=1.0.1" />
+  <link rel="stylesheet" href="css/modal.css?v=1.0.1" />
+  <link rel="stylesheet" href="css/toast.css?v=1.0.1" />
+  <link rel="stylesheet" href="css/ferias.css?v=1.0.1" />
+  <link rel="stylesheet" href="css/treinamentos.css?v=1.0.1" />
+  <link rel="stylesheet" href="css/advertencias.css?v=1.0.1" />
 </head>
 
 <body>
@@ -133,11 +133,11 @@
       <div id="nav-menu-overlay" class="nav-menu-overlay hidden">
         <div class="nav-menu-panel">
           <div class="nav-menu-header"
-            style="justify-content: flex-start; padding: 24px 20px; position: relative; align-items: center; min-height: 80px;">
+            style="justify-content: flex-start; padding: 20px 16px; position: relative; align-items: center; min-height: 90px;">
             <div class="sidebar-logo" id="logo-home"
-              style="display: flex; justify-content: flex-start; align-items: center; cursor: pointer; width: 100%; max-width: 320px;"
+              style="display: flex; justify-content: flex-start; align-items: center; cursor: pointer; width: 100%;"
               title="Voltar ao Dashboard">
-              <svg width="100%" height="auto" viewBox="40 50 530 120" xmlns="http://www.w3.org/2000/svg">
+              <svg width="100%" height="auto" viewBox="30 45 550 130" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                   <style type="text/css">
                     @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
@@ -149,17 +149,16 @@
                 </defs>
                 <g text-anchor="start">
                   <text x="50" y="110" font-size="42" font-weight="700" fill="#002D5C">Grupo GPS</text>
-                  <line x1="300" y1="60" x2="300" y2="150" stroke="#757575" stroke-width="1.5" />
+                  <line x1="300" y1="55" x2="300" y2="155" stroke="#757575" stroke-width="1.5" />
                   <g transform="translate(315, 0)">
                     <text x="0" y="102" font-size="30" font-weight="600" fill="#1E6B8C">MECANIZADA</text>
                     <text x="0" y="137" font-size="20" font-weight="400" fill="#757575">CONTROLE DE EFETIVO</text>
-                    <text x="235" y="157" font-size="12" font-weight="400" fill="#757575" text-anchor="end">By
+                    <text x="235" y="158" font-size="12" font-weight="400" fill="#757575" text-anchor="end">By
                       SGE</text>
                   </g>
                 </g>
               </svg>
             </div>
-
           </div>
           <div class="nav-menu-body" style="padding-top: 32px;">
             <button class="nav-menu-item" data-view="viz">
@@ -240,6 +239,16 @@
 
         <div id="topbar-user" style="display:none;"></div>
 
+        <!-- Export Button -->
+        <button id="topbar-export-btn" class="topbar-icon-btn" title="Exportar Dados" aria-label="Exportar Dados">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+        </button>
+
         <!-- Filter Dropdown Button -->
         <button id="filter-toggle-btn" class="topbar-icon-btn filter-btn" title="Filtros" aria-label="Abrir Filtros">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -248,7 +257,6 @@
           </svg>
           <span id="filter-count-badge" class="filter-count-badge hidden">0</span>
         </button>
-
 
       </div>
     </div>
@@ -485,27 +493,27 @@
   <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 
   <!-- JS Modules (order matters — dependencies first) -->
-  <script src="js/config.js"></script>
-  <script src="js/supabase-config.js"></script>
-  <script src="js/state.js"></script>
-  <script src="js/api.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/helpers.js"></script>
-  <script src="js/kanban.js"></script>
-  <script src="js/drawer.js"></script>
-  <script src="js/modal.js"></script>
-  <script src="js/search.js"></script>
-  <script src="js/history.js"></script>
-  <script src="js/dashboard.js"></script>
-  <script src="js/viz.js"></script>
-  <script src="js/equip.js"></script>
-  <script src="js/ferias.js?v=2"></script>
-  <script src="js/treinamentos.js?v=2"></script>
-  <script src="js/advertencias.js?v=2"></script>
-  <script src="js/settings.js"></script>
-  <script src="js/navigation.js"></script>
-  <script src="js/particles.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/config.js?v=1.0.1"></script>
+  <script src="js/supabase-config.js?v=1.0.1"></script>
+  <script src="js/state.js?v=1.0.1"></script>
+  <script src="js/api.js?v=1.0.1"></script>
+  <script src="js/auth.js?v=1.0.1"></script>
+  <script src="js/helpers.js?v=1.0.1"></script>
+  <script src="js/kanban.js?v=1.0.1"></script>
+  <script src="js/drawer.js?v=1.0.1"></script>
+  <script src="js/modal.js?v=1.0.1"></script>
+  <script src="js/search.js?v=1.0.1"></script>
+  <script src="js/history.js?v=1.0.1"></script>
+  <script src="js/dashboard.js?v=1.0.1"></script>
+  <script src="js/viz.js?v=1.0.1"></script>
+  <script src="js/equip.js?v=1.0.1"></script>
+  <script src="js/ferias.js?v=1.0.1"></script>
+  <script src="js/treinamentos.js?v=1.0.1"></script>
+  <script src="js/advertencias.js?v=1.0.1"></script>
+  <script src="js/settings.js?v=1.0.1"></script>
+  <script src="js/navigation.js?v=1.0.1"></script>
+  <script src="js/particles.js?v=1.0.1"></script>
+  <script src="js/app.js?v=1.0.1"></script>
 </body>
 
 </html>

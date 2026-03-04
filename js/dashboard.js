@@ -97,6 +97,7 @@ SGE.dashboard = {
         Chart.defaults.plugins.tooltip.cornerRadius = 8;
         Chart.defaults.plugins.tooltip.titleColor = this.theme.text1;
         Chart.defaults.plugins.tooltip.bodyColor = this.theme.text2;
+        Chart.defaults.devicePixelRatio = Math.max(window.devicePixelRatio || 1, 2);
         return true;
     },
 

@@ -21,71 +21,50 @@ SGE.treinamentos = {
         const vinculos = SGE.state.colaboradorTreinamentos || [];
         const filter = this._filterText ? this._filterText.toLowerCase() : '';
 
-        // Filter vinculos
+        // Filter vinculos, ignoring revoked ones in active count if desired, but here we just show all.
         const filtered = filter ? vinculos.filter(v => {
             return (v.employee_name || '').toLowerCase().includes(filter) ||
                 (v.treinamento_nome || '').toLowerCase().includes(filter);
         }) : vinculos;
 
         view.innerHTML = `
-            <div class="treinamentos-header">
-                <h2 class="treinamentos-title">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px">
-                        <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
-                        <path d="M6 12v5c3 3 9 3 12 0v-5"/>
-                    </svg>
-                    Treinamentos & Especificações
-                </h2>
-                <div class="treinamentos-actions">
-                    <button class="treinamentos-btn treinamentos-btn-secondary" id="btn-gerenciar-catalogo">
-                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v14M1 8h14"/></svg>
-                        Gerenciar Catálogo
-                    </button>
-                    <button class="treinamentos-btn treinamentos-btn-primary" id="btn-vincular-treinamento">
-                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v14M1 8h14"/></svg>
-                        Vincular Treinamento
-                    </button>
+            <div id="history-view" style="display:flex; flex-direction:column; height:100%;">
+                <div class="history-filters">
+                    <input type="text" class="history-filter-input" id="treinamentos-filter" placeholder="Filtrar por colaborador ou treinamento..." value="${this._filterText}" style="width: 320px;" />
+                    
+                    <div style="margin-left: auto; display: flex; gap: 12px;">
+                        <button id="btn-gerenciar-catalogo" style="padding: 7px 14px; background: var(--bg-2); border: 1px solid var(--border); border-radius: 6px; color: var(--text-2); font-family: var(--font-display); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px;"><path d="M1 4h14M1 8h14M1 12h14"/></svg>
+                            Catálogo
+                        </button>
+                        <button id="btn-vincular-treinamento" style="padding: 7px 14px; background: var(--accent); border: none; border-radius: 6px; color: #fff; font-family: var(--font-display); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px;"><path d="M8 1v14M1 8h14"/></svg>
+                            Vincular
+                        </button>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Catálogo Section -->
-            <div class="treinamentos-section">
-                <div class="treinamentos-section-title">Catálogo de Treinamentos (${catalogo.length})</div>
-                <div class="treinamentos-catalogo-grid">
-                    ${catalogo.length === 0 ? '<div class="treinamentos-empty">Nenhum treinamento cadastrado. Clique em "Gerenciar Catálogo" para adicionar.</div>' :
-                catalogo.map(t => `
-                        <div class="treinamentos-catalogo-card" data-id="${t.id}">
-                            <div class="treinamentos-catalogo-card-header">
-                                <span class="treinamentos-catalogo-card-name">${t.nome}</span>
-                                <div class="treinamentos-catalogo-card-actions">
-                                    <button class="treinamentos-icon-btn" data-action="edit-catalogo" data-id="${t.id}" title="Editar">
-                                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 1l4 4L5 15H1v-4z"/></svg>
-                                    </button>
-                                    <button class="treinamentos-icon-btn treinamentos-icon-btn-danger" data-action="delete-catalogo" data-id="${t.id}" title="Excluir">
-                                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M5 4V2h6v2M6 7v5M10 7v5"/></svg>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="treinamentos-catalogo-card-desc">${t.descricao || 'Sem descrição'}</div>
-                            <div class="treinamentos-catalogo-card-count">${vinculos.filter(v => v.treinamento_id === t.id).length} colaborador(es) vinculado(s)</div>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-
-            <!-- Vínculos Section -->
-            <div class="treinamentos-section">
-                <div class="treinamentos-section-title">Vínculos de Treinamento (${vinculos.length})</div>
-                <div class="treinamentos-filter-bar">
-                    <input type="text" class="treinamentos-filter-input" id="treinamentos-filter" placeholder="Filtrar por colaborador ou treinamento..." value="${this._filterText}" />
-                </div>
-                <div class="treinamentos-list">
-                    ${filtered.length === 0 ? '<div class="no-data-message"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-18a8 8 0 100 16 8 8 0 000-16z"/><path d="M9 9l6 6m0-6l-6 6"/></svg><h3>Nenhum registro</h3><p>Não há vínculos para o filtro atual.</p></div>' :
+                <div id="history-table-wrap">
+                    <table id="history-table">
+                        <thead>
+                            <tr>
+                                <th>Colaborador</th>
+                                <th>ID Efetivo</th>
+                                <th>Treinamento</th>
+                                <th>Conclusão</th>
+                                <th>Validade</th>
+                                <th>Status</th>
+                                <th style="text-align: center;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filtered.length === 0 ? '<tr><td colspan="7" style="text-align: center; color: var(--text-3); padding: 20px;">Nenhum registro encontrado.</td></tr>' :
                 filtered.map(v => {
                     const hoje = new Date();
                     const validade = v.validade ? new Date(v.validade + 'T00:00:00') : null;
                     let statusClass = 'treinamentos-status-ok';
                     let statusLabel = 'Válido';
+
                     if (!validade) {
                         statusClass = 'treinamentos-status-na';
                         statusLabel = 'S/ Validade';
@@ -99,34 +78,30 @@ SGE.treinamentos = {
                             statusLabel = `Vence em ${diffDays}d`;
                         }
                     }
+
                     return `
-                                <div class="treinamentos-row">
-                                    <div class="treinamentos-row-main">
-                                        <div class="treinamentos-row-title">
-                                            ${v.employee_name} 
-                                            <span class="treinamentos-status-badge ${statusClass}">${statusLabel}</span>
-                                        </div>
-                                        <div class="treinamentos-row-desc">ID: ${v.employee_matricula} • ${v.treinamento_nome}</div>
-                                    </div>
-                                    <div class="treinamentos-row-meta">
-                                        <div class="treinamentos-meta-item">
-                                            <span class="treinamentos-meta-label">Conclusão</span>
-                                            <span class="treinamentos-meta-val">${v.data_conclusao ? SGE.helpers.formatDate(v.data_conclusao).split(',')[0] : '—'}</span>
-                                        </div>
-                                        <div class="treinamentos-meta-item">
-                                            <span class="treinamentos-meta-label">Validade</span>
-                                            <span class="treinamentos-meta-val">${v.validade ? SGE.helpers.formatDate(v.validade).split(',')[0] : '—'}</span>
-                                        </div>
-                                        <div class="treinamentos-row-actions">
-                                            <button class="treinamentos-icon-btn treinamentos-icon-btn-danger" data-action="delete-vinculo" data-id="${v.id}" title="Remover">
-                                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M5 4V2h6v2M6 7v5M10 7v5"/></svg>
+                                <tr>
+                                    <td style="font-weight: 500; color: var(--text-1);">${v.employee_name}</td>
+                                    <td>${v.employee_matricula || 'N/A'}</td>
+                                    <td>${v.treinamento_nome}</td>
+                                    <td>${v.data_conclusao ? SGE.helpers.formatDate(v.data_conclusao).split(',')[0] : '—'}</td>
+                                    <td>${v.validade ? SGE.helpers.formatDate(v.validade).split(',')[0] : '—'}</td>
+                                    <td><span class="treinamentos-status-badge ${statusClass}" style="font-size: 10px; padding: 3px 8px; border-radius: 12px; font-weight: 700; text-transform: uppercase;">${statusLabel}</span></td>
+                                    <td style="text-align: center;">
+                                        <div style="display: flex; gap: 8px; justify-content: center;">
+                                            <button data-action="renovar-vinculo" data-id="${v.id}" title="Renovar Treinamento" style="padding: 4px; background:var(--bg-2); border-radius:6px; cursor:pointer; border:none; color:var(--accent); display: inline-flex;">
+                                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px;"><path d="M13.5 8a5.5 5.5 0 1 1-1.61-3.89L13.5 6"/><path d="M9 6h4.5V1.5"/></svg>
+                                            </button>
+                                            <button data-action="delete-vinculo" data-id="${v.id}" title="Remover Vínculo" style="padding: 4px; background:var(--bg-2); border-radius:6px; cursor:pointer; border:none; color:var(--red); display: inline-flex;">
+                                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px;"><path d="M4 12V3h8v9a2 2 0 01-2 2H6a2 2 0 01-2-2z"/><path d="M2 3h12M6 1v2M10 1v2M6 7v6M10 7v6"/></svg>
                                             </button>
                                         </div>
-                                    </div>
-                                </div>
+                                    </td>
+                                </tr>
                             `;
-                }).join('')
-            }
+                }).join('')}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         `;
@@ -167,6 +142,7 @@ SGE.treinamentos = {
 
             if (action === 'edit-catalogo') this._editCatalogo(id);
             if (action === 'delete-catalogo') this._deleteCatalogo(id);
+            if (action === 'renovar-vinculo') this._renovarVinculo(id);
             if (action === 'delete-vinculo') this._deleteVinculo(id);
         });
     },
@@ -324,10 +300,52 @@ SGE.treinamentos = {
         }, 100); // give the modal DOM a moment to be rendered
     },
 
+    async _renovarVinculo(id) {
+        const vinculoAtual = SGE.state.colaboradorTreinamentos.find(v => v.id === id);
+        if (!vinculoAtual) return;
+
+        const catItem = SGE.state.treinamentosCatalogo.find(c => c.id === vinculoAtual.treinamento_id);
+
+        SGE.modal.openDynamic({
+            title: 'Renovar Treinamento',
+            subtitle: `Nova validade para ${vinculoAtual.employee_name} — ${vinculoAtual.treinamento_nome}`,
+            fields: [
+                { id: 'data_conclusao', label: 'Nova Data de Conclusão', type: 'date', value: new Date().toISOString().split('T')[0] }
+            ],
+            okText: 'Renovar',
+            onConfirm: async (vals) => {
+                if (!vals.data_conclusao) {
+                    SGE.helpers.toast('Informe a data de conclusão', 'error');
+                    return false;
+                }
+
+                let validade = null;
+                if (catItem && catItem.validade_meses) {
+                    const conc = new Date(vals.data_conclusao + 'T00:00:00');
+                    conc.setMonth(conc.getMonth() + catItem.validade_meses);
+                    validade = conc.toISOString().split('T')[0];
+                }
+
+                const res = await SGE.api.syncColaboradorTreinamento('update', {
+                    id: vinculoAtual.id,
+                    data_conclusao: vals.data_conclusao,
+                    validade: validade,
+                    revogado: false // Resets revocation if it was revoked previously
+                });
+
+                if (res) {
+                    SGE.helpers.toast('Treinamento renovado com sucesso');
+                    await SGE.api.loadTreinamentos();
+                    this.render();
+                }
+            }
+        });
+    },
+
     async _deleteVinculo(id) {
         SGE.modal.confirm({
             title: 'Remover Vínculo',
-            message: 'Remover este vínculo de treinamento?',
+            message: 'Remover este vínculo de treinamento permanentemente?',
             confirmText: 'Remover',
             confirmColor: 'danger',
             onConfirm: async () => {
