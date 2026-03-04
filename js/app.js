@@ -285,6 +285,14 @@ SGE.app = {
             });
         });
 
+        // ── Global Export Button ──
+        const exportBtn = document.getElementById('topbar-export-btn');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => {
+                if (SGE.export) SGE.export.openModal();
+            });
+        }
+
         // ── Filter Dropdown Toggle ──
         const filterBtn = document.getElementById('filter-toggle-btn');
         const filterPanel = document.getElementById('filter-dropdown-panel');
@@ -383,12 +391,6 @@ SGE.app = {
         document.querySelectorAll('.history-filter-input').forEach(inp => {
             inp.addEventListener('input', () => SGE.history.render());
         });
-
-        // Export button
-        const exportBtn = document.getElementById('export-btn');
-        if (exportBtn) {
-            exportBtn.addEventListener('click', SGE.history.exportCSV);
-        }
     },
 
     setupKanbanArrows() {
