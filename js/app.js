@@ -32,71 +32,9 @@ SGE.app = {
     },
 
     setupLoginForm() {
-        const form = document.getElementById('login-form');
-        const errEl = document.getElementById('login-error');
-        const submitBtn = document.getElementById('login-submit');
-        const toggleBtn = document.getElementById('toggle-register');
-        const nameGroup = document.getElementById('group-name');
-
-        let isRegistering = false;
-
-        if (!form) return;
-
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                isRegistering = !isRegistering;
-
-                if (isRegistering) {
-                    nameGroup.style.display = 'flex';
-                    submitBtn.textContent = 'Criar Conta';
-                    toggleBtn.textContent = 'Já tem uma conta? Entrar';
-                } else {
-                    nameGroup.style.display = 'none';
-                    submitBtn.textContent = 'Entrar';
-                    toggleBtn.textContent = 'Criar uma conta';
-                }
-                errEl.textContent = '';
-            });
-        }
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            errEl.textContent = '';
-            submitBtn.disabled = true;
-            submitBtn.textContent = isRegistering ? 'Criando...' : 'Autenticando...';
-
-            const user = document.getElementById('login-user').value;
-            const pass = document.getElementById('login-pass').value;
-            const name = document.getElementById('login-name').value;
-
-            let res;
-            if (isRegistering) {
-                res = await SGE.auth.register(user, pass, name);
-                if (res.success) {
-                    SGE.helpers.toast('Conta criada! Por favor, faça login.', 'success');
-                    isRegistering = false;
-                    nameGroup.style.display = 'none';
-                    submitBtn.textContent = 'Entrar';
-                    toggleBtn.textContent = 'Criar uma conta';
-                    submitBtn.disabled = false;
-                    return; // Stop here, require them to log in
-                }
-            } else {
-                res = await SGE.auth.login(user, pass);
-                if (res.success) {
-                    document.getElementById('login-screen').classList.add('hidden');
-                    document.getElementById('loading-screen').classList.remove('hide');
-                    SGE.app.boot();
-                    return;
-                }
-            }
-
-            // Error path
-            errEl.textContent = res.error;
-            submitBtn.disabled = false;
-            submitBtn.textContent = isRegistering ? 'Criar Conta' : 'Entrar';
-        });
+        // Redundante: Agora é handled pelo SSO redirect. 
+        // Mantemos a função vazia temporariamente para não quebrar referências.
+        return;
     },
 
 
