@@ -126,129 +126,81 @@
         </a>
       </div>
 
-      <!-- CENTER: Colorful Logo (matching login style) -->
-      <div class="logo" id="logo-home" style="cursor:pointer;" title="Voltar ao Dashboard">
-        <span class="logo-gps">Grupo GPS</span>
-        <span class="logo-mecanizada">Mecanizada</span>
-        <div class="logo-divider"></div>
-        <span class="logo-gestao">Gestão De Efetivo</span>
-      </div>
+      <!-- CENTER: Colorful Logo (No longer in topbar, hidden but still required if scripts check for it, or we can just move it here and modify topbar later) -->
+      <!-- We will remove it from the center topbar later, for now we will place it in the navigation per user request -->
 
       <!-- Navigation Dropdown Overlay -->
       <div id="nav-menu-overlay" class="nav-menu-overlay hidden">
         <div class="nav-menu-panel">
-          <div class="nav-menu-header">
-            <span>Navegação</span>
-            <button id="nav-menu-close" class="topbar-icon-btn" aria-label="Fechar Menu">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M18 6L6 18M6 6l12 12" />
+          <div class="nav-menu-header"
+            style="justify-content: flex-start; padding: 24px 20px; position: relative; align-items: center; min-height: 80px;">
+            <div class="sidebar-logo" id="logo-home"
+              style="display: flex; justify-content: flex-start; align-items: center; cursor: pointer; width: 100%; max-width: 320px;"
+              title="Voltar ao Dashboard">
+              <svg width="100%" height="auto" viewBox="40 50 530 120" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <style type="text/css">
+                    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
+
+                    text {
+                      font-family: 'Open Sans', 'Roboto', 'Arial', sans-serif;
+                    }
+                  </style>
+                </defs>
+                <g text-anchor="start">
+                  <text x="50" y="110" font-size="42" font-weight="700" fill="#002D5C">Grupo GPS</text>
+                  <line x1="300" y1="60" x2="300" y2="150" stroke="#757575" stroke-width="1.5" />
+                  <g transform="translate(315, 0)">
+                    <text x="0" y="102" font-size="30" font-weight="600" fill="#1E6B8C">MECANIZADA</text>
+                    <text x="0" y="137" font-size="20" font-weight="400" fill="#757575">CONTROLE DE EFETIVO</text>
+                    <text x="235" y="157" font-size="12" font-weight="400" fill="#757575" text-anchor="end">By
+                      SGE</text>
+                  </g>
+                </g>
               </svg>
-            </button>
+            </div>
+
           </div>
-          <div class="nav-menu-body">
-            <div class="nav-menu-section">
-              <div class="nav-menu-section-title">Painel</div>
-              <button class="nav-menu-item" data-view="viz">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <rect x="1" y="1" width="14" height="14" rx="2" />
-                  <path d="M1 6h14" />
-                  <path d="M5 6v9" />
-                </svg>
-                Dashboard Executivo
-              </button>
-            </div>
-            <div class="nav-menu-section">
-              <div class="nav-menu-section-title">Gestao de Efetivo</div>
-              <button class="nav-menu-item" data-view="kanban">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <rect x="1" y="1" width="4" height="14" rx="1" />
-                  <rect x="6" y="1" width="4" height="10" rx="1" />
-                  <rect x="11" y="1" width="4" height="12" rx="1" />
-                </svg>
-                Kanban
-              </button>
-              <button class="nav-menu-item" data-view="tabela">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <rect x="1" y="2" width="14" height="12" rx="2" />
-                  <path d="M1 6h14M5 2v12M11 2v12" />
-                </svg>
-                Tabela
-              </button>
-              <button class="nav-menu-item" data-view="grupo">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <circle cx="4" cy="4" r="2" />
-                  <circle cx="12" cy="4" r="2" />
-                  <circle cx="8" cy="11" r="2" />
-                  <path d="M4 6v2a2 2 0 002 2h4a2 2 0 002-2V6" />
-                </svg>
-                Grupo
-              </button>
-              <button class="nav-menu-item" data-view="equip">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <rect x="1" y="1" width="6" height="6" rx="1" />
-                  <rect x="9" y="1" width="6" height="6" rx="1" />
-                  <rect x="1" y="9" width="6" height="6" rx="1" />
-                  <rect x="9" y="9" width="6" height="6" rx="1" />
-                </svg>
-                Equipamentos
-              </button>
-            </div>
-            <div class="nav-menu-section">
-              <div class="nav-menu-section-title">Seguranca e Documentacao</div>
-              <button class="nav-menu-item" data-view="ferias">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                  style="width:14px;height:14px" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                  <path
-                    d="M12 4v1M17.66 6.34l-.7.7M20 12h-1M17.66 17.66l-.7-.7M12 20v-1M6.34 17.66l.7-.7M4 12h1M6.34 6.34l.7.7" />
-                </svg>
-                Gestao de Ferias
-              </button>
-              <button class="nav-menu-item" data-view="treinamentos">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                  style="width:14px;height:14px" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                  <path d="M6 12v5c3 3 9 3 12 0v-5" />
-                </svg>
-                Treinamentos
-              </button>
-              <button class="nav-menu-item" data-view="advertencias">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                  style="width:14px;height:14px" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                  <line x1="12" y1="9" x2="12" y2="13" />
-                  <line x1="12" y1="17" x2="12.01" y2="17" />
-                </svg>
-                Advertencias
-              </button>
-              <button class="nav-menu-item" data-view="history">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <circle cx="8" cy="8" r="6" />
-                  <path d="M8 4v4l3 2" />
-                </svg>
-                Historico
-              </button>
-            </div>
-            <div class="nav-menu-section">
-              <div class="nav-menu-section-title">Pesquisa</div>
-              <button class="nav-menu-item" data-view="search">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <circle cx="7" cy="7" r="5" />
-                  <path d="M11 11l3 3" />
-                </svg>
-                Pesquisa
-              </button>
-            </div>
-            <div class="nav-menu-section">
-              <div class="nav-menu-section-title">Configuracoes</div>
-              <button class="nav-menu-item" data-view="settings">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <circle cx="8" cy="8" r="3" />
-                  <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.5 1.5M11.5 11.5L13 13M3 13l1.5-1.5M11.5 4.5L13 3" />
-                </svg>
-                Configuracoes
-              </button>
-            </div>
+          <div class="nav-menu-body" style="padding-top: 32px;">
+            <button class="nav-menu-item" data-view="viz">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="1" y="1" width="14" height="14" rx="2" />
+                <path d="M1 6h14" />
+                <path d="M5 6v9" />
+              </svg>
+              Dashboard Executivo
+            </button>
+            <button class="nav-menu-item" data-view="kanban">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              Gestão de Efetivo
+            </button>
+            <button class="nav-menu-item" data-view="ferias">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+              Segurança e Documentação
+            </button>
+            <button class="nav-menu-item" data-view="search">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="7" cy="7" r="5" />
+                <path d="M11 11l3 3" />
+              </svg>
+              Pesquisa
+            </button>
+            <button class="nav-menu-item" data-view="settings">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="8" cy="8" r="3" />
+                <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.5 1.5M11.5 11.5L13 13M3 13l1.5-1.5M11.5 4.5L13 3" />
+              </svg>
+              Configurações
+            </button>
           </div>
           <!-- Menu Footer: User Info + Stats -->
           <div class="nav-menu-footer">
@@ -266,6 +218,26 @@
 
       <!-- RIGHT: Filter + Refresh -->
       <div id="topbar-right">
+        <!-- Global Search in Topbar -->
+        <style>
+          .topbar-search-wrapper input:focus {
+            background: #ffffff !important;
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 0 3px var(--accent-glow);
+            width: 260px !important;
+          }
+        </style>
+        <div class="topbar-search-wrapper"
+          style="margin-right:16px; position:relative; display:flex; align-items:center;">
+          <input type="text" id="global-search" placeholder="Pesquisar..." autocomplete="off"
+            style="width: 200px; padding: 8px 14px 8px 38px; border: 1px solid transparent; border-radius: 20px; background: var(--bg-2); color: var(--text-1); font-size: 13px; font-weight: 500; outline: none; transition: all 0.3s ease; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);" />
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"
+            style="position:absolute; left:14px; width:14px; height:14px; color:var(--text-3); pointer-events:none;">
+            <circle cx="7" cy="7" r="5" />
+            <path d="M11 11l3 3" />
+          </svg>
+        </div>
+
         <div id="topbar-user" style="display:none;"></div>
 
         <!-- Filter Dropdown Button -->
@@ -294,6 +266,81 @@
 
     <!-- ==================== MAIN CONTENT ==================== -->
     <div id="main">
+
+      <!-- GESTÃO DE EFETIVO TABS -->
+      <div id="gestao-tabs" class="tabs" style="display: none; padding: 0 24px; padding-top: 24px; margin-bottom: 0;">
+        <button class="dash-tab-btn" data-view="kanban">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="1" y="1" width="4" height="14" rx="1" />
+            <rect x="6" y="1" width="4" height="10" rx="1" />
+            <rect x="11" y="1" width="4" height="12" rx="1" />
+          </svg>
+          Kanban
+        </button>
+        <button class="dash-tab-btn" data-view="tabela">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="1" y="2" width="14" height="12" rx="2" />
+            <path d="M1 6h14M5 2v12M11 2v12" />
+          </svg>
+          Tabela
+        </button>
+        <button class="dash-tab-btn" data-view="grupo">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="4" cy="4" r="2" />
+            <circle cx="12" cy="4" r="2" />
+            <circle cx="8" cy="11" r="2" />
+            <path d="M4 6v2a2 2 0 002 2h4a2 2 0 002-2V6" />
+          </svg>
+          Grupo
+        </button>
+        <button class="dash-tab-btn" data-view="equip">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="1" y="1" width="6" height="6" rx="1" />
+            <rect x="9" y="1" width="6" height="6" rx="1" />
+            <rect x="1" y="9" width="6" height="6" rx="1" />
+            <rect x="9" y="9" width="6" height="6" rx="1" />
+          </svg>
+          Equipamentos
+        </button>
+      </div>
+
+      <!-- SEGURANÇA E DOCUMENTAÇÃO TABS -->
+      <div id="seguranca-tabs" class="tabs"
+        style="display: none; padding: 0 24px; padding-top: 24px; margin-bottom: 0;">
+        <button class="dash-tab-btn" data-view="ferias">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            <path
+              d="M12 4v1M17.66 6.34l-.7.7M20 12h-1M17.66 17.66l-.7-.7M12 20v-1M6.34 17.66l.7-.7M4 12h1M6.34 6.34l.7.7" />
+          </svg>
+          Gestão de Férias
+        </button>
+        <button class="dash-tab-btn" data-view="treinamentos">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+            <path d="M6 12v5c3 3 9 3 12 0v-5" />
+          </svg>
+          Treinamentos
+        </button>
+        <button class="dash-tab-btn" data-view="advertencias">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+          Advertências
+        </button>
+        <button class="dash-tab-btn" data-view="history">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="8" cy="8" r="6" />
+            <path d="M8 4v4l3 2" />
+          </svg>
+          Histórico
+        </button>
+      </div>
 
       <!-- KANBAN VIEW -->
       <div id="kanban-wrap">

@@ -93,16 +93,44 @@ SGE.navigation = {
             history.pushState({ view: viewName }, '', `#${viewName}`);
         }
 
-        // Clear active states globally
+        // Map which sidebar item should be highlighted
+        const gestaoViews = ['kanban', 'tabela', 'grupo', 'equip'];
+        const segurancaViews = ['ferias', 'treinamentos', 'advertencias', 'history'];
+
+        let sidebarActiveView = viewName;
+        if (gestaoViews.includes(viewName)) sidebarActiveView = 'kanban';
+        if (segurancaViews.includes(viewName)) sidebarActiveView = 'ferias';
+
+        // Clear active states globally on the sidebar
         document.querySelectorAll('.nav-menu-item[data-view]').forEach(el => {
             el.classList.remove('active');
         });
 
         // Update active nav menu item
-        const activeBtn = document.querySelector(`.nav-menu-item[data-view="${viewName}"]`);
+        const activeBtn = document.querySelector(`.nav-menu-item[data-view="${sidebarActiveView}"]`);
         if (activeBtn) {
             activeBtn.classList.add('active');
         }
+
+        // Show or hide main tab bars
+        const gestaoTabs = document.getElementById('gestao-tabs');
+        if (gestaoTabs) {
+            gestaoTabs.style.display = gestaoViews.includes(viewName) ? 'flex' : 'none';
+        }
+
+        const segurancaTabs = document.getElementById('seguranca-tabs');
+        if (segurancaTabs) {
+            segurancaTabs.style.display = segurancaViews.includes(viewName) ? 'flex' : 'none';
+        }
+
+        // Highlight the selected horizontal tab
+        document.querySelectorAll('.dash-tab-btn[data-view]').forEach(btn => {
+            if (btn.dataset.view === viewName) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
 
         // Show/hide views
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -113,6 +141,14 @@ SGE.navigation = {
         const kanbanWrap = document.getElementById('kanban-wrap');
         if (kanbanWrap) {
             kanbanWrap.style.display = viewName === 'kanban' ? 'flex' : 'none';
+        }
+
+        if (viewName !== 'search') {
+            const globalSearch = document.getElementById('global-search');
+            if (globalSearch && globalSearch.value) globalSearch.value = '';
+
+            const searchInput = document.getElementById('search-input');
+            if (searchInput && searchInput.value) searchInput.value = '';
         }
 
         // Render the active view

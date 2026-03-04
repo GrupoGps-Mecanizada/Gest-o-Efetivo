@@ -264,24 +264,24 @@ SGE.app = {
         // ── Nav Menu Toggle ──
         const menuBtn = document.getElementById('nav-menu-btn');
         const menuOverlay = document.getElementById('nav-menu-overlay');
-        const menuClose = document.getElementById('nav-menu-close');
-
         const openMenu = () => menuOverlay && menuOverlay.classList.remove('hidden');
         const closeMenu = () => menuOverlay && menuOverlay.classList.add('hidden');
 
         if (menuBtn) menuBtn.addEventListener('click', openMenu);
-        if (menuClose) menuClose.addEventListener('click', closeMenu);
         if (menuOverlay) {
             menuOverlay.addEventListener('click', (e) => {
                 if (e.target === menuOverlay) closeMenu();
             });
         }
 
-        // Nav menu item clicks → switch view + close menu
-        document.querySelectorAll('.nav-menu-item[data-view]').forEach(btn => {
+        // View toggle logic for sidebar and dashboard internal tabs
+        const viewButtons = document.querySelectorAll('.nav-menu-item[data-view], .dash-tab-btn[data-view]');
+        viewButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 SGE.navigation.switchView(btn.dataset.view);
-                closeMenu();
+                if (btn.classList.contains('nav-menu-item')) {
+                    closeMenu();
+                }
             });
         });
 
@@ -349,6 +349,32 @@ SGE.app = {
         const input = document.getElementById('search-input');
         if (input) {
             input.addEventListener('input', () => SGE.search.render(input.value));
+        }
+
+        const globalSearch = document.getElementById('global-search');
+        if (globalSearch) {
+            globalSearch.addEventListener('input', (e) => {
+                const val = e.target.value;
+                if (SGE.state.activeView !== 'search' && val.trim().length > 0) {
+                    SGE.navigation.switchView('search');
+                    // Focus back to global after switch because view transition might steal it
+                    setTimeout(() => globalSearch.focus(), 10);
+                }
+
+                // Sync the main search input
+                if (input) {
+                    input.value = val;
+                }
+
+                // If it was cleared, maybe we should leave the user in search view or return them? 
+                // Usually it's fine to leave them on search view so they see the whole list
+                SGE.search.render(val);
+            });
+
+            // clear global search if leaving the search view
+            document.addEventListener('click', (e) => {
+                // Not ideal, let's just clear on navigation to another page handled somewhere else, or just keep it simple
+            });
         }
     },
 
