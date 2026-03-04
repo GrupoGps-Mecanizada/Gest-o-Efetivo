@@ -69,10 +69,7 @@ SGE.hub = {
             html += `
                 <div class="hub-sector${isOpen}">
                     <div class="hub-sector-header" data-sector="${s.id}">
-                        <div class="hub-sector-icon" style="background: ${s.color};">
-                            ${s.icon}
-                        </div>
-                        <div class="hub-sector-title">${s.label}</div>
+                        <div class="hub-sector-title" style="color: ${s.color}">${s.label}</div>
                         <svg class="hub-sector-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M6 9l6 6 6-6"/>
                         </svg>
