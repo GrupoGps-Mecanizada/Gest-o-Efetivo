@@ -94,12 +94,12 @@ SGE.navigation = {
         }
 
         // Map which sidebar item should be highlighted
-        const gestaoViews = ['kanban', 'tabela', 'grupo', 'equip'];
-        const segurancaViews = ['ferias', 'treinamentos', 'advertencias', 'history'];
+        const gestaoViews = ['kanban', 'tabela', 'grupo', 'equip', 'ferias', 'history', 'search'];
+        const segurancaViews = ['treinamentos', 'advertencias'];
 
         let sidebarActiveView = viewName;
         if (gestaoViews.includes(viewName)) sidebarActiveView = 'kanban';
-        if (segurancaViews.includes(viewName)) sidebarActiveView = 'ferias';
+        if (segurancaViews.includes(viewName)) sidebarActiveView = 'treinamentos';
 
         // Clear active states globally on the sidebar
         document.querySelectorAll('.nav-menu-item[data-view]').forEach(el => {

@@ -62,6 +62,21 @@
     height: 16px;
 }
 
+.hub-btn-explicit {
+    width: auto;
+    padding: 0 12px;
+    gap: 8px;
+    background: var(--bg-3);
+    color: var(--text-1);
+    border-color: var(--border);
+}
+
+.hub-btn-explicit:hover {
+    background: #e2e8f0;
+    /* slighly darker on hover */
+    border-color: var(--accent);
+}
+
 /* ===================== CENTER LOGO ===================== */
 .logo {
     position: absolute;
