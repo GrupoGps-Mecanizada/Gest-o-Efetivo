@@ -207,15 +207,21 @@ SGE.settings = {
             <option value="GESTAO">Gestão</option>
           </select>
         </div>
-        <div class="form-field" id="wrapper-equip">
-          <label>Equipamento (Vaga)</label>
-          <input type="text" id="new-col-equipamento" placeholder="Ex: PC-001" />
-        </div>
-        <div class="form-field" id="wrapper-setor">
-          <label>Setor</label>
-          <select id="new-col-setor">
-            <option value="">Sem Setor</option>
-            ${(SGE.state.setores || []).filter(s => s.status === 'ATIVO').map(s => `<option value="${s.nome}">${s.nome}</option>`).join('')}
+        <div class="form-field" id="wrapper-alocacao" style="grid-column:1/-1;">
+          <label>Alocação (Equipamento ou Setor)</label>
+          <select id="new-col-alocacao">
+            <option value="NONE:">Sem Alocação</option>
+            <optgroup label="Equipamentos">
+              ${(SGE.state.equipamentos || []).map(e => {
+        const eqName = `${e.sigla}-${e.numero || ''}`.replace(/-$/, '');
+        return `<option value="EQ:${eqName}">${eqName}</option>`;
+      }).join('')}
+            </optgroup>
+            <optgroup label="Setores">
+              ${(SGE.state.setores || []).filter(s => s.status === 'ATIVO').map(s => {
+        return `<option value="ST:${s.id}">${s.nome}</option>`;
+      }).join('')}
+            </optgroup>
           </select>
         </div>
         <div class="form-field">
@@ -545,9 +551,8 @@ SGE.settings = {
           const id = `COL_TEMP_${Date.now()}_${tempCount}`;
 
           const supName = document.getElementById('new-col-supervisor').value;
-          const eqName = document.getElementById('new-col-equipamento').value.trim() || 'SEM EQUIPAMENTO';
           const catVal = document.getElementById('new-col-categoria') ? document.getElementById('new-col-categoria').value : 'OPERACIONAL';
-          const setorName = document.getElementById('new-col-setor') ? document.getElementById('new-col-setor').value : '';
+          const alocacao = document.getElementById('new-col-alocacao').value;
 
           // Match IDs with state
           const targetSup = SGE.state.supervisores.find(s => s.nome === supName);
@@ -556,19 +561,17 @@ SGE.settings = {
           let finalEquipName = 'SEM EQUIPAMENTO';
           let finalSetorName = 'SEM SETOR';
 
-          if (eqName !== 'SEM EQUIPAMENTO') {
-            finalEquipName = eqName;
-            const parsed = SGE.equip ? SGE.equip.parseEquip(eqName) : null;
+          if (alocacao.startsWith('EQ:')) {
+            finalEquipName = alocacao.substring(3).trim();
+            const parsed = SGE.equip ? SGE.equip.parseEquip(finalEquipName) : null;
             if (parsed) {
               const eqObj = SGE.state.equipamentos.find(eq => eq.sigla === parsed.sigla && eq.numero === parsed.numero);
               if (eqObj) equipId = eqObj.id;
             }
-          }
-
-          if (setorName !== '') {
-            finalSetorName = setorName;
-            const sObj = SGE.state.setores.find(s => s.nome === setorName);
-            if (sObj) setorId = sObj.id;
+          } else if (alocacao.startsWith('ST:')) {
+            setorId = alocacao.substring(3).trim();
+            const sObj = SGE.state.setores.find(s => s.id === setorId);
+            if (sObj) finalSetorName = sObj.nome;
           }
 
           const newCol = {

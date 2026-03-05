@@ -136,16 +136,19 @@ SGE.modal = {
       <div class="modal-subtitle">${colaborador.nome} (${colaborador.matricula_gps || 'S/ MAT'})</div>
     `;
 
-    // Build setor options
+    // Build combined Alocacao options
     const setorOptions = (SGE.state.setores || [])
       .filter(s => s.status === 'ATIVO')
-      .map(s => `<option value="${s.id}" ${s.id === colaborador.setor_id ? 'selected' : ''}>${s.nome}</option>`)
+      .map(s => {
+        const isSelected = s.id === colaborador.setor_id;
+        return `<option value="ST:${s.id}" ${isSelected ? 'selected' : ''}>${s.nome}</option>`;
+      })
       .join('');
 
-    // Build equipment options
     const equipOptions = (SGE.state.equipamentos || []).map(e => {
       const equipName = `${e.sigla}-${e.numero || ''}`.replace(/-$/, '');
-      return `<option value="${equipName}" ${equipName === colaborador.equipamento ? 'selected' : ''}>${equipName}</option>`;
+      const isSelected = !colaborador.setor_id && equipName === colaborador.equipamento;
+      return `<option value="EQ:${equipName}" ${isSelected ? 'selected' : ''}>${equipName}</option>`;
     }).join('');
 
     const body = document.querySelector('.modal-body');
@@ -190,18 +193,16 @@ SGE.modal = {
             <option value="GESTAO" ${isGestao ? 'selected' : ''}>Gestão</option>
           </select>
         </div>
-        <div class="form-field" id="edit-wrapper-equip" style="grid-column:1/-1;">
-          <label>Equipamento (Vaga)</label>
-          <select id="edit-equipamento">
-            <option value="">Sem Equipamento</option>
-            ${equipOptions}
-          </select>
-        </div>
-        <div class="form-field" id="edit-wrapper-setor" style="grid-column:1/-1;">
-          <label>Setor</label>
-          <select id="edit-setor">
-            <option value="">Sem Setor</option>
-            ${setorOptions}
+        <div class="form-field" id="edit-wrapper-alocacao" style="grid-column:1/-1;">
+          <label>Alocação (Equipamento ou Setor)</label>
+          <select id="edit-alocacao">
+            <option value="NONE:">Sem Alocação</option>
+            <optgroup label="Equipamentos">
+              ${equipOptions}
+            </optgroup>
+            <optgroup label="Setores">
+              ${setorOptions}
+            </optgroup>
           </select>
         </div>
         <div class="form-field">
@@ -244,15 +245,19 @@ SGE.modal = {
     const regime = document.getElementById('edit-regime').value;
     const status = document.getElementById('edit-status').value;
     const categoria = document.getElementById('edit-categoria').value;
-    const equipamento = document.getElementById('edit-equipamento').value.trim();
-    const setorId = document.getElementById('edit-setor').value || null;
+    const alocacao = document.getElementById('edit-alocacao').value;
     const telefone = document.getElementById('edit-telefone').value.trim();
     const matricula_usiminas = document.getElementById('edit-mat-usiminas').value.trim();
     const matricula_gps = document.getElementById('edit-mat-gps').value.trim();
 
-    // Resolve setor name from ID
+    let equipamento = 'SEM EQUIPAMENTO';
+    let setorId = null;
     let setorNome = 'SEM SETOR';
-    if (setorId) {
+
+    if (alocacao.startsWith('EQ:')) {
+      equipamento = alocacao.substring(3);
+    } else if (alocacao.startsWith('ST:')) {
+      setorId = alocacao.substring(3);
       const sObj = (SGE.state.setores || []).find(s => s.id === setorId);
       if (sObj) setorNome = sObj.nome;
     }
