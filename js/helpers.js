@@ -66,10 +66,18 @@ SGE.helpers = {
             if (f.supervisor && f.supervisor.length > 0 && !f.supervisor.includes(c.supervisor)) return false;
             // Categoria filter (OPERACIONAL / GESTAO)
             if (f.categoria && f.categoria.length > 0 && !f.categoria.includes(c.categoria)) return false;
-            // EquipTipo filter
-            if (f.equipTipo && f.equipTipo.length > 0) {
-                const parsed = SGE.equip ? SGE.equip.parseEquip(c.equipamento) : null;
-                if (!parsed || !f.equipTipo.includes(parsed.sigla)) return false;
+            // Alocação filter (Equipamento ou Setor)
+            if (f.alocacao && f.alocacao.length > 0) {
+                let colAloc = null;
+                if (c.setor_id && c.setor && c.setor !== 'SEM SETOR') {
+                    colAloc = c.setor;
+                } else if (c.equipamento && c.equipamento !== 'SEM EQUIPAMENTO') {
+                    const parsed = SGE.equip ? SGE.equip.parseEquip(c.equipamento) : null;
+                    const tipos = SGE.CONFIG.equipTipos || {};
+                    colAloc = parsed ? (parsed.sigla + ' — ' + (tipos[parsed.sigla]?.nome || '')) : null;
+                }
+
+                if (!colAloc || !f.alocacao.includes(colAloc)) return false;
             }
             // EquipTurno filter
             if (f.equipTurno && f.equipTurno.length > 0) {

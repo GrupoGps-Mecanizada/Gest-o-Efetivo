@@ -262,7 +262,7 @@ SGE.navigation = {
         const clearBtn = document.getElementById('filter-clear-all');
         if (clearBtn) {
             clearBtn.addEventListener('click', () => {
-                SGE.state.filtros = { regime: [], funcao: [], status: [], equipTipo: [], equipTurno: [], supervisor: [], categoria: [] };
+                SGE.state.filtros = { regime: [], funcao: [], status: [], alocacao: [], equipTurno: [], supervisor: [], categoria: [] };
                 body.querySelectorAll('.filter-checkbox').forEach(cb => cb.classList.remove('checked'));
                 SGE.navigation._persistFilters();
                 SGE.navigation._updateFilterBadge();
@@ -341,14 +341,18 @@ SGE.navigation = {
         const statusCounts = countBy('status');
         const supervisorCounts = countBy('supervisor');
 
-        // Count equipment types
-        const equipTipoCounts = {};
+        // Count alocacoes (equipamento ou setor)
+        const alocacaoCounts = {};
         colabs.forEach(c => {
-            if (c.equipamento) {
+            let aloc = null;
+            if (c.setor_id && c.setor && c.setor !== 'SEM SETOR') {
+                aloc = c.setor;
+            } else if (c.equipamento && c.equipamento !== 'SEM EQUIPAMENTO') {
                 const parsed = SGE.equip.parseEquip(c.equipamento);
-                if (parsed && tipos[parsed.sigla]) {
-                    equipTipoCounts[parsed.sigla] = (equipTipoCounts[parsed.sigla] || 0) + 1;
-                }
+                aloc = parsed ? (parsed.sigla + ' — ' + (tipos[parsed.sigla]?.nome || '')) : null;
+            }
+            if (aloc) {
+                alocacaoCounts[aloc] = (alocacaoCounts[aloc] || 0) + 1;
             }
         });
 
@@ -388,8 +392,8 @@ SGE.navigation = {
         };
 
         // Build options for each category
-        const equipTipoOptions = Object.entries(tipos).map(([sigla, info]) => ({
-            value: sigla, label: `${sigla} — ${info.nome}`, count: equipTipoCounts[sigla] || 0
+        const alocacaoOptions = Object.keys(alocacaoCounts).sort().map(nome => ({
+            value: nome, label: nome, count: alocacaoCounts[nome] || 0
         }));
 
         const turnoOptions = turnos.map(t => ({
@@ -419,7 +423,7 @@ SGE.navigation = {
 
         body.innerHTML = [
             makeAccordion('Categoria', 'categoria', categoriaOptions, false),
-            makeAccordion('Equipamentos', 'equipTipo', equipTipoOptions, false),
+            makeAccordion('Alocação / Setores', 'alocacao', alocacaoOptions, false),
             makeAccordion('Turno', 'equipTurno', turnoOptions, false),
             makeAccordion('Supervisores', 'supervisor', supervisorOptions, false),
             makeAccordion('Regime', 'regime', regimeOptions, false),
@@ -444,7 +448,7 @@ SGE.navigation = {
         const total = (f.regime?.length || 0) +
             (f.funcao?.length || 0) +
             (f.status?.length || 0) +
-            (f.equipTipo?.length || 0) +
+            (f.alocacao?.length || 0) +
             (f.equipTurno?.length || 0) +
             (f.supervisor?.length || 0) +
             (f.categoria?.length || 0);
