@@ -100,7 +100,7 @@ SGE.modal = {
       regime_destino: novoRegime || '—',
       motivo: motivo,
       observacao: obs,
-      effective_date: txData, // <-- Added effective_date
+      effective_date: txData,
       created_at: new Date().toISOString(),
       usuario: SGE.auth.currentUser ? (SGE.auth.currentUser.nome || SGE.auth.currentUser.usuario) : SGE.CONFIG.usuario
     };
@@ -116,21 +116,37 @@ SGE.modal = {
     SGE.kanban.render();
     SGE.helpers.toast(`${colaborador.nome} movido para ${supervisorDestino}`);
 
-    // Sync with backend (Note: API function must support effective_date property now)
+    // Sync with backend
     await SGE.api.syncMove(mov);
   },
 
   /**
-   * Open edit modal
+   * Open edit modal with Setor OR Equipamento field based on category
    */
   openEdit(colaborador) {
     SGE.state.modalContext = 'edit';
+    // Store the ID so we can find the correct object after reload
+    SGE.state._editingColabId = colaborador.id;
+
+    const isGestao = colaborador.categoria === 'GESTAO';
 
     const header = document.querySelector('.modal-header');
     header.innerHTML = `
       <div class="modal-title">Editar Colaborador</div>
       <div class="modal-subtitle">${colaborador.nome} (${colaborador.matricula_gps || 'S/ MAT'})</div>
     `;
+
+    // Build setor options
+    const setorOptions = (SGE.state.setores || [])
+      .filter(s => s.status === 'ATIVO')
+      .map(s => `<option value="${s.id}" ${s.id === colaborador.setor_id ? 'selected' : ''}>${s.nome}</option>`)
+      .join('');
+
+    // Build equipment options
+    const equipOptions = (SGE.state.equipamentos || []).map(e => {
+      const equipName = `${e.sigla}-${e.numero || ''}`.replace(/-$/, '');
+      return `<option value="${equipName}" ${equipName === colaborador.equipamento ? 'selected' : ''}>${equipName}</option>`;
+    }).join('');
 
     const body = document.querySelector('.modal-body');
     body.innerHTML = `
@@ -167,14 +183,25 @@ SGE.modal = {
     ).join('')}
           </select>
         </div>
-        <div class="form-field" style="grid-column:1/-1">
-          <label>Equipamento</label>
+        <div class="form-field">
+          <label>Categoria</label>
+          <select id="edit-categoria">
+            <option value="OPERACIONAL" ${!isGestao ? 'selected' : ''}>Operacional</option>
+            <option value="GESTAO" ${isGestao ? 'selected' : ''}>Gestão</option>
+          </select>
+        </div>
+        <div class="form-field" id="edit-wrapper-equip" style="grid-column:1/-1; ${isGestao ? 'display:none' : ''}">
+          <label>Equipamento (Vaga)</label>
           <select id="edit-equipamento">
             <option value="">Sem Equipamento</option>
-            ${(SGE.state.equipamentos || []).map(e => {
-      const equipName = `${e.sigla}-${e.numero || ''}`.replace(/-$/, '');
-      return `<option value="${equipName}" ${equipName === colaborador.equipamento ? 'selected' : ''}>${equipName}</option>`;
-    }).join('')}
+            ${equipOptions}
+          </select>
+        </div>
+        <div class="form-field" id="edit-wrapper-setor" style="grid-column:1/-1; ${!isGestao ? 'display:none' : ''}">
+          <label>Setor</label>
+          <select id="edit-setor">
+            <option value="">Sem Setor</option>
+            ${setorOptions}
           </select>
         </div>
         <div class="form-field">
@@ -192,6 +219,16 @@ SGE.modal = {
       </div>
     `;
 
+    // Toggle setor/equip visibility based on category
+    const catSelect = document.getElementById('edit-categoria');
+    if (catSelect) {
+      catSelect.addEventListener('change', (e) => {
+        const isG = e.target.value === 'GESTAO';
+        document.getElementById('edit-wrapper-equip').style.display = isG ? 'none' : '';
+        document.getElementById('edit-wrapper-setor').style.display = isG ? '' : 'none';
+      });
+    }
+
     const footer = document.querySelector('.modal-footer');
     footer.innerHTML = `
       <button class="btn-cancel" id="modal-cancel">Cancelar</button>
@@ -205,25 +242,56 @@ SGE.modal = {
   },
 
   /**
-   * Confirm edit
+   * Confirm edit — reads fresh values from form and sends to API
    */
   async confirmEdit(colaborador) {
-    colaborador.nome = document.getElementById('edit-nome').value.trim();
-    colaborador.cr = document.getElementById('edit-cr').value.trim();
-    colaborador.funcao = document.getElementById('edit-funcao').value;
-    colaborador.regime = document.getElementById('edit-regime').value;
-    colaborador.status = document.getElementById('edit-status').value;
-    colaborador.equipamento = document.getElementById('edit-equipamento').value.trim();
-    colaborador.telefone = document.getElementById('edit-telefone').value.trim();
-    colaborador.matricula_usiminas = document.getElementById('edit-mat-usiminas').value.trim();
-    colaborador.matricula_gps = document.getElementById('edit-mat-gps').value.trim();
+    // Read values from form
+    const nome = document.getElementById('edit-nome').value.trim();
+    const cr = document.getElementById('edit-cr').value.trim();
+    const funcao = document.getElementById('edit-funcao').value;
+    const regime = document.getElementById('edit-regime').value;
+    const status = document.getElementById('edit-status').value;
+    const categoria = document.getElementById('edit-categoria').value;
+    const equipamento = document.getElementById('edit-equipamento').value.trim();
+    const setorId = document.getElementById('edit-setor').value || null;
+    const telefone = document.getElementById('edit-telefone').value.trim();
+    const matricula_usiminas = document.getElementById('edit-mat-usiminas').value.trim();
+    const matricula_gps = document.getElementById('edit-mat-gps').value.trim();
+
+    // Resolve setor name from ID
+    let setorNome = 'SEM SETOR';
+    if (setorId) {
+      const sObj = (SGE.state.setores || []).find(s => s.id === setorId);
+      if (sObj) setorNome = sObj.nome;
+    }
+
+    // Update the in-memory object
+    colaborador.nome = nome;
+    colaborador.cr = cr;
+    colaborador.funcao = funcao;
+    colaborador.regime = regime;
+    colaborador.status = status;
+    colaborador.categoria = categoria;
+    colaborador.telefone = telefone;
+    colaborador.matricula_usiminas = matricula_usiminas;
+    colaborador.matricula_gps = matricula_gps;
+
+    if (categoria === 'GESTAO') {
+      colaborador.equipamento = 'SEM EQUIPAMENTO';
+      colaborador.setor_id = setorId;
+      colaborador.setor = setorNome;
+    } else {
+      colaborador.equipamento = equipamento || 'SEM EQUIPAMENTO';
+      colaborador.setor_id = null;
+      colaborador.setor = 'SEM SETOR';
+    }
 
     SGE.modal.close();
     SGE.helpers.updateStats();
     SGE.kanban.render();
     SGE.helpers.toast(`${colaborador.nome} atualizado`);
 
-    // Sync with backend
+    // Sync with backend — pass complete data with explicit setor_id
     await SGE.api.syncEditColaborador(colaborador);
   },
 
@@ -246,7 +314,7 @@ SGE.modal = {
         ${supAtivos.map(s => `
           <div class="sup-card" style="cursor:pointer;transition:all .15s" data-sup="${s.nome}"
                onmouseover="this.style.borderColor='var(--accent)'"
-               onmouseout="this.style.borderColor='var(--border)'">
+               onmouseout="this.style.borderColor='var(--border)'"">
             <div class="sup-dot active"></div>
             <div class="sup-name">${s.nome}</div>
             <div class="sup-regime">${s.regime_padrao}</div>
@@ -279,39 +347,7 @@ SGE.modal = {
     document.getElementById('modal-overlay').classList.remove('open');
     SGE.state.pendingMove = null;
     SGE.state.modalContext = null;
-  },
-
-  /**
-   * Universal Confirmation Modal (Replaces window.confirm)
-   */
-  confirm({ title = 'Confirmar Ação', message, confirmText = 'Confirmar', confirmColor = 'danger', onConfirm }) {
-    SGE.state.modalContext = 'confirm';
-
-    const header = document.querySelector('.modal-header');
-    header.innerHTML = `
-      <div class="modal-title">${title}</div>
-    `;
-
-    const body = document.querySelector('.modal-body');
-    body.innerHTML = `
-      <div class="modal-confirm-msg">${message}</div>
-    `;
-
-    const btnClass = confirmColor === 'danger' ? 'btn-danger-confirm' : 'btn-confirm';
-
-    const footer = document.querySelector('.modal-footer');
-    footer.innerHTML = `
-      <button class="btn-cancel" id="modal-cancel">Cancelar</button>
-      <button class="${btnClass}" id="modal-confirm">${confirmText}</button>
-    `;
-
-    document.getElementById('modal-cancel').addEventListener('click', SGE.modal.close);
-    document.getElementById('modal-confirm').addEventListener('click', () => {
-      if (onConfirm) onConfirm();
-      SGE.modal.close();
-    });
-
-    document.getElementById('modal-overlay').classList.add('open');
+    SGE.state._editingColabId = null;
   },
 
   /**

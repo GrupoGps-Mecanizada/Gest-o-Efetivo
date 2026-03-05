@@ -257,7 +257,7 @@ SGE.kanban = {
         <span class="badge" style="background:${col.categoria === 'OPERACIONAL' ? '#e0f2fe' : '#fef3c7'};color:${col.categoria === 'OPERACIONAL' ? '#0369a1' : '#92400e'};border:1px solid ${col.categoria === 'OPERACIONAL' ? '#bae6fd' : '#fde68a'};font-size:9px;">${col.categoria === 'OPERACIONAL' ? 'OP' : 'GES'}</span>
         ${feriasHtml}
       </div>
-      <div class="card-vaga" style="margin-bottom: 6px;">${h.equipamentoIconSvg()} ${col.categoria === 'GESTAO' ? (col.supervisor || 'Sem Setor') : (col.equipamento || 'Sem equipamento')}</div>
+      <div class="card-vaga" style="margin-bottom: 6px;">${h.equipamentoIconSvg()} ${col.categoria === 'GESTAO' ? (col.setor || 'Sem Setor') : (col.equipamento || 'Sem equipamento')}</div>
       <div class="card-id" style="font-size: 11px; color: var(--text-3); border-top: 1px solid var(--border-color); padding-top: 6px; margin-top: auto;">
         MAT: <strong style="color: var(--text-2);">${col.matricula_gps || 'S/ MAT'}</strong>
         ${col.cr ? `<span style="margin-left:8px;">CR: <strong style="color: var(--text-2);">${col.cr}</strong></span>` : ''}
@@ -354,7 +354,7 @@ SGE.kanban = {
         <span class="badge" style="background:${colaborador.categoria === 'OPERACIONAL' ? '#e0f2fe' : '#fef3c7'};color:${colaborador.categoria === 'OPERACIONAL' ? '#0369a1' : '#92400e'};border:1px solid ${colaborador.categoria === 'OPERACIONAL' ? '#bae6fd' : '#fde68a'};font-size:9px;">${colaborador.categoria === 'OPERACIONAL' ? 'OP' : 'GES'}</span>
         ${feriasHtml}
       </div>
-      <div class="card-vaga" style="margin-bottom: 6px;">${h.equipamentoIconSvg()} ${colaborador.categoria === 'GESTAO' ? (colaborador.supervisor || 'Sem Setor') : (colaborador.equipamento || 'Sem equipamento')}</div>
+      <div class="card-vaga" style="margin-bottom: 6px;">${h.equipamentoIconSvg()} ${colaborador.categoria === 'GESTAO' ? (colaborador.setor || 'Sem Setor') : (colaborador.equipamento || 'Sem equipamento')}</div>
       <div class="card-id" style="font-size: 11px; color: var(--text-3); border-top: 1px solid var(--border-color); padding-top: 6px; margin-top: auto;">
         MAT: <strong style="color: var(--text-2);">${colaborador.matricula_gps || 'S/ MAT'}</strong>
         ${colaborador.cr ? `<span style="margin-left:8px;">CR: <strong style="color: var(--text-2);">${colaborador.cr}</strong></span>` : ''}

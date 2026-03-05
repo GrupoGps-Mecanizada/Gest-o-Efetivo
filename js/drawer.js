@@ -30,7 +30,7 @@ SGE.drawer = {
       ? 'background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd'
       : 'background:#fef3c7;color:#92400e;border:1px solid #fde68a';
     const alocacaoLabel = col.categoria === 'GESTAO' ? 'Setor' : 'Equipamento';
-    const alocacaoValue = col.categoria === 'GESTAO' ? (col.supervisor || '—') : (col.equipamento || '—');
+    const alocacaoValue = col.categoria === 'GESTAO' ? (col.setor || '—') : (col.equipamento || '—');
 
     body.innerHTML = `
       ${semIdAlert}

@@ -54,8 +54,14 @@ SGE.api = {
         if (!window.supabase) return;
 
         // Debounce: avoid flooding loadData on batch updates
+        // Skip reload during active modal edits to prevent race conditions
         let realtimeTimer = null;
         const debouncedReload = () => {
+            // Don't reload while user is editing — prevents the "wrong name" bug
+            if (SGE.state.modalContext === 'edit' || SGE.state._editingColabId) {
+                console.info('SGE Real-time: Skipping reload — modal edit active');
+                return;
+            }
             if (realtimeTimer) clearTimeout(realtimeTimer);
             realtimeTimer = setTimeout(() => this.loadData(true), 800);
         };
@@ -381,6 +387,21 @@ SGE.api = {
                 }
             }
 
+            // Handle setor_id — may come directly or need lookup by name
+            let setorId = colData.setor_id || null;
+            if (!setorId && colData.setor && colData.setor !== 'SEM SETOR') {
+                const sObj = (SGE.state.setores || []).find(s => s.nome === colData.setor);
+                if (sObj) setorId = sObj.id;
+            }
+
+            // If category is GESTAO, clear equipment; if OPERACIONAL, clear setor
+            const categoria = colData.categoria || 'OPERACIONAL';
+            if (categoria === 'GESTAO') {
+                equipId = null;
+            } else {
+                setorId = null;
+            }
+
             const { error } = await supabase
                 .schema('gps_mec')
                 .from('efetivo_gps_mec_colaboradores')
@@ -390,19 +411,23 @@ SGE.api = {
                     cr: colData.cr,
                     regime: colData.regime,
                     status: colData.status,
-                    category: colData.categoria,
+                    category: categoria,
                     telefone: colData.telefone,
                     matricula_usiminas: colData.matricula_usiminas,
                     matricula_gps: colData.matricula_gps,
                     supervisor_id: supId,
                     equipment_id: equipId,
-                    setor_id: colData.setor_id || null,
+                    setor_id: setorId,
                     updated_at: new Date()
                 })
                 .eq('id', colData.id);
 
             if (error) throw error;
             this.updateSyncBar(false);
+
+            // After successful save, trigger a fresh reload to get consistent state
+            setTimeout(() => this.loadData(true), 500);
+
             return true;
         } catch (e) {
             this.updateSyncBar(false);
