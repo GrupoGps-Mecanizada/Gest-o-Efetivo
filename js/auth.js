@@ -25,7 +25,7 @@ SGE.auth = {
      */
     async init() {
         // Tenta autenticação via SSO Token
-        const userData = ssoClient.checkAuth();
+        const userData = await ssoClient.checkAuth();
 
         if (userData) {
             // Autenticado via SSO Token
