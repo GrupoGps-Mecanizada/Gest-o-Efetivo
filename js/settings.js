@@ -707,6 +707,106 @@ SGE.settings = {
 
       // ==================== DYNAMIC CONFIG EVENTS ====================
 
+      // Add Setor
+      const addSetorBtn = document.getElementById('btn-add-setor');
+      if (addSetorBtn) {
+        addSetorBtn.addEventListener('click', () => {
+          SGE.modal.openDynamic({
+            title: 'Adicionar Setor',
+            fields: [
+              { id: 'nome', label: 'Nome do Setor', placeholder: 'Ex: Administrativo', uppercase: true },
+              { id: 'descricao', label: 'Descrição' }
+            ],
+            onConfirm: async (vals) => {
+              const nome = vals.nome.trim();
+              if (!nome) { h.toast('Digite o nome do setor', 'error'); return false; }
+              if ((SGE.state.setores || []).some(s => s.nome === nome)) { h.toast('Setor já existe', 'error'); return false; }
+
+              const result = await SGE.api.syncSetor('create', { nome, descricao: vals.descricao, status: 'ATIVO' });
+              if (result) {
+                SGE.state.setores.push(result);
+                SGE.settings.render();
+                SGE.api.refreshUI();
+                SGE.api.cacheData();
+                h.toast('Setor adicionado', 'success');
+              }
+            }
+          });
+        });
+      }
+
+      // Edit Setor
+      container.querySelectorAll('.edit-setor-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.id;
+          const setor = SGE.state.setores.find(s => s.id === id);
+          if (!setor) return;
+
+          SGE.modal.openDynamic({
+            title: 'Editar Setor',
+            fields: [
+              { id: 'nome', label: 'Nome', value: setor.nome, uppercase: true },
+              { id: 'descricao', label: 'Descrição', value: setor.descricao }
+            ],
+            onConfirm: async (vals) => {
+              const cleanVal = vals.nome.trim();
+              if (!cleanVal) return false;
+              if (cleanVal !== setor.nome && SGE.state.setores.some(s => s.nome === cleanVal)) {
+                h.toast('Setor já existe', 'error');
+                return false;
+              }
+
+              const result = await SGE.api.syncSetor('update', { id, nome: cleanVal, descricao: vals.descricao });
+              if (result) {
+                setor.nome = cleanVal;
+                setor.descricao = vals.descricao;
+
+                // Syncing users is not strictly needed since users lookup by ID in DB, 
+                // but SGE local state relies on c.setor matching if we map it like that.
+                // We'll update state.
+                SGE.state.colaboradores.forEach(c => {
+                  if (c.setor_id === id) {
+                    c.setor = cleanVal;
+                  }
+                });
+
+                SGE.settings.render();
+                SGE.api.refreshUI();
+                SGE.api.cacheData();
+                h.toast('Setor atualizado', 'success');
+              }
+            }
+          });
+        });
+      });
+
+      // Delete Setor
+      container.querySelectorAll('.del-setor-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.id;
+          const setor = SGE.state.setores.find(s => s.id === id);
+
+          if (SGE.state.colaboradores.some(c => c.setor_id === id)) {
+            return h.toast('Não é possível excluir: existem colaboradores vinculados a este setor.', 'error');
+          }
+
+          SGE.modal.confirm({
+            title: 'Excluir Setor',
+            message: `Tem certeza que deseja excluir o setor <b>${setor.nome}</b>?`,
+            onConfirm: async () => {
+              const result = await SGE.api.syncSetor('delete', { id });
+              if (result) {
+                SGE.state.setores = SGE.state.setores.filter(s => s.id !== id);
+                SGE.settings.render();
+                SGE.api.refreshUI();
+                SGE.api.cacheData();
+                h.toast('Setor excluído', 'success');
+              }
+            }
+          });
+        });
+      });
+
       // Delete Regime
       container.querySelectorAll('.del-regime-btn').forEach(btn => {
         btn.addEventListener('click', () => {
