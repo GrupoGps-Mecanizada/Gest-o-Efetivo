@@ -104,7 +104,7 @@ SGE.viz = {
       { key: 'regime', label: 'Regime', filterable: true, options: SGE.CONFIG.regimes },
       { key: 'supervisor', label: 'Supervisor', filterable: true, options: SGE.state.supervisores.map(s => s.nome) },
       { key: 'status', label: 'Status', filterable: true, options: SGE.CONFIG.statuses },
-      { key: 'equipamento', label: 'Equipamento', filterable: true, options: Object.keys(SGE.CONFIG.equipTipos) },
+      { key: 'alocacao', label: 'Alocação', filterable: false },
     ];
 
     // Salvar estado de scroll para não pular a tela no refresh
@@ -148,7 +148,7 @@ SGE.viz = {
                 <td><span class="badge ${h.regimeBadgeClass(c.regime)}">${c.regime}</span></td>
                 <td>${c.supervisor || '—'}</td>
                 <td>${c.status}</td>
-                <td style="font-size:11px">${c.equipamento || '—'}</td>
+                <td style="font-size:11px">${(c.setor_id && c.setor !== 'SEM SETOR') ? c.setor : (c.equipamento || '—')}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -291,7 +291,7 @@ SGE.viz = {
       Regime: c.regime,
       Supervisor: c.supervisor || '',
       Status: c.status,
-      Equipamento: c.equipamento || ''
+      Alocação: (c.setor_id && c.setor !== 'SEM SETOR') ? c.setor : (c.equipamento || 'SEM EQUIPAMENTO')
     }));
 
     const dateStr = new Date().toISOString().slice(0, 10);

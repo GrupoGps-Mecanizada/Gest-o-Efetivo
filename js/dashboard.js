@@ -215,16 +215,19 @@ SGE.dashboard = {
             options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
         });
 
-        // Equip Types
+        // Alocacao Types
         const eqMap = {};
-        data.forEach(c => { if (c.equipamento) eqMap[c.equipamento] = (eqMap[c.equipamento] || 0) + 1; });
+        data.forEach(c => {
+            const aloc = (c.setor_id && c.setor !== 'SEM SETOR') ? c.setor : c.equipamento;
+            if (aloc) eqMap[aloc] = (eqMap[aloc] || 0) + 1;
+        });
         const eqSorted = Object.entries(eqMap).sort((a, b) => b[1] - a[1]).slice(0, 7);
 
         this.charts.equip = new Chart(document.getElementById('c-equip'), {
             type: 'pie',
             data: {
                 labels: eqSorted.map(i => i[0]),
-                datasets: [{ data: eqSorted.map(i => i[1]), backgroundColor: [this.theme.blue, this.theme.purple, this.theme.teal, this.theme.amber, this.theme.cyan, this.theme.indigo] }]
+                datasets: [{ data: eqSorted.map(i => i[1]), backgroundColor: [this.theme.blue, this.theme.purple, this.theme.teal, this.theme.amber, this.theme.cyan, this.theme.indigo, this.theme.rose] }]
             },
             options: { plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 9 } } } } }
         });
@@ -477,21 +480,25 @@ SGE.dashboard = {
     renderOperacional(data, container) {
         const ops = data.filter(c => c.categoria === 'OPERACIONAL');
         const eqSet = new Set();
-        const eqColabs = ops.filter(c => c.equipamento);
-        eqColabs.forEach(c => eqSet.add(c.equipamento));
+        const eqColabs = ops.filter(c => c.equipamento || (c.setor_id && c.setor !== 'SEM SETOR'));
+        eqColabs.forEach(c => {
+            const aloc = (c.setor_id && c.setor !== 'SEM SETOR') ? c.setor : c.equipamento;
+            eqSet.add(aloc);
+        });
 
         // Heatmap calculation
         const turns = ['A', 'B', 'C', 'D', 'ADM'];
-        const equipments = Object.keys(SGE.CONFIG.equipTipos || {});
+        const equipamentosESetores = Array.from(eqSet).sort();
 
         // Rows data
-        const heatmapRows = equipments.map(eq => {
-            const row = { name: eq, total: 0 };
+        const heatmapRows = equipamentosESetores.map(aloc => {
+            const row = { name: aloc, total: 0 };
             turns.forEach(t => {
                 const count = ops.filter(c => {
-                    if (c.equipamento !== eq) return false;
+                    const cAloc = (c.setor_id && c.setor !== 'SEM SETOR') ? c.setor : c.equipamento;
+                    if (cAloc !== aloc) return false;
                     const turno = SGE.equip ? SGE.equip.getTurno(c.regime) : (c.regime || '').includes(t);
-                    return turno === t;
+                    return turno === t || (t === 'ADM' && SGE.equip && SGE.equip.isADM(c.regime));
                 }).length;
                 row[t] = count;
                 row.total += count;
@@ -500,7 +507,7 @@ SGE.dashboard = {
         }).filter(r => r.total > 0);
 
         // Sem equipamento list
-        const semEquip = ops.filter(c => !c.equipamento).slice(0, 10);
+        const semEquip = ops.filter(c => !c.equipamento && (!c.setor_id || c.setor === 'SEM SETOR')).slice(0, 10);
 
         container.innerHTML = `
             <div class="dash-tab-content active">
@@ -513,13 +520,13 @@ SGE.dashboard = {
 
                 <div class="chart-card span-12" style="margin-bottom:16px">
                     <div class="chart-header">
-                        <span class="chart-title">Mapa de Cobertura: Equipamento × Turno</span>
+                        <span class="chart-title">Mapa de Cobertura: Alocação × Turno</span>
                         <span class="chart-hint">Verde ≥ 2 · Amarelo = 1 · Vermelho = 0</span>
                     </div>
                     <div class="data-table-wrap" style="padding:16px">
                         <table class="heatmap-table">
                             <thead>
-                                <tr><th>Equipamento</th>${turns.map(t => `<th>T ${t}</th>`).join('')}</tr>
+                                <tr><th>Alocação</th>${turns.map(t => `<th>T ${t}</th>`).join('')}</tr>
                             </thead>
                             <tbody>
                                 ${heatmapRows.map(row => `

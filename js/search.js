@@ -22,6 +22,7 @@ SGE.search = {
         (c.id && c.id.toUpperCase().includes(query)) ||
         (c.cr && c.cr.toUpperCase().includes(query)) ||
         (c.equipamento && c.equipamento.toUpperCase().includes(query)) ||
+        (c.setor && c.setor.toUpperCase().includes(query)) ||
         (c.supervisor && c.supervisor.toUpperCase().includes(query))
       );
 
