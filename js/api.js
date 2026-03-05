@@ -578,6 +578,63 @@ SGE.api = {
     },
 
     /**
+     * CRUD operations on the setores table
+     * @param {'create'|'update'|'delete'} action
+     * @param {Object} data - Setor data (nome, descricao, status)
+     */
+    async syncSetor(action, data) {
+        if (!window.supabase) return null;
+        this.updateSyncBar(true);
+
+        try {
+            let result;
+
+            if (action === 'create') {
+                const { data: inserted, error } = await supabase
+                    .schema('gps_mec')
+                    .from('efetivo_gps_mec_setores')
+                    .insert({
+                        nome: data.nome,
+                        descricao: data.descricao || '',
+                        status: data.status || 'ATIVO'
+                    })
+                    .select();
+                if (error) throw error;
+                result = inserted?.[0];
+            } else if (action === 'update') {
+                const patch = {};
+                if (data.nome !== undefined) patch.nome = data.nome;
+                if (data.descricao !== undefined) patch.descricao = data.descricao;
+                if (data.status !== undefined) patch.status = data.status;
+
+                if (Object.keys(patch).length > 0) {
+                    const { error } = await supabase
+                        .schema('gps_mec')
+                        .from('efetivo_gps_mec_setores')
+                        .update(patch)
+                        .eq('id', data.id);
+                    if (error) throw error;
+                }
+                result = true;
+            } else if (action === 'delete') {
+                const { error } = await supabase
+                    .schema('gps_mec')
+                    .from('efetivo_gps_mec_setores')
+                    .delete()
+                    .eq('id', data.id);
+                if (error) throw error;
+                result = true;
+            }
+
+            this.updateSyncBar(false);
+            return result;
+        } catch (e) {
+            this.updateSyncBar(false);
+            return this._handleError(e, `Setor (${action})`);
+        }
+    },
+
+    /**
      * CRUD operations on the equipment table (Vagas)
      * @param {'create'|'update'|'delete'} action
      * @param {Object} data - Equipment data

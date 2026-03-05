@@ -554,16 +554,29 @@ SGE.settings = {
 
           const supName = document.getElementById('new-col-supervisor').value;
           const eqName = document.getElementById('new-col-equipamento').value.trim() || 'SEM EQUIPAMENTO';
+          const catVal = document.getElementById('new-col-categoria') ? document.getElementById('new-col-categoria').value : 'OPERACIONAL';
+          const setorName = document.getElementById('new-col-setor') ? document.getElementById('new-col-setor').value : '';
 
           // Match IDs with state
           const targetSup = SGE.state.supervisores.find(s => s.nome === supName);
           let equipId = null;
-          if (eqName !== 'SEM EQUIPAMENTO') {
+          let setorId = null;
+          let finalEquipName = 'SEM EQUIPAMENTO';
+          let finalSetorName = 'SEM SETOR';
+
+          if (catVal === 'OPERACIONAL' && eqName !== 'SEM EQUIPAMENTO') {
+            finalEquipName = eqName;
             const parsed = SGE.equip ? SGE.equip.parseEquip(eqName) : null;
             if (parsed) {
               const eqObj = SGE.state.equipamentos.find(eq => eq.sigla === parsed.sigla && eq.numero === parsed.numero);
               if (eqObj) equipId = eqObj.id;
             }
+          }
+
+          if (catVal === 'GESTAO' && setorName !== '') {
+            finalSetorName = setorName;
+            const sObj = SGE.state.setores.find(s => s.nome === setorName);
+            if (sObj) setorId = sObj.id;
           }
 
           const newCol = {
@@ -573,13 +586,15 @@ SGE.settings = {
             regime: document.getElementById('new-col-regime').value,
             supervisor: supName,
             supervisor_id: targetSup ? targetSup.id : null,
-            equipamento: eqName,
+            equipamento: catVal === 'OPERACIONAL' ? finalEquipName : 'SEM EQUIPAMENTO',
             equipment_id: equipId,
+            setor: catVal === 'GESTAO' ? finalSetorName : 'SEM SETOR',
+            setor_id: setorId,
             status: 'ATIVO',
             telefone: document.getElementById('new-col-telefone').value.trim(),
             matricula_usiminas: document.getElementById('new-col-mat-usiminas').value.trim(),
             matricula_gps: matricula_gps,
-            categoria: 'OPERACIONAL' // Default logic before "setores"
+            categoria: catVal
           };
 
           SGE.state.colaboradores.push(newCol);
