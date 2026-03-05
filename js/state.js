@@ -9,6 +9,7 @@ window.SGE = window.SGE || {};
 SGE.state = {
     colaboradores: [],
     supervisores: [],
+    setores: [],
     movimentacoes: [],
     equipamentos: [],
     treinamentosCatalogo: [],

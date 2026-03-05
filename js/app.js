@@ -115,6 +115,7 @@ SGE.app = {
                 const parsed = JSON.parse(cachedParams);
                 if (parsed.colaboradores) SGE.state.colaboradores = parsed.colaboradores;
                 if (parsed.supervisores) SGE.state.supervisores = parsed.supervisores;
+                if (parsed.setores) SGE.state.setores = parsed.setores;
                 if (parsed.movimentacoes) SGE.state.movimentacoes = parsed.movimentacoes;
                 if (parsed.equipamentos) SGE.state.equipamentos = parsed.equipamentos;
                 if (parsed.treinamentosCatalogo) SGE.state.treinamentosCatalogo = parsed.treinamentosCatalogo;

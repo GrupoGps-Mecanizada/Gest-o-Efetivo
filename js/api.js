@@ -63,6 +63,7 @@ SGE.api = {
         const channels = [
             { schema: 'gps_mec', table: 'efetivo_gps_mec_colaboradores', event: '*' },
             { schema: 'gps_mec', table: 'efetivo_gps_mec_supervisores', event: '*' },
+            { schema: 'gps_mec', table: 'efetivo_gps_mec_setores', event: '*' },
             { schema: 'gps_mec', table: 'efetivo_gps_mec_equipamentos', event: '*' },
             { schema: 'gps_mec', table: 'efetivo_gps_mec_movimentacoes', event: 'INSERT' },
             { schema: 'gps_mec', table: 'efetivo_gps_mec_ferias', event: '*' },
@@ -104,12 +105,14 @@ SGE.api = {
             const [
                 { data: employees, error: errEmp },
                 { data: supervisors, error: errSup },
+                { data: setores, error: errSetores },
                 { data: movements, error: errMov },
                 { data: equipment, error: errEq },
                 { data: configs, error: errCfg }
             ] = await Promise.all([
-                supabase.schema('gps_mec').from('efetivo_gps_mec_colaboradores').select('id, name, function, cr, regime, status, telefone, matricula_usiminas, matricula_gps, category, supervisor_id, equipment_id, supervisors:efetivo_gps_mec_supervisores(name), equipment:efetivo_gps_mec_equipamentos(sigla, numero)'),
+                supabase.schema('gps_mec').from('efetivo_gps_mec_colaboradores').select('id, name, function, cr, regime, status, telefone, matricula_usiminas, matricula_gps, category, supervisor_id, equipment_id, setor_id, supervisors:efetivo_gps_mec_supervisores(name), equipment:efetivo_gps_mec_equipamentos(sigla, numero), setores:efetivo_gps_mec_setores(nome)'),
                 supabase.schema('gps_mec').from('efetivo_gps_mec_supervisores').select('*').order('name'),
+                supabase.schema('gps_mec').from('efetivo_gps_mec_setores').select('*').order('nome'),
                 supabase.schema('gps_mec').from('efetivo_gps_mec_movimentacoes').select('*, employees:efetivo_gps_mec_colaboradores(name, matricula_gps), from_sup:efetivo_gps_mec_supervisores!movements_from_supervisor_id_fkey(name), to_sup:efetivo_gps_mec_supervisores!movements_to_supervisor_id_fkey(name)').order('created_at', { ascending: false }).limit(100),
                 supabase.schema('gps_mec').from('efetivo_gps_mec_equipamentos').select('*'),
                 supabase.schema('gps_compartilhado').from('gps_configuracoes_sistema').select('*').eq('sistema', 'EFETIVO').eq('setor', 'MEC')
@@ -136,7 +139,9 @@ SGE.api = {
                 matricula_gps: e.matricula_gps,
                 categoria: e.category || 'OPERACIONAL',
                 supervisor: e.supervisors ? e.supervisors.name : 'SEM SUPERVISOR',
-                equipamento: e.equipment ? `${e.equipment.sigla}-${e.equipment.numero || ''}`.replace(/-$/, '') : 'SEM EQUIPAMENTO'
+                equipamento: e.equipment ? `${e.equipment.sigla}-${e.equipment.numero || ''}`.replace(/-$/, '') : 'SEM EQUIPAMENTO',
+                setor: e.setores ? e.setores.nome : 'SEM SETOR',
+                setor_id: e.setor_id
             }));
 
             // DEBUG: log category distribution to verify DB mapping
@@ -152,6 +157,8 @@ SGE.api = {
                 regime_padrao: s.default_regime || 'Misto',
                 ativo: s.is_active !== false // Defaults to true if missing
             }));
+
+            SGE.state.setores = setores || [];
 
             // Map movements
             SGE.state.movimentacoes = movements.map(m => ({
@@ -236,6 +243,7 @@ SGE.api = {
                 timestamp: Date.now(),
                 colaboradores: SGE.state.colaboradores,
                 supervisores: SGE.state.supervisores,
+                setores: SGE.state.setores,
                 movimentacoes: SGE.state.movimentacoes,
                 equipamentos: SGE.state.equipamentos,
                 treinamentosCatalogo: SGE.state.treinamentosCatalogo,
@@ -335,8 +343,13 @@ SGE.api = {
                     function: colData.funcao,
                     regime: colData.regime,
                     status: colData.status,
+                    category: colData.categoria || 'OPERACIONAL',
                     supervisor_id: colData.supervisor_id,
-                    equipment_id: colData.equipment_id
+                    equipment_id: colData.equipment_id,
+                    setor_id: colData.setor_id || null,
+                    matricula_gps: colData.matricula_gps || null,
+                    matricula_usiminas: colData.matricula_usiminas || null,
+                    telefone: colData.telefone || null
                 })
                 .select();
 
@@ -377,11 +390,13 @@ SGE.api = {
                     cr: colData.cr,
                     regime: colData.regime,
                     status: colData.status,
+                    category: colData.categoria,
                     telefone: colData.telefone,
                     matricula_usiminas: colData.matricula_usiminas,
                     matricula_gps: colData.matricula_gps,
                     supervisor_id: supId,
                     equipment_id: equipId,
+                    setor_id: colData.setor_id || null,
                     updated_at: new Date()
                 })
                 .eq('id', colData.id);
@@ -440,6 +455,19 @@ SGE.api = {
                             if (eqObj) patch.equipment_id = eqObj.id;
                         }
                     }
+                }
+
+                if (u.setor !== undefined) {
+                    if (u.setor === 'SEM SETOR' || !u.setor) {
+                        patch.setor_id = null;
+                    } else {
+                        const sObj = SGE.state.setores.find(s => s.nome === u.setor);
+                        if (sObj) patch.setor_id = sObj.id;
+                    }
+                }
+
+                if (u.categoria !== undefined) {
+                    patch.category = u.categoria;
                 }
 
                 return supabase.schema('gps_mec').from('efetivo_gps_mec_colaboradores').update(patch).eq('id', u.id);
