@@ -32,9 +32,54 @@ SGE.app = {
     },
 
     setupLoginForm() {
-        // Redundante: Agora é handled pelo SSO redirect. 
-        // Mantemos a função vazia temporariamente para não quebrar referências.
-        return;
+        const form = document.getElementById('login-form');
+        const errorEl = document.getElementById('login-error');
+        const toggleLink = document.getElementById('toggle-register');
+        let isRegister = false;
+
+        if (!form) return;
+
+        if (toggleLink) {
+            toggleLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                isRegister = !isRegister;
+                const nameGroup = document.getElementById('group-name');
+                if (nameGroup) nameGroup.style.display = isRegister ? '' : 'none';
+                toggleLink.textContent = isRegister ? 'Já tenho uma conta' : 'Criar uma conta';
+                document.getElementById('login-submit').textContent = isRegister ? 'Cadastrar' : 'Entrar';
+            });
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (errorEl) errorEl.textContent = '';
+
+            const email = document.getElementById('login-user').value.trim();
+            const password = document.getElementById('login-pass').value.trim();
+            if (!email || !password) return;
+
+            try {
+                if (isRegister) {
+                    const nome = document.getElementById('login-name')?.value.trim() || '';
+                    await SGE.auth.register(email, password, nome);
+                    if (errorEl) {
+                        errorEl.style.color = 'var(--green)';
+                        errorEl.textContent = 'Conta criada! Faça login.';
+                    }
+                } else {
+                    await SGE.auth.login(email, password);
+                    const loginScreen = document.getElementById('login-screen');
+                    if (loginScreen) loginScreen.classList.add('hidden');
+                    SGE.app.boot();
+                }
+            } catch (err) {
+                console.error('[SGE AUTH] Login error:', err);
+                if (errorEl) {
+                    errorEl.style.color = 'var(--red, #d64545)';
+                    errorEl.textContent = err.message || 'Erro ao autenticar.';
+                }
+            }
+        });
     },
 
 

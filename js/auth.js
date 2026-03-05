@@ -1,10 +1,18 @@
 'use strict';
 
 /**
- * SGE — Authentication Module (Via Central SGE SSO)
+ * SGE — Authentication Module (Via Central SGE SSO com fallback local)
  * Handles token recovery, session management, and role-based permissions
+ * 
+ * ENQUANTO A CENTRAL SGE NÃO ESTIVER COM sso_login.html DEPLOYADO, 
+ * usamos SGE_SSO_BYPASS = true para permitir login local via Supabase Auth.
  */
 window.SGE = window.SGE || {};
+
+// ========== SSO MODE ==========
+// SSO está ativo — a Central SGE agora tem login integrado no index.html
+// Se precisar voltar ao login local (fallback), descomente a linha abaixo:
+// window.SGE_SSO_BYPASS = true;
 
 // Instancia o SDK passando o slug do sistema
 const ssoClient = new window.SgeAuthSDK('gestao_efetivo_mec');
@@ -13,26 +21,51 @@ SGE.auth = {
     currentUser: null,
 
     /**
-     * Initialize Auth - Check for existing session via SSO Token
+     * Initialize Auth — tenta SSO, senão fallback para Supabase local
      */
     async init() {
+        // Tenta autenticação via SSO Token
         const userData = ssoClient.checkAuth();
 
         if (userData) {
+            // Autenticado via SSO Token
+            console.log('[SGE AUTH] Autenticado via SSO:', userData.nome);
             this.updateCurrentUser(userData);
             return true;
         }
 
+        if (ssoClient.isBypass()) {
+            // BYPASS: tenta autenticação via sessão Supabase local
+            console.log('[SGE AUTH] BYPASS ativo — verificando sessão Supabase local...');
+            try {
+                const { data: { session } } = await SGE.supabase.auth.getSession();
+                if (session && session.user) {
+                    console.log('[SGE AUTH] Sessão Supabase local encontrada:', session.user.email);
+                    this.updateCurrentUser({
+                        id: session.user.id,
+                        email: session.user.email,
+                        nome: session.user.user_metadata?.nome || session.user.email.split('@')[0],
+                        perfil: session.user.user_metadata?.perfil || 'GESTAO'
+                    });
+                    return true;
+                }
+            } catch (e) {
+                console.warn('[SGE AUTH] Erro ao verificar sessão Supabase:', e);
+            }
+
+            // Sem sessão — mostra tela de login local
+            console.log('[SGE AUTH] Sem sessão — exibindo login local');
+            return false;
+        }
+
+        // SSO ativo mas sem token — ssoClient já redirecionou
         return false;
     },
 
     /**
-     * Update internal state based on JWT Payload
+     * Update internal state based on user data (JWT payload ou Supabase session)
      */
     updateCurrentUser(user) {
-        // user object is derived directly from Central SGE Token payload
-        // it should have { id, email, nome, perfil }
-
         this.currentUser = {
             id: user.id || null,
             usuario: user.email ? user.email.split('@')[0] : 'Desconhecido',
@@ -41,42 +74,68 @@ SGE.auth = {
             perfil: user.perfil || 'VISAO'
         };
 
+        console.log('[SGE AUTH] Perfil aplicado:', this.currentUser.perfil);
         this.applyRoleUI(this.currentUser.perfil);
     },
 
     /**
-     * Login & Register are now delegated to Central SGE.
-     * We just call redirectToLogin to send them to the SSO Portal.
+     * Login local via Supabase Auth (usado em BYPASS mode)
      */
-    async login() {
-        ssoClient.redirectToLogin();
-    },
+    async login(email, password) {
+        console.log('[SGE AUTH] Tentando login local via Supabase...');
+        const { data, error } = await SGE.supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
 
-    async register() {
-        ssoClient.redirectToLogin();
+        this.updateCurrentUser({
+            id: data.user.id,
+            email: data.user.email,
+            nome: data.user.user_metadata?.nome || data.user.email.split('@')[0],
+            perfil: data.user.user_metadata?.perfil || 'GESTAO'
+        });
+
+        return data;
     },
 
     /**
-     * Logout and destroy token
+     * Register local via Supabase Auth (usado em BYPASS mode)
+     */
+    async register(email, password, nome) {
+        console.log('[SGE AUTH] Registrando via Supabase...');
+        const { data, error } = await SGE.supabase.auth.signUp({
+            email,
+            password,
+            options: { data: { nome } }
+        });
+        if (error) throw error;
+        return data;
+    },
+
+    /**
+     * Logout
      */
     async logout() {
-        SGE.api.clearCache();
+        console.log('[SGE AUTH] Logout');
+        try { SGE.api.clearCache(); } catch (e) { }
+
+        if (ssoClient.isBypass()) {
+            await SGE.supabase.auth.signOut();
+            window.location.reload();
+            return;
+        }
+
         ssoClient.logout();
     },
 
     /**
-     * Check if current user has a specific role or higher
-     * Hierarchy: ADM > GESTAO > VISAO
+     * Check role hierarchy: SUPER > ADM > GESTAO > VISAO
      */
     hasRole(requiredRole) {
         if (!this.currentUser) return false;
-
         const role = this.currentUser.perfil;
-        if (role === 'SUPER') return true; // Adicionado perfil do Hub
+        if (role === 'SUPER') return true;
         if (role === 'ADM') return true;
         if (requiredRole === 'GESTAO' && role === 'GESTAO') return true;
         if (requiredRole === 'VISAO') return true;
-
         return false;
     },
 
@@ -92,7 +151,6 @@ SGE.auth = {
             topbarUser.innerHTML = '';
         }
 
-        // Populate menu user info
         const menuUser = document.getElementById('nav-menu-user');
         if (menuUser && this.currentUser) {
             menuUser.innerHTML = `
