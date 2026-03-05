@@ -185,8 +185,22 @@ SGE.settings = {
           </select>
         </div>
         <div class="form-field">
-          <label>Equipamento</label>
+          <label>Categoria</label>
+          <select id="new-col-categoria">
+            <option value="OPERACIONAL">Operacional</option>
+            <option value="GESTAO">Gestão</option>
+          </select>
+        </div>
+        <div class="form-field" id="wrapper-equip">
+          <label>Equipamento (Vaga)</label>
           <input type="text" id="new-col-equipamento" placeholder="Ex: PC-001" />
+        </div>
+        <div class="form-field" id="wrapper-setor" style="display:none;">
+          <label>Setor</label>
+          <select id="new-col-setor">
+            <option value="">Sem Setor</option>
+            ${(SGE.state.setores || []).filter(s => s.status === 'ATIVO').map(s => `<option value="${s.nome}">${s.nome}</option>`).join('')}
+          </select>
         </div>
         <div class="form-field">
           <label>Telefone</label>
@@ -274,6 +288,18 @@ SGE.settings = {
           </div>
           <div class="settings-section-body" style="padding: 10px 18px 18px 18px;">
             <div class="config-list" style="max-height:260px; overflow-y:auto">${vagasHtml}</div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-header config-header-wrap">
+            <span>Setores (Gestão)</span>
+            <button class="btn-primary btn-add-small" id="btn-add-setor">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Adicionar
+            </button>
+          </div>
+          <div class="settings-section-body" style="padding: 10px 18px 18px 18px;">
+            <div class="config-list" style="max-height:260px; overflow-y:auto">${setoresHtml}</div>
           </div>
         </div>
 
@@ -410,6 +436,16 @@ SGE.settings = {
           </div>
         </div>
       `;
+      }
+
+      // UI bindings for new forms
+      const catSelect = document.getElementById('new-col-categoria');
+      if (catSelect) {
+        catSelect.addEventListener('change', (e) => {
+          const isGestao = e.target.value === 'GESTAO';
+          document.getElementById('wrapper-equip').style.display = isGestao ? 'none' : 'block';
+          document.getElementById('wrapper-setor').style.display = isGestao ? 'block' : 'none';
+        });
       }
 
       // Event: toggle supervisor
