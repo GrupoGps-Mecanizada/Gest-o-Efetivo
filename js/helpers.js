@@ -32,6 +32,8 @@ SGE.helpers = {
      * Check if collaborator has no assigned position
      */
     isSemEquipamento(col) {
+        // If has a valid Setor, considered allocated
+        if (col.setor_id && col.setor && col.setor !== 'SEM SETOR') return false;
         return !col.equipamento || col.equipamento === 'SEM EQUIPAMENTO' || col.equipamento === 'NÃO INFORMADA';
     },
 

@@ -76,18 +76,56 @@ SGE.equip = {
       sigla: 'UNALLOCATED',
       numero: '',
       label: 'S/R',
-      tipo: { nome: 'Sem Equipamento Definido', cor: '#94a3b8' },
+      tipo: { nome: 'Sem Alocação Definida', cor: '#94a3b8' },
       escala: '24HS', // Render all turnos to catch everyone
       turnos: { 'A': [], 'B': [], 'C': [], 'D': [], 'ADM': [], '16H': [], 'S/R': [] },
       isVirtual: true
     };
 
+    // Construct virtual Setor blocks based off existing sectors in DB
+    if (SGE.state.setores && Array.isArray(SGE.state.setores)) {
+      SGE.state.setores.forEach(s => {
+        const key = 'SETOR-' + s.id;
+        equipMap[key] = {
+          sigla: 'SETOR',
+          numero: '',
+          label: s.nome, // Setor Nome
+          tipo: { nome: 'Setor', cor: s.cor || '#0a2fa8' },
+          escala: 'ADM', // Defaults to ADM
+          turnos: { 'A': [], 'B': [], 'C': [], 'D': [], 'ADM': [], '16H': [], 'S/R': [] },
+          isVirtual: true,
+          isSetor: true
+        };
+      });
+    }
+
     // 2. Populate with active collaborators (use filtered data for global filter support)
     const filteredColabs = SGE.helpers.filtrarColaboradores();
     filteredColabs.forEach(c => {
-      const parsed = SGE.equip.parseEquip(c.equipamento);
       const turno = SGE.equip.getTurno(c.regime);
 
+      // If collaborator has a known Setor!
+      if (c.setor_id && c.setor && c.setor !== 'SEM SETOR') {
+        const key = 'SETOR-' + c.setor_id;
+        // If sector didn't arrive in `state.setores` for some reason, spawn it
+        if (!equipMap[key]) {
+          equipMap[key] = {
+            sigla: 'SETOR',
+            numero: '',
+            label: c.setor,
+            tipo: { nome: 'Setor', cor: '#0a2fa8' },
+            escala: 'ADM',
+            turnos: { 'A': [], 'B': [], 'C': [], 'D': [], 'ADM': [], '16H': [], 'S/R': [] },
+            isVirtual: true,
+            isSetor: true
+          };
+        }
+        equipMap[key].turnos[turno].push(c);
+        return;
+      }
+
+      // No Setor. Check Equipment
+      const parsed = SGE.equip.parseEquip(c.equipamento);
       if (!parsed || !tipos[parsed.sigla] || !equipMap[parsed.sigla + '-' + parsed.numero]) {
         // Did not match any official map? Send to unallocated
         equipMap['UNALLOCATED'].turnos[turno].push(c);
@@ -106,6 +144,17 @@ SGE.equip = {
     });
     if (!hasUnallocated) delete equipMap['UNALLOCATED'];
 
+    // Cleanup: Prune empty SETOR virtual structures
+    Object.keys(equipMap).forEach(key => {
+      if (equipMap[key].isSetor) {
+        let hasPeople = false;
+        Object.values(equipMap[key].turnos).forEach(arr => {
+          if (arr.length > 0) hasPeople = true;
+        });
+        if (!hasPeople) delete equipMap[key];
+      }
+    });
+
     return equipMap;
   },
 
@@ -120,21 +169,32 @@ SGE.equip = {
     const tipos = SGE.CONFIG.equipTipos;
     const turnos = ['A', 'B', 'C', 'D', 'ADM', '16H', 'S/R'];
 
-    // Use global filters instead of local equip state
-    const filtroTipo = SGE.state.filtros.equipTipo || [];
+    // Use global filters instead of local equip state (Renamed equipTipo to alocacao to support both)
+    const filtroAlocacao = SGE.state.filtros.alocacao || [];
     const filtroTurno = SGE.state.filtros.equipTurno || [];
     const activeTurnoFilter = filtroTurno.length === 1 ? filtroTurno[0] : (filtroTurno.length === 0 ? 'TODOS' : 'MULTI');
 
-    // Filter by type
+    // Filter by type or sector value
     let entries = Object.values(equipData);
-    if (filtroTipo.length > 0) {
-      entries = entries.filter(e => filtroTipo.includes(e.sigla));
+    if (filtroAlocacao.length > 0) {
+      entries = entries.filter(e => {
+        if (e.isSetor) {
+          return filtroAlocacao.includes(e.label); // e.label already is the sector name
+        } else if (!e.isVirtual) {
+          const comp = e.sigla + ' — ' + e.tipo.nome;
+          return filtroAlocacao.includes(comp);
+        }
+        return false;
+      });
     }
 
-    // Sort: by sigla then numero numerically (Push UNALLOCATED to the bottom)
+    // Sort: by sigla then numero numerically (Push UNALLOCATED to the bottom, Setores to Top)
     entries.sort((a, b) => {
-      if (a.isVirtual && !b.isVirtual) return 1;
-      if (!a.isVirtual && b.isVirtual) return -1;
+      if (a.isVirtual && a.sigla === 'UNALLOCATED' && !b.isVirtual) return 1;
+      if (!a.isVirtual && b.isVirtual && b.sigla === 'UNALLOCATED') return -1;
+      if (a.isSetor && !b.isSetor) return -1;
+      if (!a.isSetor && b.isSetor) return 1;
+
       if (a.sigla !== b.sigla) return a.sigla.localeCompare(b.sigla);
       const numA = parseInt(a.numero) || 0;
       const numB = parseInt(b.numero) || 0;
@@ -148,15 +208,15 @@ SGE.equip = {
       return sum + Object.values(e.turnos).reduce((s, arr) => s + arr.length, 0);
     }, 0);
 
-    // Fixed display order for group rows
-    const groupOrder = ['AP', 'AV', 'HV', 'ASP', 'BK', 'CJ', 'MT', 'UNALLOCATED'];
+    // Fixed display order for group rows now includes SETOR
+    const groupOrder = ['SETOR', 'AP', 'AV', 'HV', 'ASP', 'BK', 'CJ', 'MT', 'UNALLOCATED'];
 
     // Build groups HTML — horizontal rows
     const groupsHtml = groupOrder.map(sigla => {
       const groupEntries = entries.filter(e => e.sigla === sigla);
       if (groupEntries.length === 0) return '';
 
-      const tipoInfo = tipos[sigla] || { nome: 'Sem Equipamento Definido', cor: '#94a3b8' };
+      const tipoInfo = sigla === 'SETOR' ? { nome: 'Setores', cor: '#0a2fa8' } : (tipos[sigla] || { nome: 'Sem Alocação Definida', cor: '#94a3b8' });
       const groupMemberCount = groupEntries.reduce((sum, e) => {
         return sum + Object.values(e.turnos).reduce((s, arr) => s + arr.length, 0);
       }, 0);
@@ -166,7 +226,7 @@ SGE.equip = {
           <div class="equip-group-header">
             <div class="equip-group-color" style="background:${tipoInfo.cor}"></div>
             <span class="equip-group-title">${tipoInfo.nome}</span>
-            <span class="equip-group-count">${groupEntries.length} equip · ${groupMemberCount} colab</span>
+            <span class="equip-group-count">${groupEntries.length} ${sigla === 'SETOR' ? 'setores' : 'equip'} · ${groupMemberCount} colab</span>
             <div class="equip-group-line"></div>
           </div>
           <div class="equip-group-cards">
@@ -181,7 +241,7 @@ SGE.equip = {
 
     // Active filters summary
     const activeFilterParts = [];
-    if (filtroTipo.length > 0) activeFilterParts.push(filtroTipo.join(', '));
+    if (filtroAlocacao.length > 0) activeFilterParts.push(filtroAlocacao.join(', '));
     if (filtroTurno.length > 0) activeFilterParts.push('Turno: ' + filtroTurno.join(', '));
     const filterSummary = activeFilterParts.length > 0
       ? `<span class="equip-filter-summary">Filtros: ${activeFilterParts.join(' | ')}</span>`
@@ -194,14 +254,14 @@ SGE.equip = {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <rect x="2" y="3" width="20" height="18" rx="2"/><path d="M2 9h20M9 3v18"/>
             </svg>
-            <h3>Nenhum equipamento encontrado</h3>
-            <p>Normalize os equipamentos primeiro para visualizá-los aqui.</p>
+            <h3>Nenhuma alocação encontrada</h3>
+            <p>Ajuste os filtros ou crie a tabela base primeiro para visualizá-los aqui.</p>
           </div>
         ` : groupsHtml}
       </div>
       <div class="equip-action-bar">
         ${filterSummary}
-        <span class="equip-stats">${totalEquip} equipamentos · ${totalColab} colaboradores alocados</span>
+        <span class="equip-stats">${totalEquip} grupos alocados · ${totalColab} colaboradores alocados</span>
       </div>
     `;
 

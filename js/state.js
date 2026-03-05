@@ -17,7 +17,7 @@ SGE.state = {
     ferias: [],
     advertencias: [],
     usuarios: [],
-    filtros: { regime: [], funcao: [], status: [], equipTipo: [], equipTurno: [], supervisor: [], categoria: [] },
+    filtros: { regime: [], funcao: [], status: [], alocacao: [], equipTurno: [], supervisor: [], categoria: [] },
     activeView: 'kanban',
     drawerColaborador: null,
     pendingMove: null,
