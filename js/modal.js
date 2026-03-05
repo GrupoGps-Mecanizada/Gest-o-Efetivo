@@ -190,14 +190,14 @@ SGE.modal = {
             <option value="GESTAO" ${isGestao ? 'selected' : ''}>Gestão</option>
           </select>
         </div>
-        <div class="form-field" id="edit-wrapper-equip" style="grid-column:1/-1; ${isGestao ? 'display:none' : ''}">
+        <div class="form-field" id="edit-wrapper-equip" style="grid-column:1/-1;">
           <label>Equipamento (Vaga)</label>
           <select id="edit-equipamento">
             <option value="">Sem Equipamento</option>
             ${equipOptions}
           </select>
         </div>
-        <div class="form-field" id="edit-wrapper-setor" style="grid-column:1/-1; ${!isGestao ? 'display:none' : ''}">
+        <div class="form-field" id="edit-wrapper-setor" style="grid-column:1/-1;">
           <label>Setor</label>
           <select id="edit-setor">
             <option value="">Sem Setor</option>
@@ -219,15 +219,7 @@ SGE.modal = {
       </div>
     `;
 
-    // Toggle setor/equip visibility based on category
-    const catSelect = document.getElementById('edit-categoria');
-    if (catSelect) {
-      catSelect.addEventListener('change', (e) => {
-        const isG = e.target.value === 'GESTAO';
-        document.getElementById('edit-wrapper-equip').style.display = isG ? 'none' : '';
-        document.getElementById('edit-wrapper-setor').style.display = isG ? '' : 'none';
-      });
-    }
+    // No category toggle required anymore: Sector and Equipment can be independently set.
 
     const footer = document.querySelector('.modal-footer');
     footer.innerHTML = `
@@ -276,15 +268,9 @@ SGE.modal = {
     colaborador.matricula_usiminas = matricula_usiminas;
     colaborador.matricula_gps = matricula_gps;
 
-    if (categoria === 'GESTAO') {
-      colaborador.equipamento = 'SEM EQUIPAMENTO';
-      colaborador.setor_id = setorId;
-      colaborador.setor = setorNome;
-    } else {
-      colaborador.equipamento = equipamento || 'SEM EQUIPAMENTO';
-      colaborador.setor_id = null;
-      colaborador.setor = 'SEM SETOR';
-    }
+    colaborador.equipamento = equipamento || 'SEM EQUIPAMENTO';
+    colaborador.setor_id = setorId;
+    colaborador.setor = setorNome;
 
     SGE.modal.close();
     SGE.helpers.updateStats();

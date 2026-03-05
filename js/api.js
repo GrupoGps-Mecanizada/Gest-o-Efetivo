@@ -394,13 +394,8 @@ SGE.api = {
                 if (sObj) setorId = sObj.id;
             }
 
-            // If category is GESTAO, clear equipment; if OPERACIONAL, clear setor
+            // Both equipment and sector are kept regardless of category now.
             const categoria = colData.categoria || 'OPERACIONAL';
-            if (categoria === 'GESTAO') {
-                equipId = null;
-            } else {
-                setorId = null;
-            }
 
             const { error } = await supabase
                 .schema('gps_mec')

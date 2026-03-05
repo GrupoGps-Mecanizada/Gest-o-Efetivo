@@ -211,7 +211,7 @@ SGE.settings = {
           <label>Equipamento (Vaga)</label>
           <input type="text" id="new-col-equipamento" placeholder="Ex: PC-001" />
         </div>
-        <div class="form-field" id="wrapper-setor" style="display:none;">
+        <div class="form-field" id="wrapper-setor">
           <label>Setor</label>
           <select id="new-col-setor">
             <option value="">Sem Setor</option>
@@ -454,15 +454,7 @@ SGE.settings = {
       `;
       }
 
-      // UI bindings for new forms
-      const catSelect = document.getElementById('new-col-categoria');
-      if (catSelect) {
-        catSelect.addEventListener('change', (e) => {
-          const isGestao = e.target.value === 'GESTAO';
-          document.getElementById('wrapper-equip').style.display = isGestao ? 'none' : 'block';
-          document.getElementById('wrapper-setor').style.display = isGestao ? 'block' : 'none';
-        });
-      }
+      // Category event logic removed to allow Setor and Equipamento simultaneously.
 
       // Event: toggle supervisor
       container.querySelectorAll('.toggle-btn').forEach(btn => {
@@ -564,7 +556,7 @@ SGE.settings = {
           let finalEquipName = 'SEM EQUIPAMENTO';
           let finalSetorName = 'SEM SETOR';
 
-          if (catVal === 'OPERACIONAL' && eqName !== 'SEM EQUIPAMENTO') {
+          if (eqName !== 'SEM EQUIPAMENTO') {
             finalEquipName = eqName;
             const parsed = SGE.equip ? SGE.equip.parseEquip(eqName) : null;
             if (parsed) {
@@ -573,7 +565,7 @@ SGE.settings = {
             }
           }
 
-          if (catVal === 'GESTAO' && setorName !== '') {
+          if (setorName !== '') {
             finalSetorName = setorName;
             const sObj = SGE.state.setores.find(s => s.nome === setorName);
             if (sObj) setorId = sObj.id;
@@ -586,9 +578,9 @@ SGE.settings = {
             regime: document.getElementById('new-col-regime').value,
             supervisor: supName,
             supervisor_id: targetSup ? targetSup.id : null,
-            equipamento: catVal === 'OPERACIONAL' ? finalEquipName : 'SEM EQUIPAMENTO',
+            equipamento: finalEquipName,
             equipment_id: equipId,
-            setor: catVal === 'GESTAO' ? finalSetorName : 'SEM SETOR',
+            setor: finalSetorName,
             setor_id: setorId,
             status: 'ATIVO',
             telefone: document.getElementById('new-col-telefone').value.trim(),

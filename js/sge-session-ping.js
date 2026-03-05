@@ -32,12 +32,25 @@
         const data = getSessionData();
         if (!data) return;
 
+        let token = data.token;
+        // Se houver uma sessão Supabase local ativa, pega o access_token fresco
+        // para evitar erro 401 JWT expired.
+        try {
+            if (window.supabase) {
+                const { data: authData } = await window.supabase.auth.getSession();
+                if (authData?.session?.access_token) {
+                    token = authData.session.access_token;
+                    localStorage.setItem('sge_session_token', token);
+                }
+            }
+        } catch (e) { }
+
         try {
             const response = await fetch(`${SUPABASE_URL}/rest/v1/sge_central_sessoes?id=eq.${data.sessionId}&usuario_id=eq.${data.userId}`, {
                 method: 'PATCH',
                 headers: {
                     'apikey': ANON_KEY,
-                    'Authorization': `Bearer ${data.token}`,
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                     'Content-Profile': 'gps_compartilhado',
                     'Accept-Profile': 'gps_compartilhado',
