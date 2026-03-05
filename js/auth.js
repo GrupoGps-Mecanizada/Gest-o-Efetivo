@@ -31,6 +31,7 @@ SGE.auth = {
             // Autenticado via SSO Token
             console.log('[SGE AUTH] Autenticado via SSO:', userData.nome);
             this.updateCurrentUser(userData);
+            await this.registerSession(userData.id);
             return true;
         }
 
@@ -47,6 +48,7 @@ SGE.auth = {
                         nome: session.user.user_metadata?.nome || session.user.email.split('@')[0],
                         perfil: session.user.user_metadata?.perfil || 'GESTAO'
                     });
+                    await this.registerSession(session.user.id, session.access_token);
                     return true;
                 }
             } catch (e) {
@@ -60,6 +62,79 @@ SGE.auth = {
 
         // SSO ativo mas sem token — ssoClient já redirecionou
         return false;
+    },
+
+    /**
+     * Register session in sge_central_sessoes for the Radar
+     */
+    async registerSession(userId, accessToken) {
+        try {
+            // Check if session already registered (avoid duplicates on page refresh)
+            const existingId = localStorage.getItem('sge_session_id');
+            if (existingId) {
+                console.log('[SGE AUTH] Sessão já registrada:', existingId);
+                return;
+            }
+
+            const SUPABASE_URL = SGE.SUPABASE_URL || 'https://mgcjidryrjqiceielmzp.supabase.co';
+            const ANON_KEY = SGE.SUPABASE_KEY;
+
+            const headers = {
+                'apikey': ANON_KEY,
+                'Content-Type': 'application/json',
+                'Content-Profile': 'gps_compartilhado',
+                'Accept-Profile': 'gps_compartilhado',
+                'Prefer': 'return=representation'
+            };
+
+            if (accessToken) {
+                headers['Authorization'] = `Bearer ${accessToken}`;
+            } else {
+                headers['Authorization'] = `Bearer ${ANON_KEY}`;
+            }
+
+            // Get sistema_id for this app slug
+            const sysResp = await fetch(
+                `${SUPABASE_URL}/rest/v1/sge_central_sistemas?slug=eq.gestao_efetivo_mec&select=id`,
+                { headers: { 'apikey': ANON_KEY, 'Authorization': headers['Authorization'], 'Accept-Profile': 'gps_compartilhado', 'Accept': 'application/vnd.pgrst.object+json' } }
+            );
+
+            if (!sysResp.ok) {
+                console.warn('[SGE AUTH] Não conseguiu buscar sistema para sessão');
+                return;
+            }
+
+            const sysData = await sysResp.json();
+            if (!sysData?.id) return;
+
+            // Insert session
+            const sessResp = await fetch(`${SUPABASE_URL}/rest/v1/sge_central_sessoes`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    usuario_id: userId,
+                    sistema_id: sysData.id,
+                    ip_address: '0.0.0.0',
+                    user_agent: navigator.userAgent.substring(0, 200),
+                    expira_em: new Date(Date.now() + (1000 * 60 * 60 * 8)).toISOString()
+                })
+            });
+
+            if (sessResp.ok) {
+                const sessData = await sessResp.json();
+                const sessionId = Array.isArray(sessData) ? sessData[0]?.id : sessData?.id;
+                if (sessionId) {
+                    localStorage.setItem('sge_session_id', sessionId);
+                    localStorage.setItem('sge_session_user_id', userId);
+                    if (accessToken) localStorage.setItem('sge_session_token', accessToken);
+                    console.log('[SGE AUTH] ✓ Sessão registrada para Radar:', sessionId);
+                }
+            } else {
+                console.warn('[SGE AUTH] Falha ao registrar sessão:', sessResp.status);
+            }
+        } catch (err) {
+            console.warn('[SGE AUTH] Erro ao registrar sessão:', err);
+        }
     },
 
     /**
@@ -93,6 +168,8 @@ SGE.auth = {
             perfil: data.user.user_metadata?.perfil || 'GESTAO'
         });
 
+        await this.registerSession(data.user.id, data.session?.access_token);
+
         return data;
     },
 
@@ -116,6 +193,16 @@ SGE.auth = {
     async logout() {
         console.log('[SGE AUTH] Logout');
         try { SGE.api.clearCache(); } catch (e) { }
+
+        // Clean up session data
+        try {
+            localStorage.removeItem('sge_session_id');
+            localStorage.removeItem('sge_session_user_id');
+            localStorage.removeItem('sge_session_token');
+        } catch (e) { }
+
+        // Stop ping
+        if (window.SGE_SESSION_PING) window.SGE_SESSION_PING.stop();
 
         if (ssoClient.isBypass()) {
             await SGE.supabase.auth.signOut();
