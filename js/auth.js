@@ -35,8 +35,10 @@ SGE.auth = {
             // Recuperar o access_token da sessão Supabase (necessário para RLS)
             let token = null;
             try {
-                const { data: { session } } = await SGE.supabase.auth.getSession();
-                token = session?.access_token || null;
+                if (window.supabase) {
+                    const { data: { session } } = await window.supabase.auth.getSession();
+                    token = session?.access_token || null;
+                }
             } catch (e) {
                 console.warn('[SGE AUTH] Não foi possível recuperar token da sessão Supabase:', e);
             }
@@ -49,17 +51,19 @@ SGE.auth = {
             // BYPASS: tenta autenticação via sessão Supabase local
             console.log('[SGE AUTH] BYPASS ativo — verificando sessão Supabase local...');
             try {
-                const { data: { session } } = await SGE.supabase.auth.getSession();
-                if (session && session.user) {
-                    console.log('[SGE AUTH] Sessão Supabase local encontrada:', session.user.email);
-                    this.updateCurrentUser({
-                        id: session.user.id,
-                        email: session.user.email,
-                        nome: session.user.user_metadata?.nome || session.user.email.split('@')[0],
-                        perfil: session.user.user_metadata?.perfil || 'GESTAO'
-                    });
-                    await this.registerSession(session.user.id, session.access_token);
-                    return true;
+                if (window.supabase) {
+                    const { data: { session } } = await window.supabase.auth.getSession();
+                    if (session && session.user) {
+                        console.log('[SGE AUTH] Sessão Supabase local encontrada:', session.user.email);
+                        this.updateCurrentUser({
+                            id: session.user.id,
+                            email: session.user.email,
+                            nome: session.user.user_metadata?.nome || session.user.email.split('@')[0],
+                            perfil: session.user.user_metadata?.perfil || 'GESTAO'
+                        });
+                        await this.registerSession(session.user.id, session.access_token);
+                        return true;
+                    }
                 }
             } catch (e) {
                 console.warn('[SGE AUTH] Erro ao verificar sessão Supabase:', e);
@@ -88,11 +92,12 @@ SGE.auth = {
                 return;
             }
 
-            // Se não tiver token autenticado, tenta recuperar da sessão Supabase
             if (!accessToken) {
                 try {
-                    const { data: { session } } = await SGE.supabase.auth.getSession();
-                    accessToken = session?.access_token || null;
+                    if (window.supabase) {
+                        const { data: { session } } = await window.supabase.auth.getSession();
+                        accessToken = session?.access_token || null;
+                    }
                 } catch (e) { /* ignore */ }
             }
 
@@ -179,7 +184,8 @@ SGE.auth = {
      */
     async login(email, password) {
         console.log('[SGE AUTH] Tentando login local via Supabase...');
-        const { data, error } = await SGE.supabase.auth.signInWithPassword({ email, password });
+        if (!window.supabase) throw new Error('Supabase client não inicializado');
+        const { data, error } = await window.supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
 
         this.updateCurrentUser({
@@ -199,7 +205,8 @@ SGE.auth = {
      */
     async register(email, password, nome) {
         console.log('[SGE AUTH] Registrando via Supabase...');
-        const { data, error } = await SGE.supabase.auth.signUp({
+        if (!window.supabase) throw new Error('Supabase client não inicializado');
+        const { data, error } = await window.supabase.auth.signUp({
             email,
             password,
             options: { data: { nome } }
@@ -226,7 +233,7 @@ SGE.auth = {
         if (window.SGE_SESSION_PING) window.SGE_SESSION_PING.stop();
 
         if (ssoClient.isBypass()) {
-            await SGE.supabase.auth.signOut();
+            if (window.supabase) await window.supabase.auth.signOut();
             window.location.reload();
             return;
         }

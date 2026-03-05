@@ -33,24 +33,25 @@
         if (!data) return;
 
         try {
-            const client = window.supabase.createClient(SUPABASE_URL, ANON_KEY, {
-                db: { schema: 'gps_compartilhado' },
-                global: {
-                    headers: { 'Authorization': `Bearer ${data.token}` }
-                }
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/sge_central_sessoes?id=eq.${data.sessionId}&usuario_id=eq.${data.userId}`, {
+                method: 'PATCH',
+                headers: {
+                    'apikey': ANON_KEY,
+                    'Authorization': `Bearer ${data.token}`,
+                    'Content-Type': 'application/json',
+                    'Content-Profile': 'gps_compartilhado',
+                    'Accept-Profile': 'gps_compartilhado',
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify({ ultimo_ping_em: new Date().toISOString() })
             });
 
-            const { error } = await client
-                .from('sge_central_sessoes')
-                .update({ ultimo_ping_em: new Date().toISOString() })
-                .eq('id', data.sessionId)
-                .eq('usuario_id', data.userId);
-
-            if (error) {
-                console.warn('[SGE Ping] Erro no ping:', error.message);
+            if (!response.ok) {
+                const errText = await response.text().catch(() => '');
+                console.warn('[SGE Ping] Erro no ping:', response.status, errText);
             }
         } catch (err) {
-            console.warn('[SGE Ping] Falha:', err.message);
+            console.warn('[SGE Ping] Falha no ping:', err.message);
         }
     }
 

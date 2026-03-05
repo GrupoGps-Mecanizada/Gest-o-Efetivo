@@ -491,26 +491,43 @@ SGE.settings = {
           const nome = document.getElementById('new-col-nome').value.trim().toUpperCase();
           if (!nome) return h.toast('Digite o nome do colaborador', 'error');
 
-          let id = document.getElementById('new-col-id').value.trim().toUpperCase();
-          if (!id) {
-            const tempCount = SGE.state.colaboradores.filter(c => c.id.startsWith('COL_TEMP_')).length;
-            id = `COL_TEMP_${Date.now()}_${tempCount}`;
-          }
+          const matricula_gps = document.getElementById('new-col-mat-gps').value.trim();
+          if (!matricula_gps) return h.toast('A matrícula GPS é obrigatória', 'error');
 
-          const exists = SGE.state.colaboradores.some(c => c.id === id);
-          if (exists) return h.toast('ID já existe', 'error');
+          const exists = SGE.state.colaboradores.some(c => c.matricula_gps === matricula_gps);
+          if (exists) return h.toast('Matrícula GPS já existe', 'error');
+
+          const tempCount = SGE.state.colaboradores.filter(c => c.id.startsWith('COL_TEMP_')).length;
+          const id = `COL_TEMP_${Date.now()}_${tempCount}`;
+
+          const supName = document.getElementById('new-col-supervisor').value;
+          const eqName = document.getElementById('new-col-equipamento').value.trim() || 'SEM EQUIPAMENTO';
+
+          // Match IDs with state
+          const targetSup = SGE.state.supervisores.find(s => s.nome === supName);
+          let equipId = null;
+          if (eqName !== 'SEM EQUIPAMENTO') {
+            const parsed = SGE.equip ? SGE.equip.parseEquip(eqName) : null;
+            if (parsed) {
+              const eqObj = SGE.state.equipamentos.find(eq => eq.sigla === parsed.sigla && eq.numero === parsed.numero);
+              if (eqObj) equipId = eqObj.id;
+            }
+          }
 
           const newCol = {
             id,
             nome,
             funcao: document.getElementById('new-col-funcao').value,
             regime: document.getElementById('new-col-regime').value,
-            supervisor: document.getElementById('new-col-supervisor').value,
-            equipamento: document.getElementById('new-col-equipamento').value.trim() || 'SEM EQUIPAMENTO',
+            supervisor: supName,
+            supervisor_id: targetSup ? targetSup.id : null,
+            equipamento: eqName,
+            equipment_id: equipId,
             status: 'ATIVO',
             telefone: document.getElementById('new-col-telefone').value.trim(),
             matricula_usiminas: document.getElementById('new-col-mat-usiminas').value.trim(),
-            matricula_gps: document.getElementById('new-col-mat-gps').value.trim()
+            matricula_gps: matricula_gps,
+            categoria: 'OPERACIONAL' // Default logic before "setores"
           };
 
           SGE.state.colaboradores.push(newCol);
@@ -518,7 +535,16 @@ SGE.settings = {
           SGE.api.refreshUI();
           SGE.api.cacheData();
           h.toast(`${nome} adicionado com sucesso`);
-          await SGE.api.syncNewColaborador(newCol);
+
+          const result = await SGE.api.syncNewColaborador(newCol);
+          // Substituir ID temporário pelo real retornado pelo Supabase (se houver)
+          if (result && result.id) {
+            const localIdx = SGE.state.colaboradores.findIndex(c => c.id === id);
+            if (localIdx > -1) {
+              SGE.state.colaboradores[localIdx].id = result.id;
+              SGE.api.cacheData();
+            }
+          }
         });
       }
 
