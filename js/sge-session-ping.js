@@ -93,6 +93,7 @@
 
     // ── Início ───────────────────────────────────────────────
     async function start() {
+        if (_channel) return; // já conectado — evita canal duplo
         const data = getSessionData();
         if (!data) {
             console.log('[SGE Presence] Nenhuma sessão SGE encontrada no localStorage.');
