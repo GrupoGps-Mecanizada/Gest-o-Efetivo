@@ -152,7 +152,14 @@ SGE.auth = {
                     localStorage.setItem('sge_session_id', sessionId);
                     localStorage.setItem('sge_session_user_id', userId);
                     localStorage.setItem('sge_session_token', accessToken);
+                    // Chaves necessárias para o sge-session-ping.js identificar o satélite
+                    localStorage.setItem('sge_session_user_name', this.currentUser?.nome || 'Usuário SGE');
+                    localStorage.setItem('sge_session_user_email', this.currentUser?.email || '');
+                    localStorage.setItem('sge_session_app_slug', 'gestao_efetivo_mec');
+                    localStorage.setItem('sge_session_app_name', 'Gestão de Efetivo');
                     console.log('[SGE AUTH] ✓ Sessão registrada para Radar:', sessionId);
+                    // Inicia presença no canal (resolve race condition com DOMContentLoaded)
+                    if (window.SGE_SESSION_PING) window.SGE_SESSION_PING.start();
                 }
             } else {
                 const errText = await sessResp.text().catch(() => '');
@@ -227,6 +234,10 @@ SGE.auth = {
             localStorage.removeItem('sge_session_id');
             localStorage.removeItem('sge_session_user_id');
             localStorage.removeItem('sge_session_token');
+            localStorage.removeItem('sge_session_user_name');
+            localStorage.removeItem('sge_session_user_email');
+            localStorage.removeItem('sge_session_app_slug');
+            localStorage.removeItem('sge_session_app_name');
         } catch (e) { }
 
         // Stop ping
