@@ -448,11 +448,7 @@
     border-color: var(--accent);
 }
 
-[data-theme="dark"] .mass-edit-bar {
-    background: var(--bg-2);
-    border-color: var(--border);
-    color: var(--text-1);
-}
+/* mass-edit-bar keeps accent background in dark mode — see bottom of file */
 
 /* ===== HUB ===== */
 [data-theme="dark"] .hub-dropdown-panel {
@@ -523,4 +519,443 @@
 
 [data-theme="dark"] #app {
     background: var(--bg-0);
+}
+
+/* ===== COMPACT TOOLBAR (nova) ===== */
+[data-theme="dark"] .et-toolbar {
+    background: var(--bg-1);
+    border-bottom-color: var(--border);
+}
+
+[data-theme="dark"] .et-toolbar-sep {
+    background: var(--border);
+}
+
+/* ===== COUNT BADGES (treinamentos / advertências) — dark ===== */
+[data-theme="dark"] .et-count-tr {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+}
+
+[data-theme="dark"] .et-count-adv {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+}
+
+/* ===== CATEGORIA BADGES (kanban) — dark ===== */
+[data-theme="dark"] .badge-cat-op {
+    background: rgba(74, 158, 255, 0.14);
+    color: #60a5fa;
+    border-color: rgba(74, 158, 255, 0.28);
+}
+
+[data-theme="dark"] .badge-cat-ges {
+    background: rgba(245, 158, 11, 0.13);
+    color: #fbbf24;
+    border-color: rgba(245, 158, 11, 0.28);
+}
+
+/* ===== REGIME BADGES (kanban + tabela) — dark ===== */
+[data-theme="dark"] .badge-24A {
+    background: rgba(38, 217, 127, 0.12);
+    color: #4ade80;
+    border-color: rgba(38, 217, 127, 0.25);
+}
+
+[data-theme="dark"] .badge-24B {
+    background: rgba(74, 158, 255, 0.12);
+    color: #60a5fa;
+    border-color: rgba(74, 158, 255, 0.25);
+}
+
+[data-theme="dark"] .badge-24C {
+    background: rgba(249, 115, 22, 0.13);
+    color: #fb923c;
+    border-color: rgba(249, 115, 22, 0.28);
+}
+
+[data-theme="dark"] .badge-24D {
+    background: rgba(155, 114, 255, 0.13);
+    color: #a78bfa;
+    border-color: rgba(155, 114, 255, 0.28);
+}
+
+[data-theme="dark"] .badge-ADM {
+    background: rgba(148, 163, 184, 0.1);
+    color: #94a3b8;
+    border-color: rgba(148, 163, 184, 0.2);
+}
+
+[data-theme="dark"] .badge-16HS {
+    background: rgba(234, 179, 8, 0.12);
+    color: #facc15;
+    border-color: rgba(234, 179, 8, 0.25);
+}
+
+[data-theme="dark"] .badge-SEM {
+    background: rgba(242, 92, 110, 0.12);
+    color: #f87171;
+    border-color: rgba(242, 92, 110, 0.25);
+}
+
+/* ===== EXCEL RIBBON (legado) ===== */
+[data-theme="dark"] .excel-ribbon {
+    background: var(--bg-1);
+    border-bottom-color: var(--border);
+}
+
+[data-theme="dark"] .excel-ribbon-group {
+    border-right-color: var(--border);
+}
+
+[data-theme="dark"] .excel-ribbon-sep {
+    background: var(--border);
+}
+
+[data-theme="dark"] .excel-search-wrap {
+    background: var(--bg-2);
+    border-color: var(--border);
+}
+
+[data-theme="dark"] .et-search-input {
+    color: var(--text-1);
+}
+
+[data-theme="dark"] .et-search-icon {
+    color: var(--text-3);
+}
+
+[data-theme="dark"] .et-search-clear {
+    color: var(--text-3);
+}
+
+[data-theme="dark"] .et-search-clear:hover {
+    color: var(--text-1);
+}
+
+/* ===== EXCEL COL PICKER ===== */
+[data-theme="dark"] .et-col-picker-panel {
+    background: var(--bg-1);
+    border-color: var(--border);
+}
+
+[data-theme="dark"] .et-col-picker-title {
+    color: var(--text-3);
+    border-bottom-color: var(--border);
+}
+
+[data-theme="dark"] .et-col-picker-item {
+    color: var(--text-2);
+}
+
+[data-theme="dark"] .et-col-picker-item:hover {
+    background: var(--bg-3);
+    color: var(--text-1);
+}
+
+/* ===== HIGHLIGHT MARK ===== */
+[data-theme="dark"] mark.et-hl {
+    background: rgba(240, 169, 70, 0.25);
+    color: #f0a946;
+}
+
+/* ===== SPECIAL CELLS ===== */
+[data-theme="dark"] .td-rownum {
+    background: var(--bg-2) !important;
+    color: var(--text-3);
+    border-right-color: var(--border-bright) !important;
+}
+
+[data-theme="dark"] .col-rownum {
+    background: var(--bg-2) !important;
+    border-right-color: var(--border-bright) !important;
+}
+
+/* ===== BADGES — CATEGORIA (dark) ===== */
+[data-theme="dark"] .et-cat-op {
+    background: rgba(74, 158, 255, 0.14);
+    color: #60a5fa;
+}
+
+[data-theme="dark"] .et-cat-gestao {
+    background: rgba(155, 114, 255, 0.14);
+    color: #a78bfa;
+}
+
+/* ===== BADGES — FUNÇÃO (dark) ===== */
+[data-theme="dark"] .et-func-op {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+}
+
+[data-theme="dark"] .et-func-mot {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+}
+
+[data-theme="dark"] .et-func-cam {
+    background: rgba(249, 115, 22, 0.15);
+    color: #fb923c;
+}
+
+[data-theme="dark"] .et-func-suparea {
+    background: rgba(20, 184, 166, 0.15);
+    color: #2dd4bf;
+}
+
+[data-theme="dark"] .et-func-supobra {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+}
+
+[data-theme="dark"] .et-func-coord {
+    background: rgba(99, 102, 241, 0.15);
+    color: #818cf8;
+}
+
+[data-theme="dark"] .et-func-plan {
+    background: rgba(34, 211, 238, 0.15);
+    color: #22d3ee;
+}
+
+[data-theme="dark"] .et-func-almo {
+    background: rgba(234, 179, 8, 0.15);
+    color: #facc15;
+}
+
+[data-theme="dark"] .et-func-seg {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+}
+
+[data-theme="dark"] .et-func-default {
+    background: rgba(148, 163, 184, 0.1);
+    color: #94a3b8;
+}
+
+/* ===== BADGES — STATUS (dark) ===== */
+[data-theme="dark"] .et-status-ativo {
+    background: rgba(38, 217, 127, 0.12);
+    color: #4ade80;
+}
+
+[data-theme="dark"] .et-status-inativo {
+    background: rgba(148, 163, 184, 0.1);
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .et-status-ferias {
+    background: rgba(59, 130, 246, 0.13);
+    color: #60a5fa;
+}
+
+[data-theme="dark"] .et-status-afastado {
+    background: rgba(249, 115, 22, 0.14);
+    color: #fb923c;
+}
+
+[data-theme="dark"] .et-status-desligado {
+    background: rgba(242, 92, 110, 0.14);
+    color: #f87171;
+}
+
+[data-theme="dark"] .et-status-aviso {
+    background: rgba(245, 158, 11, 0.13);
+    color: #fbbf24;
+}
+
+[data-theme="dark"] .et-status-contrat {
+    background: rgba(155, 114, 255, 0.14);
+    color: #a78bfa;
+}
+
+[data-theme="dark"] .et-status-default {
+    background: rgba(148, 163, 184, 0.1);
+    color: #94a3b8;
+}
+
+/* ===== BADGES — ALOCAÇÃO (dark) ===== */
+[data-theme="dark"] .et-aloc-s {
+    background: rgba(20, 184, 166, 0.14);
+    color: #2dd4bf;
+}
+
+[data-theme="dark"] .et-aloc-e {
+    background: rgba(99, 102, 241, 0.14);
+    color: #818cf8;
+}
+
+/* ===== EXCEL FILTER INPUTS (dark) ===== */
+[data-theme="dark"] .excel-filter-select {
+    background: var(--bg-1);
+    border-color: var(--border);
+    color: var(--text-1);
+}
+
+[data-theme="dark"] .excel-filter-select:focus {
+    border-color: var(--accent);
+}
+
+/* ===== MASS EDIT BAR (dark) — override to keep accent color ===== */
+[data-theme="dark"] .mass-edit-bar {
+    background: var(--accent);
+    color: #fff;
+    border-bottom-color: transparent;
+}
+
+/* ===== TH FILTER BUTTON (dark) ===== */
+[data-theme="dark"] .th-filter-btn {
+    color: var(--text-3);
+}
+
+[data-theme="dark"] .th-filter-btn:hover,
+[data-theme="dark"] .th-filter-btn.active {
+    color: var(--accent);
+    background: var(--accent-glow);
+}
+
+/* ===== FLOATING FILTER PANEL (dark) ===== */
+[data-theme="dark"] .et-filter-panel {
+    background: var(--bg-1);
+    border-color: var(--border);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+[data-theme="dark"] .et-fp-header {
+    border-bottom-color: var(--border);
+}
+
+[data-theme="dark"] .et-fp-title {
+    color: var(--text-3);
+}
+
+[data-theme="dark"] .et-fp-close {
+    color: var(--text-3);
+}
+
+[data-theme="dark"] .et-fp-close:hover {
+    color: var(--text-1);
+    background: var(--bg-3);
+}
+
+[data-theme="dark"] .et-fp-sort {
+    border-bottom-color: var(--border);
+}
+
+[data-theme="dark"] .et-fp-sort-btn {
+    border-color: var(--border);
+    color: var(--text-2);
+    background: transparent;
+}
+
+[data-theme="dark"] .et-fp-sort-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-glow);
+}
+
+[data-theme="dark"] .et-fp-sort-btn.active {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+    color: var(--accent);
+}
+
+[data-theme="dark"] .et-fp-text-wrap {
+    border-bottom-color: var(--border);
+}
+
+[data-theme="dark"] .et-fp-text {
+    background: var(--bg-2);
+    border-color: var(--border);
+    color: var(--text-1);
+}
+
+[data-theme="dark"] .et-fp-text:focus {
+    border-color: var(--accent);
+}
+
+[data-theme="dark"] .et-fp-text::placeholder {
+    color: var(--text-3);
+}
+
+[data-theme="dark"] .et-fp-option {
+    color: var(--text-2);
+}
+
+[data-theme="dark"] .et-fp-option:hover {
+    background: var(--bg-3);
+    color: var(--text-1);
+}
+
+[data-theme="dark"] .et-fp-check {
+    border-color: var(--border-bright);
+}
+
+[data-theme="dark"] .et-fp-footer {
+    border-top-color: var(--border);
+    background: var(--bg-2);
+}
+
+[data-theme="dark"] .et-fp-btn-clear {
+    border-color: var(--border);
+    color: var(--text-2);
+    background: transparent;
+}
+
+[data-theme="dark"] .et-fp-btn-clear:hover {
+    border-color: var(--red);
+    color: var(--red);
+    background: rgba(242, 92, 110, 0.08);
+}
+
+/* ===== PENCIL ICON EDITING (dark) ===== */
+[data-theme="dark"] .cell-edit-icon {
+    color: var(--text-3);
+}
+
+[data-theme="dark"] .cell-edit-icon:hover {
+    color: var(--accent);
+    background: var(--accent-glow);
+}
+
+/* ===== TRAINING STATUS BADGES (dark) ===== */
+[data-theme="dark"] .et-tr-ok {
+    background: rgba(34, 197, 94, 0.14);
+    color: #4ade80;
+}
+
+[data-theme="dark"] .et-tr-warning {
+    background: rgba(245, 158, 11, 0.14);
+    color: #fbbf24;
+}
+
+[data-theme="dark"] .et-tr-expired {
+    background: rgba(239, 68, 68, 0.14);
+    color: #f87171;
+}
+
+[data-theme="dark"] .et-tr-na {
+    background: rgba(148, 163, 184, 0.1);
+    color: #64748b;
+}
+
+/* ===== WARNING TYPE BADGES (dark) ===== */
+[data-theme="dark"] .et-adv-verbal {
+    background: rgba(245, 158, 11, 0.14);
+    color: #fbbf24;
+}
+
+[data-theme="dark"] .et-adv-escrita {
+    background: rgba(249, 115, 22, 0.14);
+    color: #fb923c;
+}
+
+[data-theme="dark"] .et-adv-suspensao {
+    background: rgba(239, 68, 68, 0.14);
+    color: #f87171;
+}
+
+/* ===== EMPTY COUNT STATE (dark) ===== */
+[data-theme="dark"] .et-count-empty {
+    color: var(--text-3);
 }

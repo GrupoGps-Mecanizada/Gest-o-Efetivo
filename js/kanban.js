@@ -254,7 +254,7 @@ SGE.kanban = {
       <div class="card-badges" style="margin-bottom: 6px;">
         <span class="badge" style="${funcaoStyle}">${col.funcao}</span>
         <span class="badge ${badgeRegime}">${col.regime}</span>
-        <span class="badge" style="background:${col.categoria === 'OPERACIONAL' ? '#e0f2fe' : '#fef3c7'};color:${col.categoria === 'OPERACIONAL' ? '#0369a1' : '#92400e'};border:1px solid ${col.categoria === 'OPERACIONAL' ? '#bae6fd' : '#fde68a'};font-size:9px;">${col.categoria === 'OPERACIONAL' ? 'OP' : 'GES'}</span>
+        <span class="badge" class="badge-cat-${col.categoria === 'OPERACIONAL' ? 'op' : 'ges'}">${col.categoria === 'OPERACIONAL' ? 'OP' : 'GES'}</span>
         ${feriasHtml}
       </div>
       <div class="card-vaga" style="margin-bottom: 6px;">${h.equipamentoIconSvg()} ${(col.setor_id && col.setor !== 'SEM SETOR') ? col.setor : (col.equipamento || 'Sem equipamento')}</div>
@@ -351,7 +351,7 @@ SGE.kanban = {
       <div class="card-badges" style="margin-bottom: 6px;">
         <span class="badge" style="${funcaoStyle}">${colaborador.funcao}</span>
         <span class="badge ${badgeRegime}">${colaborador.regime}</span>
-        <span class="badge" style="background:${colaborador.categoria === 'OPERACIONAL' ? '#e0f2fe' : '#fef3c7'};color:${colaborador.categoria === 'OPERACIONAL' ? '#0369a1' : '#92400e'};border:1px solid ${colaborador.categoria === 'OPERACIONAL' ? '#bae6fd' : '#fde68a'};font-size:9px;">${colaborador.categoria === 'OPERACIONAL' ? 'OP' : 'GES'}</span>
+        <span class="badge" class="badge-cat-${colaborador.categoria === 'OPERACIONAL' ? 'op' : 'ges'}">${colaborador.categoria === 'OPERACIONAL' ? 'OP' : 'GES'}</span>
         ${feriasHtml}
       </div>
       <div class="card-vaga" style="margin-bottom: 6px;">${h.equipamentoIconSvg()} ${(colaborador.setor_id && colaborador.setor !== 'SEM SETOR') ? colaborador.setor : (colaborador.equipamento || 'Sem equipamento')}</div>

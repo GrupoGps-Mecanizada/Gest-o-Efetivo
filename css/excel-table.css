@@ -692,6 +692,854 @@
     border-bottom-color: var(--accent);
 }
 
+/* ── Compact Toolbar ── */
+.et-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    background: var(--bg-1);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    min-height: 48px;
+    flex-wrap: wrap;
+    position: relative;
+}
+
+.et-toolbar-sep {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    flex-shrink: 0;
+    margin: 0 2px;
+}
+
+.et-toolbar-search {
+    flex: 0 1 220px;
+    min-width: 140px;
+}
+
+/* ── Fullscreen / expand ── */
+.excel-wrap.et-expanded {
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    background: var(--bg-0);
+    border-radius: 0;
+}
+
+/* ── Count badges (treinamentos / advertências) ── */
+.td-count {
+    text-align: center;
+    min-width: 60px;
+    color: var(--text-3);
+    font-size: 12px;
+}
+
+.et-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 11px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.et-count-tr {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.et-count-adv {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* ── Excel Ribbon (legado, mantido para compatibilidade) ── */
+.excel-ribbon {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    padding: 0 8px;
+    background: var(--bg-1);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    min-height: 60px;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.excel-ribbon-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px 8px 4px;
+    border-right: 1px solid var(--border);
+    gap: 2px;
+    min-width: fit-content;
+}
+
+.excel-ribbon-btns {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    flex: 1;
+}
+
+.excel-ribbon-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-3);
+    font-weight: 600;
+    white-space: nowrap;
+    margin-top: auto;
+    padding-top: 2px;
+}
+
+.excel-ribbon-sep {
+    width: 1px;
+    background: var(--border);
+    margin: 8px 0;
+    flex-shrink: 0;
+    align-self: stretch;
+}
+
+/* ── Search dentro da ribbon ── */
+.excel-search-wrap {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-2);
+    transition: border-color .15s, box-shadow .15s;
+    min-width: 180px;
+}
+
+.excel-search-wrap:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.et-search-icon {
+    width: 13px;
+    height: 13px;
+    color: var(--text-3);
+    flex-shrink: 0;
+}
+
+.et-search-input {
+    border: none;
+    background: transparent;
+    outline: none;
+    color: var(--text-1);
+    font-family: var(--font-display);
+    font-size: 12px;
+    width: 100%;
+    min-width: 0;
+}
+
+.et-search-input::placeholder {
+    color: var(--text-3);
+}
+
+.et-search-clear {
+    border: none;
+    background: none;
+    color: var(--text-3);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 2px;
+    line-height: 1;
+    transition: color .12s;
+    flex-shrink: 0;
+}
+
+.et-search-clear:hover {
+    color: var(--text-1);
+}
+
+/* ── Badge pill (contador de filtros ativos) ── */
+.et-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    font-style: normal;
+}
+
+/* ── Células especiais ── */
+.td-rownum {
+    font-size: 10px;
+    color: var(--text-3);
+    text-align: right;
+    font-family: var(--font-mono);
+    user-select: none;
+    background: var(--bg-2) !important;
+    border-right: 2px solid var(--border-bright) !important;
+    padding: 7px 8px !important;
+    width: 40px;
+    min-width: 40px;
+}
+
+.col-rownum {
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
+    text-align: right;
+    background: var(--bg-2) !important;
+    border-right: 2px solid var(--border-bright) !important;
+}
+
+.td-mono {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.3px;
+}
+
+.td-aloc {
+    max-width: 200px;
+}
+
+.et-aloc-setor .et-badge-aloc {
+    font-style: italic;
+}
+
+.et-nomat {
+    font-size: 10px;
+    color: var(--text-3);
+    font-style: italic;
+}
+
+.et-sel-stat {
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.page-ellipsis {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    height: 30px;
+    color: var(--text-3);
+    font-size: 13px;
+    user-select: none;
+}
+
+.mass-edit-btn-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.cell-editable {
+    cursor: cell;
+    position: relative;
+}
+
+.cell-editable:hover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 1px dashed var(--accent);
+    pointer-events: none;
+    opacity: 0.5;
+    border-radius: 2px;
+}
+
+/* ── Destaque de busca ── */
+mark.et-hl {
+    background: #fef08a;
+    color: #713f12;
+    border-radius: 2px;
+    padding: 0 1px;
+    font-weight: 700;
+}
+
+/* ── Column Picker dropdown ── */
+.et-col-picker-panel {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 200px;
+    max-height: 320px;
+    overflow-y: auto;
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+    z-index: 100;
+    padding: 6px;
+}
+
+.et-col-picker-panel.open {
+    display: block;
+}
+
+.et-col-picker-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-3);
+    padding: 4px 8px 8px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+}
+
+.et-col-picker-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-2);
+    transition: background .1s;
+}
+
+.et-col-picker-item:hover {
+    background: var(--bg-3);
+    color: var(--text-1);
+}
+
+.et-col-picker-item input[type="checkbox"] {
+    accent-color: var(--accent);
+    width: 13px;
+    height: 13px;
+    cursor: pointer;
+}
+
+/* ── BADGES — Base ── */
+.et-badge-cat,
+.et-badge-func,
+.et-badge-status,
+.et-badge-aloc {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    line-height: 1.6;
+}
+
+/* ── BADGES — Categoria ── */
+.et-cat-op {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.et-cat-gestao {
+    background: #ede9fe;
+    color: #6d28d9;
+}
+
+/* ── BADGES — Função ── */
+.et-func-op {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.et-func-mot {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.et-func-cam {
+    background: #ffedd5;
+    color: #9a3412;
+}
+
+.et-func-suparea {
+    background: #ccfbf1;
+    color: #0f766e;
+}
+
+.et-func-supobra {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.et-func-coord {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.et-func-plan {
+    background: #cffafe;
+    color: #0e7490;
+}
+
+.et-func-almo {
+    background: #fef9c3;
+    color: #854d0e;
+}
+
+.et-func-seg {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.et-func-default {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+/* ── BADGES — Status ── */
+.et-status-ativo {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.et-status-inativo {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.et-status-ferias {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.et-status-afastado {
+    background: #ffedd5;
+    color: #9a3412;
+}
+
+.et-status-desligado {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.et-status-aviso {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.et-status-contrat {
+    background: #ede9fe;
+    color: #6d28d9;
+}
+
+.et-status-default {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+/* ── BADGES — Alocação ── */
+.et-aloc-s {
+    background: #ccfbf1;
+    color: #0f766e;
+}
+
+.et-aloc-e {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+/* ── TH filter button ── */
+.th-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--text-3);
+    border-radius: 3px;
+    padding: 0;
+    margin-left: 4px;
+    flex-shrink: 0;
+    transition: color .12s, background .12s;
+    vertical-align: middle;
+}
+
+.th-filter-btn:hover {
+    color: var(--accent);
+    background: var(--accent-glow);
+}
+
+.th-filter-btn.active {
+    color: var(--accent);
+    background: var(--accent-glow);
+}
+
+.th-filter-btn svg {
+    width: 11px;
+    height: 11px;
+    pointer-events: none;
+}
+
+/* ── Floating filter panel ── */
+.et-filter-panel {
+    position: fixed;
+    min-width: 220px;
+    max-width: 280px;
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: fpSlideIn .12s ease;
+}
+
+@keyframes fpSlideIn {
+    from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.et-fp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+.et-fp-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-3);
+}
+
+.et-fp-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--text-3);
+    border-radius: 4px;
+    transition: color .1s, background .1s;
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+}
+
+.et-fp-close:hover {
+    color: var(--text-1);
+    background: var(--bg-3);
+}
+
+.et-fp-sort {
+    display: flex;
+    gap: 6px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.et-fp-sort-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 5px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-2);
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .12s;
+}
+
+.et-fp-sort-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-glow);
+}
+
+.et-fp-sort-btn.active {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.et-fp-sort-btn svg {
+    width: 11px;
+    height: 11px;
+}
+
+.et-fp-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0;
+}
+
+.et-fp-text-wrap {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.et-fp-text {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-2);
+    color: var(--text-1);
+    font-family: var(--font-display);
+    font-size: 12px;
+    outline: none;
+    transition: border .12s;
+    box-sizing: border-box;
+}
+
+.et-fp-text:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.et-fp-text::placeholder {
+    color: var(--text-3);
+}
+
+.et-fp-options {
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 6px;
+}
+
+.et-fp-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-2);
+    transition: background .08s;
+    user-select: none;
+}
+
+.et-fp-option:hover {
+    background: var(--bg-3);
+    color: var(--text-1);
+}
+
+.et-fp-check {
+    width: 13px;
+    height: 13px;
+    border: 1.5px solid var(--border-bright);
+    border-radius: 3px;
+    flex-shrink: 0;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .1s;
+}
+
+.et-fp-option.selected .et-fp-check {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.et-fp-option.selected .et-fp-check::after {
+    content: '';
+    width: 6px;
+    height: 4px;
+    border-left: 1.5px solid #fff;
+    border-bottom: 1.5px solid #fff;
+    transform: rotate(-45deg) translate(0.5px, -0.5px);
+    display: block;
+}
+
+.et-fp-footer {
+    display: flex;
+    gap: 6px;
+    padding: 8px 12px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-2);
+}
+
+.et-fp-btn-clear {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-2);
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .12s;
+}
+
+.et-fp-btn-clear:hover {
+    border-color: var(--red);
+    color: var(--red);
+    background: rgba(242, 92, 110, 0.06);
+}
+
+.et-fp-btn-apply {
+    flex: 1.5;
+    padding: 6px 10px;
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity .12s;
+}
+
+.et-fp-btn-apply:hover {
+    opacity: 0.88;
+}
+
+/* ── Pencil icon editing ── */
+.cell-with-edit {
+    position: relative;
+}
+
+.cell-content {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+}
+
+.cell-val {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cell-edit-icon {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--text-3);
+    border-radius: 4px;
+    padding: 0;
+    flex-shrink: 0;
+    transition: color .1s, background .1s;
+}
+
+.cell-edit-icon svg {
+    width: 11px;
+    height: 11px;
+    pointer-events: none;
+}
+
+.cell-edit-icon:hover {
+    color: var(--accent);
+    background: var(--accent-glow);
+}
+
+.cell-with-edit:hover .cell-edit-icon {
+    display: inline-flex;
+}
+
+/* ── Training status badges ── */
+.et-tr-badge,
+.et-adv-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+    line-height: 1.6;
+}
+
+.et-tr-ok {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.et-tr-warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.et-tr-expired {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.et-tr-na {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+/* ── Warning type badges ── */
+.et-adv-verbal {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.et-adv-escrita {
+    background: #ffedd5;
+    color: #9a3412;
+}
+
+.et-adv-suspensao {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* ── Empty count state ── */
+.et-count-empty {
+    font-size: 10px;
+    color: var(--text-3);
+    font-style: italic;
+    cursor: pointer;
+    transition: color .12s;
+}
+
+.et-count-empty:hover {
+    color: var(--accent);
+    text-decoration: underline;
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
     .excel-toolbar {

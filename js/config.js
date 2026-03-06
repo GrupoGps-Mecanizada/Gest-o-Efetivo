@@ -66,9 +66,27 @@ SGE.CONFIG = {
   },
 
   /**
-   * Get inline style string for a function badge
+   * Get inline style string for a function badge (dark-mode-aware)
    */
   getFuncaoBadgeStyle(funcao) {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+      const key = funcao ? funcao.toUpperCase().trim() : '';
+      const darkStyles = {
+        'OPERADOR DE EQUIPAMENTOS': 'background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.25);',
+        'MOTORISTA DE CAMINHAO':    'background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.25);',
+        'MOTORISTA':                'background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.25);',
+        'SUPERVISOR DE AREA':       'background:rgba(249,115,22,0.14);color:#fb923c;border:1px solid rgba(249,115,22,0.28);',
+        'SUPERVISOR DE OBRA I':     'background:rgba(155,114,255,0.14);color:#a78bfa;border:1px solid rgba(155,114,255,0.28);',
+        'COORDENADOR DE OPERACOES': 'background:rgba(99,102,241,0.15);color:#818cf8;border:1px solid rgba(99,102,241,0.28);',
+        'PLANEJADOR DE MANUTENCAO': 'background:rgba(34,211,238,0.15);color:#22d3ee;border:1px solid rgba(34,211,238,0.28);',
+        'PROGRAMADOR DE MANUTENCAO':   'background:rgba(34,211,238,0.15);color:#22d3ee;border:1px solid rgba(34,211,238,0.28);',
+        'PROGRAMADOR DE MANUTENCAO I': 'background:rgba(34,211,238,0.15);color:#22d3ee;border:1px solid rgba(34,211,238,0.28);',
+        'ALMOXARIFE I':                'background:rgba(234,179,8,0.15);color:#facc15;border:1px solid rgba(234,179,8,0.28);',
+        'TECNICO DE SEGURANCA DO TRABALHO': 'background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.28);',
+      };
+      return darkStyles[key] || 'background:rgba(148,163,184,0.1);color:#94a3b8;border:1px solid rgba(148,163,184,0.2);';
+    }
     const c = this.getFuncaoColor(funcao);
     return `background:${c.bg};color:${c.text};border:1px solid ${c.border};`;
   },
