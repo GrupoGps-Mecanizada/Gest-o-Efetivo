@@ -520,6 +520,15 @@
   <!-- JS Modules (order matters — dependencies first) -->
   <script src="js/config.js?v=1.0.1"></script>
   <script src="js/supabase-config.js?v=1.0.1"></script>
+
+  <!-- DEV MODE: ativa bypass SSO para desenvolvimento local (file:// / localhost) -->
+  <script>
+    if (localStorage.getItem('sge_dev_bypass') === '1') {
+      window.SGE_SSO_BYPASS = true;
+      console.log('[SGE DEV] Bypass SSO ativado — modo desenvolvimento local');
+    }
+  </script>
+
   <!-- SGE SSO AUTH (carregado do GitHub Pages do SGE_GRUPOGPS) -->
   <script src="https://grupogps-mecanizada.github.io/SGE_GRUPOGPS/js/auth/sso_client.js?v=5"></script>
 
@@ -545,6 +554,7 @@
   <script src="js/particles.js?v=1.0.1"></script>
   <script src="js/hub.js?v=1.0.1"></script>
   <script src="js/app.js?v=1.0.1"></script>
+  <script src="js/dev-mode.js?v=1.0.0"></script>
 </body>
 
 </html>

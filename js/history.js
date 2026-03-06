@@ -61,7 +61,7 @@ SGE.history = {
       <tr>
         <td style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">${displayDate}</td>
         <td><strong>${m.colaborador_nome}</strong></td>
-        <td style="font-family:var(--font-mono);font-size:11px">${m.colaborador_matricula}</td>
+        <td style="font-family:var(--font-mono);font-size:11px">${m.colaborador_matricula || m.colaborador_id || '—'}</td>
         <td>${m.supervisor_origem}<span class="mov-arrow">→</span>${m.supervisor_destino}</td>
         <td>${m.regime_origem}<span class="mov-arrow">→</span>${m.regime_destino}</td>
         <td>${m.motivo}</td>
@@ -86,7 +86,7 @@ SGE.history = {
         const rows = SGE.state.movimentacoes.map(m => [
             m.created_at,
             m.colaborador_nome,
-            m.colaborador_matricula,
+            m.colaborador_matricula || m.colaborador_id || '',
             m.supervisor_origem,
             m.supervisor_destino,
             m.regime_origem,

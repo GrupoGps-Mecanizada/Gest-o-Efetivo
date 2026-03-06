@@ -14,7 +14,6 @@ SGE.modal = {
     SGE.state.pendingMove = { colaborador, supervisorDestino, source };
     SGE.state.modalContext = 'move';
 
-    const supOld = SGE.state.supervisores.find(s => s.nome === colaborador.supervisor);
     const supNew = SGE.state.supervisores.find(s => s.nome === supervisorDestino);
 
     const header = document.querySelector('.modal-header');
@@ -94,6 +93,7 @@ SGE.modal = {
     const mov = {
       colaborador_id: colaborador.id,
       colaborador_nome: colaborador.nome,
+      colaborador_matricula: colaborador.matricula_gps || '',
       supervisor_origem: supOld,
       supervisor_destino: supervisorDestino,
       regime_origem: regOld,
@@ -129,6 +129,7 @@ SGE.modal = {
     SGE.state._editingColabId = colaborador.id;
 
     const isGestao = colaborador.categoria === 'GESTAO';
+    const esc = (v) => (v || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     const header = document.querySelector('.modal-header');
     header.innerHTML = `
@@ -156,11 +157,11 @@ SGE.modal = {
       <div class="edit-modal-form">
         <div class="form-field">
           <label>Nome</label>
-          <input type="text" id="edit-nome" value="${colaborador.nome}" />
+          <input type="text" id="edit-nome" value="${esc(colaborador.nome)}" />
         </div>
         <div class="form-field">
           <label>CR</label>
-          <input type="text" id="edit-cr" value="${colaborador.cr || ''}" />
+          <input type="text" id="edit-cr" value="${esc(colaborador.cr)}" />
         </div>
         <div class="form-field">
           <label>Função</label>
@@ -207,15 +208,15 @@ SGE.modal = {
         </div>
         <div class="form-field">
           <label>Telefone</label>
-          <input type="text" id="edit-telefone" value="${colaborador.telefone || ''}" placeholder="(XX) XXXXX-XXXX" />
+          <input type="text" id="edit-telefone" value="${esc(colaborador.telefone)}" placeholder="(XX) XXXXX-XXXX" />
         </div>
         <div class="form-field">
           <label>Mat. Usiminas</label>
-          <input type="text" id="edit-mat-usiminas" value="${colaborador.matricula_usiminas || ''}" />
+          <input type="text" id="edit-mat-usiminas" value="${esc(colaborador.matricula_usiminas)}" />
         </div>
         <div class="form-field">
           <label>Mat. GPS</label>
-          <input type="text" id="edit-mat-gps" value="${colaborador.matricula_gps || ''}" />
+          <input type="text" id="edit-mat-gps" value="${esc(colaborador.matricula_gps)}" />
         </div>
       </div>
     `;
@@ -305,7 +306,7 @@ SGE.modal = {
         ${supAtivos.map(s => `
           <div class="sup-card" style="cursor:pointer;transition:all .15s" data-sup="${s.nome}"
                onmouseover="this.style.borderColor='var(--accent)'"
-               onmouseout="this.style.borderColor='var(--border)'"">
+               onmouseout="this.style.borderColor='var(--border)'"
             <div class="sup-dot active"></div>
             <div class="sup-name">${s.nome}</div>
             <div class="sup-regime">${s.regime_padrao}</div>

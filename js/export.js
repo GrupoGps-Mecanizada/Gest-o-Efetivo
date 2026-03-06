@@ -71,9 +71,9 @@ SGE.export = {
                     Colaborador: c.nome || 'Desconhecido',
                     Tipo: a.tipo,
                     Motivo: a.motivo,
-                    Aplicador: a.usuario_nome,
-                    Dias_Suspensao: a.suspensao_dias || 0,
-                    Data_Registro: a.data_registro ? SGE.helpers.formatDate(a.data_registro).split(',')[0] : ''
+                    Aplicador: a.aplicador || '',
+                    Dias_Suspensao: a.dias_suspensao || 0,
+                    Data_Aplicacao: a.data_aplicacao ? SGE.helpers.formatDate(a.data_aplicacao).split(',')[0] : ''
                 };
             });
         } else if (base === 'ferias') {
@@ -116,7 +116,7 @@ SGE.export = {
         }
 
         if (data.length === 0) {
-            SGE.helpers.toast('Não há dados disponíveis para esta base.', 'warning');
+            SGE.helpers.toast('Não há dados disponíveis para esta base.', 'info');
             return;
         }
 

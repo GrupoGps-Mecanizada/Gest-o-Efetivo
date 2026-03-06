@@ -34,7 +34,7 @@ SGE.advertencias = {
         const totalSuspensao = todas.filter(a => a.tipo === 'SUSPENSAO').length;
 
         view.innerHTML = `
-            <div id="history-view" style="display:flex; flex-direction:column; height:100%;">
+            <div id="advertencias-table-view" style="display:flex; flex-direction:column; height:100%;">
                 <div class="history-filters">
                     <input type="text" class="history-filter-input" id="advertencias-filter" placeholder="Filtrar por colaborador ou motivo..." value="${this._filterText}" style="width: 280px;" />
                     <select class="history-filter-input" id="advertencias-filter-tipo">

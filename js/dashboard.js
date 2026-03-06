@@ -369,9 +369,9 @@ SGE.dashboard = {
         const activeIds = new Set(data.map(c => c.id));
         const advs = (SGE.state.advertencias || []).filter(a => activeIds.has(a.employee_id));
         const ferias = (SGE.state.ferias || []).filter(f => activeIds.has(f.employee_id));
-        const movs = (SGE.state.historico || []).filter(h => activeIds.has(h.employee_id));
+        const movs = (SGE.state.movimentacoes || []).filter(m => activeIds.has(m.colaborador_id));
 
-        const suspensionDays = advs.reduce((acc, curr) => acc + (parseInt(curr.suspensao_dias) || 0), 0);
+        const suspensionDays = advs.reduce((acc, curr) => acc + (parseInt(curr.dias_suspensao) || 0), 0);
         const reincidentes = new Set();
         const advCounts = {};
         advs.forEach(a => {
@@ -379,7 +379,7 @@ SGE.dashboard = {
             if (advCounts[a.employee_id] >= 2) reincidentes.add(a.employee_id);
         });
 
-        const fAtivas = ferias.filter(f => f.status === 'ATIVA').length;
+        const fAtivas = ferias.filter(f => f.status === 'EM_ANDAMENTO').length;
         const fAgendadas = ferias.filter(f => f.status === 'AGENDADA').length;
 
         container.innerHTML = `
@@ -445,7 +445,7 @@ SGE.dashboard = {
 
         // Aplicadores
         const aplicMap = {};
-        advs.forEach(a => { if (a.usuario_nome) aplicMap[a.usuario_nome] = (aplicMap[a.usuario_nome] || 0) + 1; });
+        advs.forEach(a => { if (a.aplicador) aplicMap[a.aplicador] = (aplicMap[a.aplicador] || 0) + 1; });
         const appSorted = Object.entries(aplicMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
         this.charts.aplic = new Chart(document.getElementById('c-aplic'), {

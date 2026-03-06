@@ -408,9 +408,8 @@ SGE.navigation = {
         const funcaoOptions = SGE.CONFIG.funcoes.map(f => ({ value: f, label: f, count: funcaoCounts[f] || 0 }));
         const statusOptions = SGE.CONFIG.statuses.map(s => ({ value: s, label: s, count: statusCounts[s] || 0 }));
 
-        // Add special status options
+        // Add special pseudo-status filter options (not real DB values, handled in filtrarColaboradores)
         statusOptions.push(
-            { value: 'FÉRIAS', label: 'Ferias', count: colabs.filter(c => SGE.helpers.isFerias(c)).length },
             { value: 'SEM EQUIP', label: 'Sem Equipamento', count: colabs.filter(c => SGE.helpers.isSemEquipamento(c)).length },
             { value: 'SEM_ID', label: 'Sem ID', count: colabs.filter(c => SGE.helpers.isSemId(c)).length }
         );

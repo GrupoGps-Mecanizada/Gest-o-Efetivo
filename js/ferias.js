@@ -26,7 +26,7 @@ SGE.ferias = {
             ) : historico;
 
         view.innerHTML = `
-            <div id="history-view" style="display:flex; flex-direction:column; height:100%;">
+            <div id="ferias-table-view" style="display:flex; flex-direction:column; height:100%;">
                 <div class="history-filters">
                     <input type="text" class="history-filter-input" id="ferias-filter" placeholder="Filtrar por colaborador..." value="${this._filterText}" style="width: 280px;" />
                     

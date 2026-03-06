@@ -44,7 +44,7 @@ SGE.kanban = {
             <path d="M8 3v18M16 3v18"/>
           </svg>
           <h3>Nenhum dado carregado</h3>
-          <p>Configure a URL do Google Apps Script em <strong>js/config.js</strong><br>para carregar os dados dos colaboradores do Google Sheets.</p>
+          <p>Verifique a conexão com o Supabase em <strong>js/supabase-config.js</strong><br>e confirme que os dados foram cadastrados corretamente.</p>
         </div>`;
             return;
         }
