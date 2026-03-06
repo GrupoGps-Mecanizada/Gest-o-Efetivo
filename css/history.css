@@ -100,3 +100,36 @@
     color: var(--text-3);
     margin: 0 4px
 }
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width: 768px) {
+    #history-view {
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .history-filters {
+        gap: 6px;
+    }
+
+    .history-filter-input {
+        flex: 1;
+        min-width: 120px;
+    }
+
+    #export-btn {
+        margin-left: 0;
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .history-filters {
+        flex-direction: column;
+    }
+
+    #export-btn {
+        order: -1;
+    }
+}

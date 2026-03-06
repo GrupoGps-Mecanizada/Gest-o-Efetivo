@@ -196,10 +196,26 @@
 }
 
 /* ===================== RESPONSIVE ===================== */
+@media (max-width: 768px) {
+    #drawer {
+        width: min(380px, 92vw);
+    }
+}
+
 @media (max-width: 480px) {
     #drawer {
         width: 100%;
         border-left: none;
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+        top: auto;
+        bottom: 0;
+        height: 85vh;
+        transform: translateY(100%);
+    }
+
+    #drawer.open {
+        transform: translateY(0);
     }
 
     .drawer-fields-grid {

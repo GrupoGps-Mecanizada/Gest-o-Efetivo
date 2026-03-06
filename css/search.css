@@ -97,3 +97,22 @@
     display: block;
     opacity: .4
 }
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width: 768px) {
+    #search-view {
+        padding: 12px;
+        gap: 12px;
+    }
+
+    #search-results {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    #search-results {
+        grid-template-columns: 1fr;
+    }
+}

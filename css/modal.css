@@ -27,10 +27,8 @@
 }
 
 @keyframes modal-in {
-    from {
-        opacity: 0;
-        transform: scale(.94) translateY(10px)
-    }
+    from { opacity: 0; transform: scale(.96); }
+    to { opacity: 1; transform: scale(1); }
 }
 
 .modal-header {
@@ -89,6 +87,21 @@
 }
 
 /* ===================== RESPONSIVE ===================== */
+@media (max-width: 768px) {
+    #modal {
+        max-width: 96vw;
+    }
+
+    .modal-footer {
+        flex-wrap: wrap;
+    }
+
+    .modal-footer .btn-confirm,
+    .modal-footer .btn-cancel {
+        flex: 1;
+    }
+}
+
 @media (max-width: 480px) {
     #modal {
         max-width: 100%;
@@ -96,7 +109,18 @@
     }
 
     #modal-overlay {
-        padding: 12px;
+        padding: 10px;
+        align-items: flex-end;
+    }
+
+    #modal {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        border-radius: 16px 16px 0 0;
+    }
+
+    .modal-body {
+        max-height: 60vh;
     }
 }
 

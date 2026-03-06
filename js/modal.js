@@ -333,6 +333,50 @@ SGE.modal = {
   },
 
   /**
+   * Generic Open — aceita elemento DOM ou string HTML no body + array de botões
+   * SGE.modal.open(title, bodyEl|htmlStr, [ {label, class, action} ])
+   */
+  open(title, body, buttons = []) {
+    SGE.state.modalContext = 'generic';
+
+    const header = document.querySelector('.modal-header');
+    header.innerHTML = `<div class="modal-title">${title}</div>`;
+
+    const bodyEl = document.querySelector('.modal-body');
+    bodyEl.innerHTML = '';
+    if (typeof body === 'string') {
+      bodyEl.innerHTML = body;
+    } else if (body instanceof HTMLElement) {
+      bodyEl.appendChild(body);
+    }
+
+    const footer = document.querySelector('.modal-footer');
+    footer.innerHTML = '';
+    buttons.forEach(btn => {
+      const el = document.createElement('button');
+      el.className = btn.class || 'btn-cancel';
+      el.textContent = btn.label || 'OK';
+      if (btn.action) {
+        el.addEventListener('click', async () => {
+          const oldText = el.textContent;
+          el.disabled = true;
+          el.textContent = 'Aguarde...';
+          try {
+            await btn.action();
+          } catch (e) {
+            console.error('[SGE Modal] Erro no botão:', e);
+          }
+          el.disabled = false;
+          el.textContent = oldText;
+        });
+      }
+      footer.appendChild(el);
+    });
+
+    document.getElementById('modal-overlay').classList.add('open');
+  },
+
+  /**
    * Close modal
    */
   close() {

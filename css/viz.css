@@ -2,7 +2,8 @@
 #viz-view {
     padding: 0;
     gap: 0;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .viz-toolbar {
@@ -49,12 +50,31 @@
 
 /* Table (Excel) view */
 #viz-content,
-#tabela-content,
 #grupo-content {
     flex: 1;
     overflow: auto;
     padding: 12px 20px 20px;
     min-height: 0;
+}
+
+/* Tabela profissional — sem padding, usa excel-wrap internamente */
+#tabela-content {
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+#tabela-view {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+#tabela-view.active {
+    display: flex;
 }
 
 .viz-table-wrap {

@@ -98,7 +98,7 @@ SGE.navigation = {
         const segurancaViews = ['treinamentos', 'advertencias'];
 
         let sidebarActiveView = viewName;
-        if (gestaoViews.includes(viewName)) sidebarActiveView = 'kanban';
+        if (gestaoViews.includes(viewName)) sidebarActiveView = 'tabela';
         if (segurancaViews.includes(viewName)) sidebarActiveView = 'treinamentos';
 
         // Clear active states globally on the sidebar
@@ -169,7 +169,8 @@ SGE.navigation = {
                 SGE.history.render();
                 break;
             case 'tabela':
-                SGE.viz.renderTable();
+                if (SGE.excelTable) SGE.excelTable.render();
+                else SGE.viz.renderTable();
                 break;
             case 'grupo':
                 SGE.viz.renderGroups();
@@ -203,7 +204,7 @@ SGE.navigation = {
         if (hash && SGE.navigation._validViews.includes(hash)) {
             return hash;
         }
-        return 'viz'; // default
+        return 'tabela'; // default
     },
 
     /**
@@ -468,7 +469,7 @@ SGE.navigation = {
         switch (activeView) {
             case 'kanban': SGE.kanban.render(); break;
             case 'viz': if (SGE.dashboard) SGE.dashboard.render(); break;
-            case 'tabela': SGE.viz.renderTable(); break;
+            case 'tabela': if (SGE.excelTable) SGE.excelTable.render(); else SGE.viz.renderTable(); break;
             case 'grupo': SGE.viz.renderGroups(); break;
             case 'search': SGE.search.render(); break;
             case 'equip': SGE.equip.render(); break;

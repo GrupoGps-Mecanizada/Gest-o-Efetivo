@@ -363,5 +363,41 @@
 
     #topbar {
         padding: 6px 10px;
+        gap: 6px;
+    }
+
+    /* Esconder texto do botão hub em telas pequenas */
+    .hub-btn-explicit span {
+        display: none;
+    }
+
+    .hub-btn-explicit {
+        width: 34px;
+        padding: 0;
+        justify-content: center;
+    }
+
+    /* Colapsar o campo de busca da topbar em mobile */
+    .topbar-search-wrapper input {
+        width: 120px !important;
+        font-size: 12px;
+    }
+
+    .topbar-search-wrapper input:focus {
+        width: 180px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .topbar-search-wrapper {
+        display: none;
+    }
+
+    #topbar-right {
+        gap: 4px;
+    }
+
+    .nav-menu-panel {
+        width: 100vw;
     }
 }

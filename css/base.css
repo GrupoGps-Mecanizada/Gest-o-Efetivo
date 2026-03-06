@@ -356,3 +356,56 @@ body {
     font-size: 12px;
     line-height: 1.6;
 }
+
+/* ===================== MOBILE GLOBAL ===================== */
+@media (max-width: 768px) {
+    body {
+        font-size: 13px;
+    }
+
+    /* Garantir que tabs horizontais scrollem em mobile */
+    .tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        flex-wrap: nowrap;
+        padding-bottom: 0;
+    }
+
+    .tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .dash-tab-btn {
+        padding: 8px 14px;
+        font-size: 12px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    /* Modal responsivo */
+    #modal {
+        width: calc(100vw - 20px) !important;
+        max-width: calc(100vw - 20px) !important;
+        margin: 10px auto;
+        max-height: calc(100vh - 40px);
+    }
+
+    /* Drawer full width em mobile */
+    #drawer {
+        width: 100vw !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .dash-tab-btn {
+        padding: 7px 10px;
+        font-size: 11px;
+        gap: 4px;
+    }
+
+    .dash-tab-btn svg {
+        width: 13px;
+        height: 13px;
+    }
+}
