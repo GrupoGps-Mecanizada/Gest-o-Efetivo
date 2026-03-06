@@ -10,7 +10,8 @@
     if (!isLocal) return;
 
     const STORAGE_KEY = 'sge_dev_bypass';
-    const isActive = localStorage.getItem(STORAGE_KEY) === '1';
+    const SLUG_KEY = 'sge_dev_bypass_gestao_efetivo_mec';
+    const isActive = localStorage.getItem(STORAGE_KEY) === '1' || localStorage.getItem(SLUG_KEY) === '1';
 
     const btn = document.createElement('div');
     btn.id = 'sge-dev-toggle';
@@ -58,6 +59,7 @@
     btn.addEventListener('click', () => {
         if (isActive) {
             localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(SLUG_KEY);
             // Also clear any stored SSO tokens so fresh auth starts
             const appSlug = 'gestao_efetivo_mec';
             localStorage.removeItem(`sge_token_${appSlug}`);
@@ -65,6 +67,7 @@
             localStorage.removeItem('sge_session_id');
         } else {
             localStorage.setItem(STORAGE_KEY, '1');
+            localStorage.setItem(SLUG_KEY, '1');
         }
         location.reload();
     });

@@ -523,7 +523,7 @@
 
   <!-- DEV MODE: ativa bypass SSO para desenvolvimento local (file:// / localhost) -->
   <script>
-    if (localStorage.getItem('sge_dev_bypass') === '1') {
+    if (localStorage.getItem('sge_dev_bypass') === '1' || localStorage.getItem('sge_dev_bypass_gestao_efetivo_mec') === '1') {
       window.SGE_SSO_BYPASS = true;
       console.log('[SGE DEV] Bypass SSO ativado — modo desenvolvimento local');
     }
