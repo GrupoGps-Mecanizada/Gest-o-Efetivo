@@ -7,6 +7,45 @@
 window.SGE = window.SGE || {};
 
 SGE.modal = {
+  _dirty: false,    // true when user has modified any field in the open modal
+  _dirtyObserver: null,
+
+  /**
+   * Marks the modal as dirty when the user changes any input/select.
+   * Called once after modal body is populated.
+   */
+  _watchDirty() {
+    SGE.modal._dirty = false;
+    if (SGE.modal._dirtyObserver) {
+      SGE.modal._dirtyObserver.disconnect();
+      SGE.modal._dirtyObserver = null;
+    }
+    const body = document.querySelector('.modal-body');
+    if (!body) return;
+    const markDirty = () => { SGE.modal._dirty = true; };
+    body.querySelectorAll('input, select, textarea').forEach(el => {
+      el.addEventListener('change', markDirty, { once: false });
+      el.addEventListener('input', markDirty, { once: false });
+    });
+  },
+
+  /**
+   * Attempt to close — shows confirmation if form is dirty.
+   */
+  _safeClose() {
+    if (SGE.modal._dirty) {
+      SGE.modal.confirm({
+        title: 'Descartar alterações?',
+        message: 'Você fez alterações que não foram salvas. Deseja descartar?',
+        confirmText: 'Descartar',
+        confirmColor: 'danger',
+        onConfirm: () => { SGE.modal._dirty = false; SGE.modal.close(); }
+      });
+    } else {
+      SGE.modal.close();
+    }
+  },
+
   /**
    * Open move confirmation modal
    */
@@ -67,9 +106,10 @@ SGE.modal = {
       <button class="btn-confirm" id="modal-confirm">Confirmar Movimentação</button>
     `;
 
-    document.getElementById('modal-cancel').addEventListener('click', SGE.modal.close);
+    document.getElementById('modal-cancel').addEventListener('click', SGE.modal._safeClose);
     document.getElementById('modal-confirm').addEventListener('click', SGE.modal.confirmMove);
 
+    SGE.modal._watchDirty();
     document.getElementById('modal-overlay').classList.add('open');
   },
 
@@ -134,10 +174,27 @@ SGE.modal = {
     SGE.modal.close();
     SGE.helpers.updateStats();
     SGE.kanban.render();
-    SGE.helpers.toast(`${colaborador.nome} movido para ${supervisorDestino}`);
 
-    // Sync with backend
-    await SGE.api.syncMove(mov);
+    // ── Undo: mostra toast com botão "Desfazer" por 10s ──
+    let undid = false;
+    const undoTimer = setTimeout(async () => {
+        if (!undid) await SGE.api.syncMove(mov);
+    }, 10000);
+
+    SGE.helpers.toastUndo(
+        `${colaborador.nome} movido para ${supervisorDestino}`,
+        () => {
+            undid = true;
+            clearTimeout(undoTimer);
+            // Revert in memory
+            colaborador.supervisor = supOld;
+            colaborador.regime = regOld;
+            SGE.state.movimentacoes.shift(); // remove the optimistic entry
+            SGE.helpers.updateStats();
+            SGE.kanban.render();
+            SGE.helpers.toast('Movimentação desfeita.', 'info');
+        }
+    );
   },
 
   /**
@@ -249,9 +306,10 @@ SGE.modal = {
       <button class="btn-confirm" id="modal-confirm">Salvar Alterações</button>
     `;
 
-    document.getElementById('modal-cancel').addEventListener('click', SGE.modal.close);
+    document.getElementById('modal-cancel').addEventListener('click', SGE.modal._safeClose);
     document.getElementById('modal-confirm').addEventListener('click', () => SGE.modal.confirmEdit(colaborador));
 
+    SGE.modal._watchDirty();
     document.getElementById('modal-overlay').classList.add('open');
   },
 
@@ -301,6 +359,27 @@ SGE.modal = {
       if (sObj) setorNome = sObj.nome;
     }
 
+    // ── Captura diff de campos (antes × depois) ──
+    const fieldLabels = {
+      nome: 'Nome', cr: 'CR', funcao: 'Função', regime: 'Regime',
+      status: 'Status', categoria: 'Categoria', telefone: 'Telefone',
+      matricula_usiminas: 'Mat. Usiminas', matricula_gps: 'Mat. GPS',
+      equipamento: 'Equipamento', setor: 'Setor'
+    };
+    const after = { nome, cr, funcao, regime, status, categoria, telefone,
+                    matricula_usiminas, matricula_gps,
+                    equipamento: equipamento || 'SEM EQUIPAMENTO', setor: setorNome };
+    const before = {};
+    const changedFields = [];
+    for (const [key, label] of Object.entries(fieldLabels)) {
+      const prev = String(colaborador[key] ?? '');
+      const next = String(after[key] ?? '');
+      if (prev !== next) {
+        before[key] = prev;
+        changedFields.push({ campo: label, de: prev, para: next });
+      }
+    }
+
     // Update the in-memory object
     colaborador.nome = nome;
     colaborador.cr = cr;
@@ -321,8 +400,8 @@ SGE.modal = {
     SGE.kanban.render();
     SGE.helpers.toast(`${colaborador.nome} atualizado`);
 
-    // Sync with backend — pass complete data with explicit setor_id
-    await SGE.api.syncEditColaborador(colaborador);
+    // Sync with backend — pass complete data with field-level diff
+    await SGE.api.syncEditColaborador(colaborador, changedFields);
   },
 
   /**

@@ -63,6 +63,8 @@
 
     // ── Busca version.json sem cache ─────────────────────────
     async function _fetchVersionFile() {
+        // file:// protocol blocks cross-origin fetch — rely on Supabase Realtime only
+        if (window.location.protocol === 'file:') return null;
         try {
             const res = await fetch(`${VERSION_FILE}?_=${Date.now()}`, {
                 cache: 'no-store',

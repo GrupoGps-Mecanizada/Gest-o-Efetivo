@@ -63,6 +63,7 @@ SGE.kanban = {
     /**
      * Full (initial) render: build all columns from scratch.
      * Only called when container is empty.
+     * Uses IntersectionObserver to lazily populate card contents.
      */
     _fullRender(container, filteredColabs, supAtivos) {
         const frag = document.createDocumentFragment();
@@ -75,6 +76,56 @@ SGE.kanban = {
 
         container.innerHTML = '';
         container.appendChild(frag);
+
+        // Lazy-render card bodies for off-screen columns
+        SGE.kanban._setupLazyColumns(container, filteredColabs);
+    },
+
+    /**
+     * Observe columns with pending lazy render, populate when they enter viewport.
+     */
+    _setupLazyColumns(container, filteredColabs) {
+        if (!('IntersectionObserver' in window)) return;
+
+        // Disconnect previous observer if any
+        if (SGE.kanban._colObserver) SGE.kanban._colObserver.disconnect();
+
+        SGE.kanban._colObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) return;
+                const colEl = entry.target;
+                if (!colEl.dataset.lazyPending) return;
+
+                const supName = colEl.dataset.supervisor;
+                const body = colEl.querySelector('.col-body');
+                if (!body) return;
+
+                const membros = filteredColabs.filter(c => c.supervisor === supName);
+                if (membros.length === 0) {
+                    body.innerHTML = '<div class="empty-col">Nenhum colaborador</div>';
+                } else {
+                    const frag = document.createDocumentFragment();
+                    const h = SGE.helpers;
+                    membros.forEach(c => {
+                        const card = SGE.kanban.makeCard(c);
+                        Object.assign(card.dataset, {
+                            nome: c.nome || '', funcao: c.funcao || '', cr: c.cr || '',
+                            regime: c.regime || '', equipamento: c.equipamento || '',
+                            ferias: h.isFerias(c) ? '1' : '', semId: h.isSemId(c) ? '1' : ''
+                        });
+                        frag.appendChild(card);
+                    });
+                    body.innerHTML = '';
+                    body.appendChild(frag);
+                }
+                delete colEl.dataset.lazyPending;
+                SGE.kanban._colObserver.unobserve(colEl);
+            });
+        }, { root: container, rootMargin: '0px 200px 0px 200px', threshold: 0 });
+
+        container.querySelectorAll('.kanban-col[data-lazy-pending]').forEach(col => {
+            SGE.kanban._colObserver.observe(col);
+        });
     },
 
     /**
@@ -305,26 +356,31 @@ SGE.kanban = {
             SGE.kanban._setupColumnDrop(body, sup);
         }
 
-        if (membros.length === 0) {
-            body.innerHTML = '<div class="empty-col">Nenhum colaborador</div>';
-        } else {
-            const bodyFrag = document.createDocumentFragment();
-            membros.forEach(c => {
-                const card = SGE.kanban.makeCard(c);
-                // Stamp initial data attributes for future diffing
-                const h = SGE.helpers;
-                Object.assign(card.dataset, {
-                    nome: c.nome || '',
-                    funcao: c.funcao || '',
-                    cr: c.cr || '',
-                    regime: c.regime || '',
-                    equipamento: c.equipamento || '',
-                    ferias: h.isFerias(c) ? '1' : '',
-                    semId: h.isSemId(c) ? '1' : ''
+        // First 3 columns render immediately; rest are lazy (IntersectionObserver)
+        if (idx < 3) {
+            if (membros.length === 0) {
+                body.innerHTML = '<div class="empty-col">Nenhum colaborador</div>';
+            } else {
+                const bodyFrag = document.createDocumentFragment();
+                membros.forEach(c => {
+                    const card = SGE.kanban.makeCard(c);
+                    const h = SGE.helpers;
+                    Object.assign(card.dataset, {
+                        nome: c.nome || '', funcao: c.funcao || '', cr: c.cr || '',
+                        regime: c.regime || '', equipamento: c.equipamento || '',
+                        ferias: h.isFerias(c) ? '1' : '', semId: h.isSemId(c) ? '1' : ''
+                    });
+                    bodyFrag.appendChild(card);
                 });
-                bodyFrag.appendChild(card);
-            });
-            body.appendChild(bodyFrag);
+                body.appendChild(bodyFrag);
+            }
+        } else {
+            // Lazy: show skeleton until column scrolls into view
+            colEl.dataset.lazyPending = '1';
+            const skeletonCount = Math.min(membros.length, 4);
+            body.innerHTML = Array.from({ length: skeletonCount }, () =>
+                '<div class="card-skeleton"></div>'
+            ).join('');
         }
 
         return colEl;

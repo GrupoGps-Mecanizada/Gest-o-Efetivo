@@ -108,27 +108,35 @@ SGE.app = {
         SGE.navigation.loadScrollPositions();
 
         // 1. Try to load from Cache first for instant boot
+        const CACHE_TTL = 4 * 60 * 60 * 1000; // 4 hours — recarrega do servidor após 4h
         let usedCache = false;
         try {
             const cachedParams = localStorage.getItem('SGE_CACHE');
             if (cachedParams) {
                 const parsed = JSON.parse(cachedParams);
-                if (parsed.colaboradores) SGE.state.colaboradores = parsed.colaboradores;
-                if (parsed.supervisores) SGE.state.supervisores = parsed.supervisores;
-                if (parsed.setores) SGE.state.setores = parsed.setores;
-                if (parsed.movimentacoes) SGE.state.movimentacoes = parsed.movimentacoes;
-                if (parsed.equipamentos) SGE.state.equipamentos = parsed.equipamentos;
-                if (parsed.treinamentosCatalogo) SGE.state.treinamentosCatalogo = parsed.treinamentosCatalogo;
-                if (parsed.colaboradorTreinamentos) SGE.state.colaboradorTreinamentos = parsed.colaboradorTreinamentos;
-                if (parsed.ferias) SGE.state.ferias = parsed.ferias;
-                if (parsed.advertencias) SGE.state.advertencias = parsed.advertencias;
+                // Invalidate stale cache
+                const age = Date.now() - (parsed.timestamp || 0);
+                if (age > CACHE_TTL) {
+                    localStorage.removeItem('SGE_CACHE');
+                    console.info('[SGE] Cache expirado — recarregando do servidor.');
+                } else {
+                    if (parsed.colaboradores) SGE.state.colaboradores = parsed.colaboradores;
+                    if (parsed.supervisores) SGE.state.supervisores = parsed.supervisores;
+                    if (parsed.setores) SGE.state.setores = parsed.setores;
+                    if (parsed.movimentacoes) SGE.state.movimentacoes = parsed.movimentacoes;
+                    if (parsed.equipamentos) SGE.state.equipamentos = parsed.equipamentos;
+                    if (parsed.treinamentosCatalogo) SGE.state.treinamentosCatalogo = parsed.treinamentosCatalogo;
+                    if (parsed.colaboradorTreinamentos) SGE.state.colaboradorTreinamentos = parsed.colaboradorTreinamentos;
+                    if (parsed.ferias) SGE.state.ferias = parsed.ferias;
+                    if (parsed.advertencias) SGE.state.advertencias = parsed.advertencias;
 
-                SGE.state.dataLoaded = true;
-                usedCache = true;
-                setStatus('Carregando offline (instanciado do cache)...');
+                    SGE.state.dataLoaded = true;
+                    usedCache = true;
+                    setStatus('Carregando offline (instanciado do cache)...');
 
-                // Trigger background sync after UI is ready
-                setTimeout(() => { SGE.api.syncBackground(true); }, 1500);
+                    // Trigger background sync after UI is ready
+                    setTimeout(() => { SGE.api.syncBackground(true); }, 1500);
+                }
             }
         } catch (e) {
             console.warn('Cache load failed:', e);
@@ -282,6 +290,15 @@ SGE.app = {
             });
         }
 
+        // ── Print / PDF Button ──
+        const printBtn = document.getElementById('topbar-print-btn');
+        if (printBtn) {
+            printBtn.addEventListener('click', () => {
+                document.body.setAttribute('data-print-date', new Date().toLocaleString('pt-BR'));
+                window.print();
+            });
+        }
+
         // ── Filter Dropdown Toggle ──
         const filterBtn = document.getElementById('filter-toggle-btn');
         const filterPanel = document.getElementById('filter-dropdown-panel');
@@ -337,7 +354,14 @@ SGE.app = {
     setupModal() {
         document.getElementById('modal-overlay').addEventListener('click', e => {
             if (e.target === document.getElementById('modal-overlay')) {
-                SGE.modal.close();
+                SGE.modal._safeClose();
+            }
+        });
+
+        // ESC key closes modal (with dirty check)
+        document.addEventListener('keydown', ({ key }) => {
+            if (key === 'Escape' && document.getElementById('modal-overlay').classList.contains('open')) {
+                SGE.modal._safeClose();
             }
         });
     },
@@ -345,27 +369,23 @@ SGE.app = {
     setupSearch() {
         const input = document.getElementById('search-input');
         if (input) {
-            input.addEventListener('input', () => SGE.search.render(input.value));
+            const debouncedLocalSearch = SGE.helpers.debounce(() => SGE.search.render(input.value), 250);
+            input.addEventListener('input', debouncedLocalSearch);
         }
 
         const globalSearch = document.getElementById('global-search');
         if (globalSearch) {
-            globalSearch.addEventListener('input', (e) => {
-                const val = e.target.value;
+            const debouncedGlobalSearch = SGE.helpers.debounce((val) => {
                 if (SGE.state.activeView !== 'search' && val.trim().length > 0) {
                     SGE.navigation.switchView('search');
-                    // Focus back to global after switch because view transition might steal it
                     setTimeout(() => globalSearch.focus(), 10);
                 }
-
-                // Sync the main search input
-                if (input) {
-                    input.value = val;
-                }
-
-                // If it was cleared, maybe we should leave the user in search view or return them? 
-                // Usually it's fine to leave them on search view so they see the whole list
+                if (input) input.value = val;
                 SGE.search.render(val);
+            }, 250);
+
+            globalSearch.addEventListener('input', (e) => {
+                debouncedGlobalSearch(e.target.value);
             });
 
             // clear global search if leaving the search view

@@ -1,5 +1,5 @@
 {
-  "version": "1.0.1",
+  "version": "1.1.0",
   "updated_at": "2026-03-09",
-  "notes": "Correções de segurança, XSS, validações e ARIA"
+  "notes": "Debounce search, cache expiração, confirm modal, virtual scrolling kanban, undo movimentação, usuários online, PDF export, push notifications, histórico de campos"
 }

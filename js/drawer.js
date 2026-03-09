@@ -63,10 +63,64 @@ SGE.drawer = {
       <div style="margin-top:24px; padding-top:12px; border-top:1px dashed var(--border); font-size:11px; color:var(--text-3); text-align:center;">
         Ultima Atualizacao: ${col.ultima_edicao ? esc(h.formatDate(col.ultima_edicao)) : 'Desconhecida'} por <strong>${esc(col.editado_por || 'Sistema')}</strong>
       </div>
+      <div id="drawer-field-history-section"></div>
     `;
 
     document.getElementById('drawer-overlay').classList.add('open');
     document.getElementById('drawer').classList.add('open');
+
+    // Load field-level history asynchronously (non-blocking)
+    SGE.drawer._loadFieldHistory(col.id);
+  },
+
+  /**
+   * Load and render field-level change history for a collaborator
+   */
+  async _loadFieldHistory(colId) {
+    const section = document.getElementById('drawer-field-history-section');
+    if (!section || !window.supabase) return;
+
+    try {
+      const { data, error } = await window.supabase
+        .schema('gps_compartilhado')
+        .from('gps_field_history')
+        .select('changed_by, changed_at, changes')
+        .eq('entity_type', 'colaborador')
+        .eq('entity_id', String(colId))
+        .order('changed_at', { ascending: false })
+        .limit(10);
+
+      if (error || !data || data.length === 0) return;
+
+      const h = SGE.helpers;
+      const esc = h.escapeHtml.bind(h);
+
+      const rows = data.map(entry => {
+        const changes = Array.isArray(entry.changes) ? entry.changes : [];
+        const changesHtml = changes.map(c =>
+          `<div style="display:flex;gap:6px;align-items:baseline;font-size:11px;">
+             <span style="color:var(--text-3);min-width:80px">${esc(c.campo)}:</span>
+             <span style="text-decoration:line-through;color:var(--text-3)">${esc(c.de || '—')}</span>
+             <span style="color:var(--text-3)">→</span>
+             <span style="color:var(--text-1);font-weight:600">${esc(c.para || '—')}</span>
+           </div>`
+        ).join('');
+
+        return `<div style="padding:8px 0;border-bottom:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--text-3);margin-bottom:4px">
+            ${esc(h.formatDate(entry.changed_at))} — <strong>${esc(entry.changed_by)}</strong>
+          </div>
+          ${changesHtml}
+        </div>`;
+      }).join('');
+
+      section.innerHTML = `
+        <div class="section-title" style="margin-top:16px">Histórico de Campos</div>
+        <div style="font-size:12px;">${rows}</div>
+      `;
+    } catch {
+      // Table may not exist yet — fail silently
+    }
   },
 
   /**

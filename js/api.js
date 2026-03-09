@@ -361,7 +361,7 @@ SGE.api = {
         }
     },
 
-    async syncEditColaborador(colData) {
+    async syncEditColaborador(colData, changedFields = []) {
         if (!window.supabase) return null;
         this.updateSyncBar(true);
 
@@ -411,6 +411,29 @@ SGE.api = {
                 .eq('id', colData.id);
 
             if (error) throw error;
+
+            // ── Persiste histórico de campos alterados ──
+            if (changedFields.length > 0) {
+                const userName = (SGE.auth.currentUser
+                    ? (SGE.auth.currentUser.nome || SGE.auth.currentUser.usuario)
+                    : null) || 'Sistema';
+
+                await supabase
+                    .schema('gps_compartilhado')
+                    .from('gps_field_history')
+                    .insert({
+                        entity_type: 'colaborador',
+                        entity_id: String(colData.id),
+                        entity_name: colData.nome,
+                        changed_by: userName,
+                        changed_at: new Date().toISOString(),
+                        changes: changedFields   // jsonb column
+                    })
+                    .then(({ error: hErr }) => {
+                        if (hErr) console.warn('[SGE] Field history insert failed (tabela pode não existir):', hErr.message);
+                    });
+            }
+
             this.updateSyncBar(false);
 
             // After successful save, trigger a fresh reload to get consistent state

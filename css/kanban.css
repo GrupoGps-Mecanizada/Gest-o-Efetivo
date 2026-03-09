@@ -330,3 +330,16 @@
         gap: 10px;
     }
 }
+
+/* ── Lazy-load skeleton cards ── */
+@keyframes sge-skeleton-pulse {
+    0%, 100% { opacity: 0.5; }
+    50%       { opacity: 1;   }
+}
+.card-skeleton {
+    height: 88px;
+    border-radius: 10px;
+    background: var(--bg-2, #f1f5f9);
+    margin-bottom: 8px;
+    animation: sge-skeleton-pulse 1.4s ease-in-out infinite;
+}

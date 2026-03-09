@@ -131,6 +131,32 @@ SGE.helpers = {
     },
 
     /**
+     * Show toast with an "Undo" action button (10s auto-dismiss)
+     */
+    toastUndo(msg, onUndo, duration = 10000) {
+        const el = document.createElement('div');
+        el.className = 'toast success toast-undo';
+        el.innerHTML = `
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="2 8 6 12 14 4"/></svg>
+            <span class="toast-undo-msg">${SGE.helpers.escapeHtml(msg)}</span>
+            <button class="toast-undo-btn" aria-label="Desfazer">Desfazer</button>
+        `;
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+        container.appendChild(el);
+
+        let dismissed = false;
+        const dismiss = () => { if (dismissed) return; dismissed = true; el.remove(); };
+
+        el.querySelector('.toast-undo-btn').addEventListener('click', () => {
+            dismiss();
+            if (onUndo) onUndo();
+        });
+
+        setTimeout(dismiss, duration);
+    },
+
+    /**
      * Format ISO date to pt-BR locale string
      */
     formatDate(iso) {

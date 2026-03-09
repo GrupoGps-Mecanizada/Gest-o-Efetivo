@@ -1,0 +1,123 @@
+/* ===================== PRINT / PDF EXPORT =====================
+   Activated via window.print() or Ctrl+P.
+   Shows only the active view content in a clean layout.
+   ============================================================= */
+
+@media print {
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box !important; }
+
+    body {
+        background: #fff !important;
+        color: #000 !important;
+        font-family: 'Inter', Arial, sans-serif !important;
+        font-size: 11pt !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* ── Hide non-essential UI ── */
+    #login-screen,
+    #loading-screen,
+    #topbar,
+    #filterbar,
+    #drawer-overlay,
+    #modal-overlay,
+    #toast-container,
+    #nav-menu-overlay,
+    #hub-dropdown-overlay,
+    #global-sync-bar,
+    .kanban-arrow,
+    .no-print {
+        display: none !important;
+    }
+
+    /* ── Page layout ── */
+    #app, #main {
+        display: block !important;
+        height: auto !important;
+        overflow: visible !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* ── Print header ── */
+    body::before {
+        content: 'GPS Mecanizada — Gestão de Efetivo';
+        display: block;
+        font-size: 14pt;
+        font-weight: 700;
+        color: #0f3868;
+        padding: 10px 20px 4px;
+        border-bottom: 2px solid #0f3868;
+        margin-bottom: 12px;
+    }
+    body::after {
+        content: 'Impresso em: ' attr(data-print-date);
+        display: block;
+        font-size: 8pt;
+        color: #666;
+        padding: 10px 20px;
+        border-top: 1px solid #ddd;
+        margin-top: 16px;
+        text-align: right;
+    }
+
+    /* ── Kanban: horizontal → vertical stacked ── */
+    #kanban-view {
+        display: block !important;
+        overflow: visible !important;
+        height: auto !important;
+        padding: 0 !important;
+    }
+
+    .kanban-col {
+        display: block !important;
+        width: 100% !important;
+        min-width: unset !important;
+        max-width: unset !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+        margin-bottom: 16px !important;
+        border: 1px solid #ddd !important;
+        border-radius: 8px !important;
+        overflow: visible !important;
+    }
+
+    .col-body {
+        max-height: none !important;
+        overflow: visible !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        padding: 8px !important;
+    }
+
+    .card {
+        width: calc(25% - 8px) !important;
+        min-width: 160px !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+        box-shadow: none !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+
+    .card-skeleton { display: none !important; }
+
+    /* ── Table/Excel view ── */
+    .excel-table-container,
+    #search-view table {
+        overflow: visible !important;
+        width: 100% !important;
+    }
+
+    table { border-collapse: collapse !important; width: 100% !important; }
+    th, td { border: 1px solid #ccc !important; padding: 4px 8px !important; font-size: 9pt !important; }
+    th { background: #0f3868 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    /* ── Links ── */
+    a { text-decoration: none !important; color: inherit !important; }
+
+    /* ── Page breaks ── */
+    h2, h3, .col-header { page-break-after: avoid; break-after: avoid; }
+}

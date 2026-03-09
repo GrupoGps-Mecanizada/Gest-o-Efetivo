@@ -52,3 +52,21 @@
         transform: translateY(10px) scale(.95)
     }
 }
+
+/* ── Undo toast ── */
+.toast-undo { max-width: 360px; }
+.toast-undo-msg { flex: 1; min-width: 0; }
+.toast-undo-btn {
+    background: rgba(26, 122, 66, 0.14);
+    border: 1px solid rgba(26, 122, 66, 0.35);
+    color: #1a7a42;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+    font-family: inherit;
+}
+.toast-undo-btn:hover { background: rgba(26, 122, 66, 0.24); }
