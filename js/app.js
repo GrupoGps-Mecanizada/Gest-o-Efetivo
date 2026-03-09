@@ -91,7 +91,7 @@ SGE.app = {
         const filterbar = document.getElementById('filterbar');
 
         // Detect if loading screen was already hidden (cached instant boot)
-        const isInstantBoot = loadingScreen && loadingScreen.classList.contains('hide');
+        let isInstantBoot = loadingScreen && loadingScreen.classList.contains('hide');
 
         // Hide app content during loading (only if not instant boot)
         if (!isInstantBoot) {
@@ -140,6 +140,19 @@ SGE.app = {
             }
         } catch (e) {
             console.warn('Cache load failed:', e);
+        }
+
+        // Se o cache existia (isInstantBoot=true) mas era inválido/expirado (usedCache=false),
+        // reverter para boot normal: reexibir loading screen e ocultar conteúdo
+        if (isInstantBoot && !usedCache) {
+            isInstantBoot = false;
+            if (topbar) topbar.style.opacity = '0';
+            if (main) main.style.opacity = '0';
+            if (filterbar) filterbar.style.opacity = '0';
+            if (loadingScreen) {
+                loadingScreen.classList.remove('hide');
+                setStatus('Atualizando dados...');
+            }
         }
 
         // Initialize Real-time immediately if connected

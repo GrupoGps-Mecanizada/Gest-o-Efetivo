@@ -498,7 +498,7 @@ SGE.dashboard = {
                     const cAloc = (c.setor_id && c.setor !== 'SEM SETOR') ? c.setor : c.equipamento;
                     if (cAloc !== aloc) return false;
                     const turno = SGE.equip ? SGE.equip.getTurno(c.regime) : (c.regime || '').includes(t);
-                    return turno === t || (t === 'ADM' && SGE.equip && SGE.equip.isADM(c.regime));
+                    return turno === t;
                 }).length;
                 row[t] = count;
                 row.total += count;
