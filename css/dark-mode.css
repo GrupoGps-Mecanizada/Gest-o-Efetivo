@@ -480,9 +480,9 @@
 }
 
 /* ===== LOGIN ===== */
-[data-theme="dark"] .login-box {
+[data-theme="dark"] .login-form-area,
+[data-theme="dark"] .login-loading-area {
     background: var(--bg-1);
-    border-color: var(--border);
 }
 
 [data-theme="dark"] .login-input-group input {
@@ -492,6 +492,10 @@
 }
 
 [data-theme="dark"] .login-input-group label {
+    color: var(--text-3);
+}
+
+[data-theme="dark"] .login-loading-area {
     color: var(--text-3);
 }
 

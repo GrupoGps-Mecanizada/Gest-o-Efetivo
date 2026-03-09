@@ -49,53 +49,60 @@
 <body>
   <!-- ==================== LOGIN SCREEN ==================== -->
   <div id="login-screen" class="hidden">
-    <!-- Particle Canvas for Login -->
-    <canvas id="bg-canvas"
-      style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; opacity: 0.5;"></canvas>
-    <div id="vignette"
-      style="position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 40%, transparent 45%, rgba(180,192,210,0.18) 100%); pointer-events: none; z-index: 1;">
+    <canvas id="bg-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.3;"></canvas>
+    <div class="login-glow-a"></div>
+    <div class="login-glow-b"></div>
+
+    <div class="login-box">
+      <!-- Header: identidade visual Central GPS -->
+      <div class="login-header">
+        <div class="login-monogram">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+          </svg>
+        </div>
+        <div class="login-central-label">Central GPS</div>
+        <div class="login-brand-name">GRUPO GPS</div>
+        <div class="login-brand-sub">Mecanizada</div>
+        <div class="login-divider"></div>
+        <div class="login-system-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          Gestão de Efetivo
+        </div>
+      </div>
+      <!-- Formulário -->
+      <div class="login-form-area">
+        <form id="login-form">
+          <div class="login-input-group" id="group-name" style="display: none;">
+            <label>Nome</label>
+            <input type="text" id="login-name" autocomplete="name" />
+          </div>
+          <div class="login-input-group">
+            <label>E-mail</label>
+            <input type="email" id="login-user" required autocomplete="username" />
+          </div>
+          <div class="login-input-group">
+            <label>Senha</label>
+            <input type="password" id="login-pass" required autocomplete="current-password" />
+          </div>
+          <button type="submit" class="login-btn" id="login-submit">Entrar</button>
+          <div style="text-align:center;margin-top:14px;font-size:13px;">
+            <a href="#" id="toggle-register" style="color:#2563eb;text-decoration:none;font-weight:600;">Criar uma conta</a>
+          </div>
+        </form>
+        <div class="login-error" id="login-error"></div>
+      </div>
     </div>
 
-    <div class="login-box" style="z-index: 10; position: relative;">
-      <!-- Title Block matching HUB -->
-      <div
-        style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 30px; text-align: center;">
-        <span
-          style="font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: #94a3b8;">Grupo
-          GPS</span>
-        <span
-          style="font-family: 'Inter', sans-serif; font-size: 32px; font-weight: 800; letter-spacing: -0.02em; color: #0a2fa8; line-height: 1.2;">MECANIZADA</span>
-        <div
-          style="width: 32px; height: 2px; background: #0a2fa8; border-radius: 2px; opacity: 0.25; margin-top: 6px; margin-bottom: 12px;">
-        </div>
-        <span
-          style="font-size: 13px; font-weight: 600; color: #475569; letter-spacing: 0.05em; text-transform: uppercase;">Gestão
-          de Efetivo</span>
-      </div>
-      <form id="login-form">
-        <div class="login-input-group" id="group-name" style="display: none;">
-          <label>Nome</label>
-          <input type="text" id="login-name" autocomplete="name" />
-        </div>
-        <div class="login-input-group">
-          <label>E-mail</label>
-          <input type="email" id="login-user" required autocomplete="username" />
-        </div>
-        <div class="login-input-group">
-          <label>Senha</label>
-          <input type="password" id="login-pass" required autocomplete="current-password" />
-        </div>
-        <button type="submit" class="login-btn" id="login-submit">Entrar</button>
-        <div style="text-align: center; margin-top: 15px; font-size: 13px;">
-          <a href="#" id="toggle-register" style="color: #0f3868; text-decoration: none; font-weight: 600;">Criar uma
-            conta</a>
-        </div>
-      </form>
-      <div class="login-error" id="login-error"></div>
-    </div>
-    <div class="login-footer">
-      Desenvolvido por Warlison Abreu | Icaro Bernardo - Grupo GPS
-    </div>
+    <div class="login-footer">Desenvolvido por Warlison Abreu &amp; Icaro Bernardo — Grupo GPS</div>
   </div>
 
   <div id="app">
