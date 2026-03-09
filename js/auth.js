@@ -279,9 +279,10 @@ SGE.auth = {
 
         const menuUser = document.getElementById('nav-menu-user');
         if (menuUser && this.currentUser) {
+            const esc = (str) => String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
             menuUser.innerHTML = `
                 <span style="color:var(--text-3);">Bem-vindo(a),</span>
-                <strong style="color:var(--text-1); font-weight:700;">${this.currentUser.nome}</strong>
+                <strong style="color:var(--text-1); font-weight:700;">${esc(this.currentUser.nome)}</strong>
                 <button title="Sair do sistema" id="logout-btn" style="margin-left:auto; display:flex; align-items:center; gap:4px; font-weight:600; font-size:12px; background:none; border:none; color:var(--danger); cursor:pointer; padding:4px 8px; border-radius:4px; transition: background 0.2s">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
                     Sair

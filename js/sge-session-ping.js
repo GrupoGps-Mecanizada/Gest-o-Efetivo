@@ -109,10 +109,13 @@
             return;
         }
 
-        // Cria client dedicado para o canal de presença (anon key)
-        _supabase = window.supabase.createClient(SUPABASE_URL, ANON_KEY, {
-            realtime: { params: { eventsPerSecond: 5 } }
-        });
+        // Reutiliza o client Supabase já inicializado pelo supabase-config.js
+        // (window.supabase é a instância do client, não a library — não usar .createClient())
+        _supabase = window.supabase;
+        if (!_supabase || typeof _supabase.channel !== 'function') {
+            console.warn('[SGE Presence] Supabase client não disponível — abortando presença.');
+            return;
+        }
 
         _payload = buildPayload(data, 'online');
 

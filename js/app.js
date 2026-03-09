@@ -208,9 +208,14 @@ SGE.app = {
             history.pushState({ sge: true, view: SGE.state.activeView }, '');
         });
 
-        // Silent polling (runs every 30s; after mutations, syncBackground(true) runs immediately)
-        setInterval(() => {
-            SGE.api.syncBackground();
+        // Silent polling (runs every 30s; with sync lock to prevent concurrent executions)
+        let _bgSyncLock = false;
+        setInterval(async () => {
+            if (_bgSyncLock) return;
+            _bgSyncLock = true;
+            try { await SGE.api.syncBackground(); }
+            catch (e) { console.warn('[SGE] Background sync error:', e); }
+            finally { _bgSyncLock = false; }
         }, 30000);
 
         // Fade out loading screen and show app

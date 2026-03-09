@@ -4,6 +4,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <!-- Content Security Policy — restringe fontes de scripts, estilos e conexões -->
+  <!-- NOTA: frame-ancestors não funciona via meta tag (limitação do browser) — configurar via HTTP header no servidor -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self' https:;
+    script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.sheetjs.com https://grupogps-mecanizada.github.io;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com;
+    font-src 'self' https://fonts.gstatic.com;
+    img-src 'self' data: blob:;
+    connect-src 'self' https://*.supabase.co wss://*.supabase.co https://grupogps-mecanizada.github.io https://cdn.jsdelivr.net;
+    object-src 'none';
+    base-uri 'self';
+  " />
   <title>EFETIVO - GPS - MECANIZADA</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -119,7 +132,7 @@
         </button>
 
         <!-- SGE Hub Tree Button -->
-        <button id="hub-menu-btn" class="topbar-icon-btn hub-btn-explicit" title="Ecossistema SGE">
+        <button id="hub-menu-btn" class="topbar-icon-btn hub-btn-explicit" title="Ecossistema SGE" aria-label="Abrir Ecossistema SGE">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
             stroke-linejoin="round">
             <rect x="3" y="3" width="7" height="7"></rect>
@@ -143,7 +156,7 @@
               <span class="brand">SGE Ecossistema</span>
               <span class="sys">Grupo GPS</span>
             </div>
-            <button id="hub-close-btn" class="hub-close-btn" aria-label="Fechar Hub">
+            <button id="hub-close-btn" class="hub-close-btn" aria-label="Fechar Ecossistema SGE">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -157,8 +170,8 @@
         </div>
       </div>
 
-      <div id="nav-menu-overlay" class="nav-menu-overlay hidden">
-        <div class="nav-menu-panel">
+      <div id="nav-menu-overlay" class="nav-menu-overlay hidden" role="dialog" aria-label="Menu de Navegação" aria-modal="true">
+        <div class="nav-menu-panel" role="navigation" aria-label="Menu principal">
           <div class="nav-menu-header"
             style="justify-content: flex-start; padding: 20px 16px; position: relative; align-items: center; min-height: 90px;">
             <div class="sidebar-logo" id="logo-home"
@@ -249,6 +262,7 @@
         <div class="topbar-search-wrapper"
           style="margin-right:16px; position:relative; display:flex; align-items:center;">
           <input type="text" id="global-search" placeholder="Pesquisar..." autocomplete="off"
+            aria-label="Pesquisar colaboradores"
             style="width: 200px; padding: 8px 14px 8px 38px; border: 1px solid transparent; border-radius: 20px; background: var(--bg-2); color: var(--text-1); font-size: 13px; font-weight: 500; outline: none; transition: all 0.3s ease; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);" />
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"
             style="position:absolute; left:14px; width:14px; height:14px; color:var(--text-3); pointer-events:none;">
@@ -413,7 +427,8 @@
       <!-- SEARCH VIEW -->
       <div id="search-view" class="view">
         <div id="search-bar">
-          <input type="text" id="search-input" placeholder="Pesquisar por nome, ID, alocação, setor ou supervisor..." />
+          <input type="text" id="search-input" placeholder="Pesquisar por nome, ID, alocação, setor ou supervisor..."
+            aria-label="Pesquisar colaboradores por nome, ID, alocação, setor ou supervisor" />
         </div>
         <div id="search-results"></div>
       </div>
@@ -422,9 +437,11 @@
       <div id="history-view" class="view">
         <div class="history-filters">
           <input type="text" class="history-filter-input" data-field="colaborador"
-            placeholder="Filtrar colaborador..." />
-          <input type="text" class="history-filter-input" data-field="origem" placeholder="Filtrar origem..." />
-          <input type="text" class="history-filter-input" data-field="destino" placeholder="Filtrar destino..." />
+            placeholder="Filtrar colaborador..." aria-label="Filtrar por colaborador" />
+          <input type="text" class="history-filter-input" data-field="origem"
+            placeholder="Filtrar origem..." aria-label="Filtrar por supervisor de origem" />
+          <input type="text" class="history-filter-input" data-field="destino"
+            placeholder="Filtrar destino..." aria-label="Filtrar por supervisor de destino" />
           <button id="export-btn">
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M8 1v10M4 7l4 4 4-4" />
@@ -482,29 +499,29 @@
     </div>
 
     <!-- ==================== DRAWER ==================== -->
-    <div id="drawer-overlay"></div>
-    <div id="drawer">
+    <div id="drawer-overlay" aria-hidden="true"></div>
+    <div id="drawer" role="complementary" aria-label="Detalhes do colaborador">
       <div id="drawer-header">
         <div>
           <div id="drawer-title">—</div>
           <div id="drawer-id">—</div>
         </div>
-        <button id="drawer-close">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+        <button id="drawer-close" aria-label="Fechar painel de detalhes">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path d="M3 3l10 10M13 3L3 13" />
           </svg>
         </button>
       </div>
       <div id="drawer-body"></div>
       <div id="drawer-footer">
-        <button class="drawer-btn" data-action="move">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <button class="drawer-btn" data-action="move" aria-label="Mover colaborador para outro supervisor">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
             <path d="M1 8h14M11 4l4 4-4 4" />
           </svg>
           Mover
         </button>
-        <button class="drawer-btn" data-action="edit">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <button class="drawer-btn" data-action="edit" aria-label="Editar dados do colaborador">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
             <path d="M11 1l4 4L5 15H1v-4z" />
           </svg>
           Editar
@@ -517,10 +534,10 @@
     </div>
 
     <!-- ==================== MODAL ==================== -->
-    <div id="modal-overlay">
+    <div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-dialog-title">
       <div id="modal">
         <div class="modal-header">
-          <div class="modal-title">—</div>
+          <div class="modal-title" id="modal-dialog-title">—</div>
         </div>
         <div class="modal-body"></div>
         <div class="modal-footer"></div>
@@ -582,6 +599,8 @@
   <script src="js/excel-table.js?v=1.0.0"></script>
   <script src="js/app.js?v=1.0.1"></script>
   <script src="js/dev-mode.js?v=1.0.0"></script>
+  <!-- Auto-Update: detecta novas versões e atualiza todos os navegadores automaticamente -->
+  <script src="js/updater.js?v=1.0.0"></script>
 </body>
 
 </html>

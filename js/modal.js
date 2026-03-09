@@ -17,21 +17,23 @@ SGE.modal = {
     const supNew = SGE.state.supervisores.find(s => s.nome === supervisorDestino);
 
     const header = document.querySelector('.modal-header');
+    const esc = SGE.helpers.escapeHtml.bind(SGE.helpers);
+
     header.innerHTML = `
       <div class="modal-title">Confirmar Movimentação</div>
-      <div class="modal-subtitle">${colaborador.nome} (${colaborador.id})</div>
+      <div class="modal-subtitle">${esc(colaborador.nome)} (${esc(String(colaborador.id))})</div>
     `;
 
     const body = document.querySelector('.modal-body');
     body.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px">
-        <div class="modal-colname">${colaborador.supervisor}</div>
+        <div class="modal-colname">${esc(colaborador.supervisor)}</div>
         <div class="move-arrow">
           <svg width="20" height="12" viewBox="0 0 20 12" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M0 6h18M14 1l5 5-5 5"/>
           </svg>
         </div>
-        <div class="modal-colname">${supervisorDestino}</div>
+        <div class="modal-colname">${esc(supervisorDestino)}</div>
       </div>
       
       <div class="form-field">
@@ -86,6 +88,24 @@ SGE.modal = {
     const motivo = document.getElementById('modal-motivo').value;
     const obs = document.getElementById('modal-obs').value.trim();
 
+    // ── Input Validation ──
+    if (!txData || !/^\d{4}-\d{2}-\d{2}$/.test(txData)) {
+      SGE.helpers.toast('Data inválida. Selecione uma data válida.', 'error');
+      return;
+    }
+    if (!novoRegime || !SGE.CONFIG.regimes.includes(novoRegime)) {
+      SGE.helpers.toast('Regime de destino inválido.', 'error');
+      return;
+    }
+    if (!motivo || !SGE.CONFIG.motivos.includes(motivo)) {
+      SGE.helpers.toast('Motivo inválido.', 'error');
+      return;
+    }
+    if (obs.length > 500) {
+      SGE.helpers.toast('Observação deve ter no máximo 500 caracteres.', 'error');
+      return;
+    }
+
     const supOld = colaborador.supervisor;
     const regOld = colaborador.regime || '—';
 
@@ -134,7 +154,7 @@ SGE.modal = {
     const header = document.querySelector('.modal-header');
     header.innerHTML = `
       <div class="modal-title">Editar Colaborador</div>
-      <div class="modal-subtitle">${colaborador.nome} (${colaborador.matricula_gps || 'S/ MAT'})</div>
+      <div class="modal-subtitle">${esc(colaborador.nome)} (${esc(colaborador.matricula_gps || 'S/ MAT')})</div>
     `;
 
     // Build combined Alocacao options
@@ -251,6 +271,24 @@ SGE.modal = {
     const matricula_usiminas = document.getElementById('edit-mat-usiminas').value.trim();
     const matricula_gps = document.getElementById('edit-mat-gps').value.trim();
 
+    // ── Input Validation ──
+    if (!nome || nome.length < 2 || nome.length > 100) {
+      SGE.helpers.toast('Nome deve ter entre 2 e 100 caracteres.', 'error');
+      return;
+    }
+    if (!SGE.CONFIG.regimes.includes(regime)) {
+      SGE.helpers.toast('Regime inválido.', 'error');
+      return;
+    }
+    if (!SGE.CONFIG.statuses.includes(status)) {
+      SGE.helpers.toast('Status inválido.', 'error');
+      return;
+    }
+    if (!['OPERACIONAL', 'GESTAO'].includes(categoria)) {
+      SGE.helpers.toast('Categoria inválida.', 'error');
+      return;
+    }
+
     let equipamento = 'SEM EQUIPAMENTO';
     let setorId = null;
     let setorNome = 'SEM SETOR';
@@ -304,12 +342,12 @@ SGE.modal = {
     body.innerHTML = `
       <div class="settings-grid">
         ${supAtivos.map(s => `
-          <div class="sup-card" style="cursor:pointer;transition:all .15s" data-sup="${s.nome}"
+          <div class="sup-card" style="cursor:pointer;transition:all .15s" data-sup="${SGE.helpers.escapeHtml(s.nome)}"
                onmouseover="this.style.borderColor='var(--accent)'"
-               onmouseout="this.style.borderColor='var(--border)'"
+               onmouseout="this.style.borderColor='var(--border)'">
             <div class="sup-dot active"></div>
-            <div class="sup-name">${s.nome}</div>
-            <div class="sup-regime">${s.regime_padrao}</div>
+            <div class="sup-name">${SGE.helpers.escapeHtml(s.nome)}</div>
+            <div class="sup-regime">${SGE.helpers.escapeHtml(s.regime_padrao)}</div>
           </div>
         `).join('')}
       </div>

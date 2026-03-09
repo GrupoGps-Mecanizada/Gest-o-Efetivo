@@ -41,6 +41,8 @@ SGE.history = {
             return;
         }
 
+        const esc = h.escapeHtml.bind(h);
+
         tbody.innerHTML = movs.map(m => {
             // Se effective_date existir usa ele, senao usa created_at
             const dateStr = m.effective_date || m.created_at;
@@ -59,14 +61,14 @@ SGE.history = {
 
             return `
       <tr>
-        <td style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">${displayDate}</td>
-        <td><strong>${m.colaborador_nome}</strong></td>
-        <td style="font-family:var(--font-mono);font-size:11px">${m.colaborador_matricula || m.colaborador_id || '—'}</td>
-        <td>${m.supervisor_origem}<span class="mov-arrow">→</span>${m.supervisor_destino}</td>
-        <td>${m.regime_origem}<span class="mov-arrow">→</span>${m.regime_destino}</td>
-        <td>${m.motivo}</td>
-        <td style="color:var(--text-3);font-size:11px">${m.observacao || '—'}</td>
-        <td style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">${m.usuario || '—'}</td>
+        <td style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">${esc(displayDate)}</td>
+        <td><strong>${esc(m.colaborador_nome)}</strong></td>
+        <td style="font-family:var(--font-mono);font-size:11px">${esc(m.colaborador_matricula || m.colaborador_id || '—')}</td>
+        <td>${esc(m.supervisor_origem)}<span class="mov-arrow">→</span>${esc(m.supervisor_destino)}</td>
+        <td>${esc(m.regime_origem)}<span class="mov-arrow">→</span>${esc(m.regime_destino)}</td>
+        <td>${esc(m.motivo)}</td>
+        <td style="color:var(--text-3);font-size:11px">${esc(m.observacao || '—')}</td>
+        <td style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">${esc(m.usuario || '—')}</td>
       </tr>
     `}).join('');
 

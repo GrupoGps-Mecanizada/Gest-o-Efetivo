@@ -8,6 +8,30 @@ window.SGE = window.SGE || {};
 
 SGE.helpers = {
     /**
+     * Escape HTML special characters to prevent XSS
+     * Use this before inserting any user/database data into innerHTML
+     */
+    escapeHtml(str) {
+        return String(str ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    },
+
+    /**
+     * Debounce a function — delays execution until after `delay` ms of inactivity
+     */
+    debounce(fn, delay) {
+        let timer;
+        return function (...args) {
+            clearTimeout(timer);
+            timer = setTimeout(() => fn.apply(this, args), delay);
+        };
+    },
+
+    /**
      * Get CSS class for regime badge
      */
     regimeBadgeClass(regime) {

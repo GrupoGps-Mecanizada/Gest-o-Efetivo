@@ -240,27 +240,31 @@ SGE.kanban = {
         // Stamp data attributes for future comparisons
         Object.assign(cardEl.dataset, next);
 
+        const esc = h.escapeHtml.bind(h);
         const badgeRegime = h.regimeBadgeClass(col.regime);
         const funcaoStyle = SGE.CONFIG.getFuncaoBadgeStyle(col.funcao);
         const alertHtml = semId ? '<div class="card-alert" title="Sem ID definitivo"></div>' : '';
-        const feriasHtml = isFerias ? '<span class="badge badge-SEM">Ferias</span>' : '';
+        const feriasHtml = isFerias ? '<span class="badge badge-SEM">Férias</span>' : '';
+        const alocacaoText = (col.setor_id && col.setor !== 'SEM SETOR')
+            ? esc(col.setor)
+            : esc(col.equipamento || 'Sem equipamento');
 
         // Update inner HTML (preserves the card element and its drag listeners)
         cardEl.innerHTML = `
       ${alertHtml}
       <div class="card-top">
-        <div class="card-name" style="font-weight: 600; font-size: 13px; margin-bottom: 4px; color: var(--text-1);">${col.nome}</div>
+        <div class="card-name" style="font-weight: 600; font-size: 13px; margin-bottom: 4px; color: var(--text-1);">${esc(col.nome)}</div>
       </div>
       <div class="card-badges" style="margin-bottom: 6px;">
-        <span class="badge" style="${funcaoStyle}">${col.funcao}</span>
-        <span class="badge ${badgeRegime}">${col.regime}</span>
-        <span class="badge" class="badge-cat-${col.categoria === 'OPERACIONAL' ? 'op' : 'ges'}">${col.categoria === 'OPERACIONAL' ? 'OP' : 'GES'}</span>
+        <span class="badge" style="${funcaoStyle}">${esc(col.funcao)}</span>
+        <span class="badge ${badgeRegime}">${esc(col.regime)}</span>
+        <span class="badge badge-cat-${col.categoria === 'OPERACIONAL' ? 'op' : 'ges'}">${col.categoria === 'OPERACIONAL' ? 'OP' : 'GES'}</span>
         ${feriasHtml}
       </div>
-      <div class="card-vaga" style="margin-bottom: 6px;">${h.equipamentoIconSvg()} ${(col.setor_id && col.setor !== 'SEM SETOR') ? col.setor : (col.equipamento || 'Sem equipamento')}</div>
+      <div class="card-vaga" style="margin-bottom: 6px;">${h.equipamentoIconSvg()} ${alocacaoText}</div>
       <div class="card-id" style="font-size: 11px; color: var(--text-3); border-top: 1px solid var(--border-color); padding-top: 6px; margin-top: auto;">
-        MAT: <strong style="color: var(--text-2);">${col.matricula_gps || 'S/ MAT'}</strong>
-        ${col.cr ? `<span style="margin-left:8px;">CR: <strong style="color: var(--text-2);">${col.cr}</strong></span>` : ''}
+        MAT: <strong style="color: var(--text-2);">${esc(col.matricula_gps || 'S/ MAT')}</strong>
+        ${col.cr ? `<span style="margin-left:8px;">CR: <strong style="color: var(--text-2);">${esc(col.cr)}</strong></span>` : ''}
       </div>
     `;
     },
@@ -279,15 +283,16 @@ SGE.kanban = {
             colEl.draggable = true;
         }
 
+        const esc = SGE.helpers.escapeHtml.bind(SGE.helpers);
         colEl.innerHTML = `
         <div class="col-header">
           <div class="col-title">
-            ☰ ${sup.nome}
+            ☰ ${esc(sup.nome)}
             <span class="col-count">${membros.length}</span>
           </div>
-          <div class="col-regime">${sup.regime_padrao || 'Misto'}</div>
+          <div class="col-regime">${esc(sup.regime_padrao || 'Misto')}</div>
         </div>
-        <div class="col-body" data-supervisor="${sup.nome}"></div>
+        <div class="col-body" data-supervisor="${esc(sup.nome)}"></div>
       `;
 
         if (SGE.auth.hasRole('GESTAO')) {
@@ -337,27 +342,31 @@ SGE.kanban = {
         el.dataset.id = colaborador.id;
 
         const h = SGE.helpers;
+        const esc = h.escapeHtml.bind(h);
         const semId = h.isSemId(colaborador);
         const badgeRegime = h.regimeBadgeClass(colaborador.regime);
         const funcaoStyle = SGE.CONFIG.getFuncaoBadgeStyle(colaborador.funcao);
         const alertHtml = semId ? '<div class="card-alert" title="Sem ID definitivo"></div>' : '';
-        const feriasHtml = h.isFerias(colaborador) ? '<span class="badge badge-SEM">Ferias</span>' : '';
+        const feriasHtml = h.isFerias(colaborador) ? '<span class="badge badge-SEM">Férias</span>' : '';
+        const alocacaoText = (colaborador.setor_id && colaborador.setor !== 'SEM SETOR')
+            ? esc(colaborador.setor)
+            : esc(colaborador.equipamento || 'Sem equipamento');
 
         el.innerHTML = `
       ${alertHtml}
       <div class="card-top">
-        <div class="card-name" style="font-weight: 600; font-size: 13px; margin-bottom: 4px; color: var(--text-1);">${colaborador.nome}</div>
+        <div class="card-name" style="font-weight: 600; font-size: 13px; margin-bottom: 4px; color: var(--text-1);">${esc(colaborador.nome)}</div>
       </div>
       <div class="card-badges" style="margin-bottom: 6px;">
-        <span class="badge" style="${funcaoStyle}">${colaborador.funcao}</span>
-        <span class="badge ${badgeRegime}">${colaborador.regime}</span>
-        <span class="badge" class="badge-cat-${colaborador.categoria === 'OPERACIONAL' ? 'op' : 'ges'}">${colaborador.categoria === 'OPERACIONAL' ? 'OP' : 'GES'}</span>
+        <span class="badge" style="${funcaoStyle}">${esc(colaborador.funcao)}</span>
+        <span class="badge ${badgeRegime}">${esc(colaborador.regime)}</span>
+        <span class="badge badge-cat-${colaborador.categoria === 'OPERACIONAL' ? 'op' : 'ges'}">${colaborador.categoria === 'OPERACIONAL' ? 'OP' : 'GES'}</span>
         ${feriasHtml}
       </div>
-      <div class="card-vaga" style="margin-bottom: 6px;">${h.equipamentoIconSvg()} ${(colaborador.setor_id && colaborador.setor !== 'SEM SETOR') ? colaborador.setor : (colaborador.equipamento || 'Sem equipamento')}</div>
+      <div class="card-vaga" style="margin-bottom: 6px;">${h.equipamentoIconSvg()} ${alocacaoText}</div>
       <div class="card-id" style="font-size: 11px; color: var(--text-3); border-top: 1px solid var(--border-color); padding-top: 6px; margin-top: auto;">
-        MAT: <strong style="color: var(--text-2);">${colaborador.matricula_gps || 'S/ MAT'}</strong>
-        ${colaborador.cr ? `<span style="margin-left:8px;">CR: <strong style="color: var(--text-2);">${colaborador.cr}</strong></span>` : ''}
+        MAT: <strong style="color: var(--text-2);">${esc(colaborador.matricula_gps || 'S/ MAT')}</strong>
+        ${colaborador.cr ? `<span style="margin-left:8px;">CR: <strong style="color: var(--text-2);">${esc(colaborador.cr)}</strong></span>` : ''}
       </div>
     `;
 

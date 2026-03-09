@@ -150,13 +150,6 @@ SGE.api = {
                 setor_id: e.setor_id
             }));
 
-            // DEBUG: log category distribution to verify DB mapping
-            const catDebug = {};
-            SGE.state.colaboradores.forEach(c => {
-                catDebug[c.categoria] = (catDebug[c.categoria] || 0) + 1;
-            });
-            console.log('[SGE DEBUG] Category distribution:', catDebug);
-            console.log('[SGE DEBUG] First employee raw:', employees[0]);
             SGE.state.supervisores = supervisors.map(s => ({
                 id: s.id,
                 nome: s.name,

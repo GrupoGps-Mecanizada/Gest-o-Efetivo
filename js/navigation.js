@@ -151,45 +151,59 @@ SGE.navigation = {
             if (searchInput && searchInput.value) searchInput.value = '';
         }
 
-        // Render the active view
-        switch (viewName) {
-            case 'viz':
-                if (SGE.dashboard) SGE.dashboard.render();
-                break;
-            case 'kanban':
-                SGE.kanban.render();
-                setTimeout(() => SGE.kanban.updateArrows(), 100);
-                break;
-            case 'search':
-                SGE.search.render();
-                const si = document.getElementById('search-input');
-                if (si) si.focus();
-                break;
-            case 'history':
-                SGE.history.render();
-                break;
-            case 'tabela':
-                if (SGE.excelTable) SGE.excelTable.render();
-                else SGE.viz.renderTable();
-                break;
-            case 'grupo':
-                SGE.viz.renderGroups();
-                break;
-            case 'equip':
-                SGE.equip.render();
-                break;
-            case 'settings':
-                SGE.settings.render();
-                break;
-            case 'ferias':
-                if (SGE.ferias) SGE.ferias.render();
-                break;
-            case 'treinamentos':
-                if (SGE.treinamentos) SGE.treinamentos.render();
-                break;
-            case 'advertencias':
-                if (SGE.advertencias) SGE.advertencias.render();
-                break;
+        // Render the active view (with error boundary)
+        try {
+            switch (viewName) {
+                case 'viz':
+                    if (SGE.dashboard) SGE.dashboard.render();
+                    break;
+                case 'kanban':
+                    SGE.kanban.render();
+                    setTimeout(() => SGE.kanban.updateArrows(), 100);
+                    break;
+                case 'search': {
+                    SGE.search.render();
+                    const si = document.getElementById('search-input');
+                    if (si) si.focus();
+                    break;
+                }
+                case 'history':
+                    SGE.history.render();
+                    break;
+                case 'tabela':
+                    if (SGE.excelTable) SGE.excelTable.render();
+                    else SGE.viz.renderTable();
+                    break;
+                case 'grupo':
+                    SGE.viz.renderGroups();
+                    break;
+                case 'equip':
+                    SGE.equip.render();
+                    break;
+                case 'settings':
+                    SGE.settings.render();
+                    break;
+                case 'ferias':
+                    if (SGE.ferias) SGE.ferias.render();
+                    break;
+                case 'treinamentos':
+                    if (SGE.treinamentos) SGE.treinamentos.render();
+                    break;
+                case 'advertencias':
+                    if (SGE.advertencias) SGE.advertencias.render();
+                    break;
+            }
+        } catch (err) {
+            console.error(`[SGE] Erro ao renderizar view "${viewName}":`, err);
+            const target = document.getElementById(`${viewName}-view`);
+            if (target) {
+                target.innerHTML = `
+                    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;color:var(--text-3);">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:16px;opacity:.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <strong style="font-size:15px;color:var(--text-2);margin-bottom:8px;">Erro ao carregar esta visualização</strong>
+                        <span style="font-size:13px;">Tente recarregar a página ou contacte o suporte.</span>
+                    </div>`;
+            }
         }
 
         // Restore scroll after render
@@ -221,11 +235,16 @@ SGE.navigation = {
 
     /**
      * Setup filter dropdown event listeners
+     * Uses a guard flag to prevent duplicate listeners on rebuilds
      */
     setupFilterDropdown() {
         const panel = document.getElementById('filter-dropdown-panel');
         const body = document.getElementById('filter-dropdown-body');
         if (!panel || !body) return;
+
+        // Prevent duplicate listeners when filter dropdown is rebuilt
+        if (body._filterListenerAttached) return;
+        body._filterListenerAttached = true;
 
         // Accordion toggle handler (event delegation)
         body.addEventListener('click', (e) => {
@@ -259,9 +278,10 @@ SGE.navigation = {
             SGE.navigation._refreshViews();
         });
 
-        // Clear all button
+        // Clear all button — only attach once using a flag on the element
         const clearBtn = document.getElementById('filter-clear-all');
-        if (clearBtn) {
+        if (clearBtn && !clearBtn._listenerAttached) {
+            clearBtn._listenerAttached = true;
             clearBtn.addEventListener('click', () => {
                 SGE.state.filtros = { regime: [], funcao: [], status: [], alocacao: [], equipTurno: [], supervisor: [], categoria: [] };
                 body.querySelectorAll('.filter-checkbox').forEach(cb => cb.classList.remove('checked'));
@@ -322,6 +342,9 @@ SGE.navigation = {
     buildFilterDropdown() {
         const body = document.getElementById('filter-dropdown-body');
         if (!body) return;
+
+        // Reset listener guard so new content can receive fresh delegation
+        body._filterListenerAttached = false;
 
         const colabs = SGE.state.colaboradores || [];
         const tipos = SGE.CONFIG.equipTipos;
