@@ -480,6 +480,10 @@
 }
 
 /* ===== LOGIN — estrutura hub ===== */
+[data-theme="dark"] #login-screen {
+    background: radial-gradient(ellipse at 50% 30%, #0f172a 0%, #1e293b 60%, #0f1e3a 100%);
+}
+
 [data-theme="dark"] .login-box {
     background: var(--bg-1);
 }

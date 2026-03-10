@@ -6,9 +6,7 @@
 #login-screen {
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, 0.96);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: radial-gradient(ellipse at 50% 30%, #f1f5f9 0%, #e8edf5 60%, #dde4ef 100%);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -18,26 +16,9 @@
     overflow: hidden;
 }
 
-#login-screen > .login-glow-a {
-    position: absolute;
-    top: -20%;
-    left: -15%;
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(15,56,104,0.45) 0%, transparent 65%);
-    pointer-events: none;
-    z-index: 0;
-}
-
+#login-screen > .login-glow-a,
 #login-screen > .login-glow-b {
-    position: absolute;
-    bottom: -25%;
-    right: -15%;
-    width: 520px;
-    height: 520px;
-    background: radial-gradient(circle, rgba(37,99,235,0.15) 0%, transparent 65%);
-    pointer-events: none;
-    z-index: 0;
+    display: none;
 }
 
 #login-screen.hidden {
@@ -47,11 +28,12 @@
 }
 
 .login-box {
-    background: radial-gradient(ellipse at 50% 30%, #ffffff 0%, #f4f7fa 100%);
+    background: #ffffff;
+    border: 1px solid rgba(10, 47, 168, 0.12);
     width: 100%;
-    max-width: 360px;
+    max-width: 380px;
     border-radius: 16px;
-    box-shadow: 0 4px 32px rgba(0,0,0,0.25), 0 24px 64px rgba(0,0,0,0.35);
+    box-shadow: 0 4px 18px rgba(10, 47, 168, 0.07), 0 1px 4px rgba(0, 0, 0, 0.04);
     display: flex;
     flex-direction: column;
     overflow: hidden;
