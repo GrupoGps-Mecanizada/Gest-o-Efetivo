@@ -447,6 +447,78 @@ SGE.api = {
     },
 
     /**
+     * Permanently delete a collaborator and all their related data from Supabase.
+     * Deletes: movimentações, treinamentos vínculos, advertências, férias, field history,
+     * and finally the collaborator row itself.
+     * @param {Object} col - The collaborator object (must have .id and .nome)
+     * @returns {boolean|null} true on success, null on error
+     */
+    async syncDeleteColaborador(col) {
+        if (!window.supabase) return null;
+        this.updateSyncBar(true);
+
+        const id = col.id;
+        const idStr = String(id);
+
+        try {
+            // 1. Delete movimentações (registros de histórico de movimentação)
+            await supabase
+                .schema('gps_mec')
+                .from('efetivo_gps_mec_movimentacoes')
+                .delete()
+                .eq('employee_id', id);
+
+            // 2. Delete treinamentos vinculados ao colaborador
+            await supabase
+                .schema('gps_mec')
+                .from('efetivo_gps_mec_colaborador_treinamentos')
+                .delete()
+                .eq('employee_id', id);
+
+            // 3. Delete advertências
+            await supabase
+                .schema('gps_mec')
+                .from('efetivo_gps_mec_advertencias')
+                .delete()
+                .eq('employee_id', id);
+
+            // 4. Delete férias
+            await supabase
+                .schema('gps_mec')
+                .from('efetivo_gps_mec_ferias')
+                .delete()
+                .eq('employee_id', id);
+
+            // 5. Delete field history (gps_compartilhado)
+            await supabase
+                .schema('gps_compartilhado')
+                .from('gps_field_history')
+                .delete()
+                .eq('entity_type', 'colaborador')
+                .eq('entity_id', idStr);
+
+            // 6. Finally delete the collaborator record itself
+            const { error } = await supabase
+                .schema('gps_mec')
+                .from('efetivo_gps_mec_colaboradores')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+
+            // Remove from local state immediately
+            SGE.state.colaboradores = SGE.state.colaboradores.filter(c => c.id !== id);
+            SGE.state.movimentacoes = SGE.state.movimentacoes.filter(m => m.employee_id !== id && m.colaborador_id !== id);
+
+            this.updateSyncBar(false);
+            return true;
+        } catch (e) {
+            this.updateSyncBar(false);
+            return this._handleError(e, 'Excluir Colaborador');
+        }
+    },
+
+    /**
      * Batch update multiple employees in Supabase
      * @param {Array} updates - Array of {id, ...fieldsToUpdate}
      */

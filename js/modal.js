@@ -658,5 +658,97 @@ SGE.modal = {
     });
 
     document.getElementById('modal-overlay').classList.add('open');
+  },
+
+  /**
+   * Open permanent delete confirmation modal for a collaborator.
+   * Requires the user to type the collaborator's name to confirm deletion.
+   * @param {Object} col - The collaborator object
+   */
+  openDelete(col) {
+    SGE.state.modalContext = 'delete';
+    const esc = SGE.helpers.escapeHtml.bind(SGE.helpers);
+    const nome = col.nome || '—';
+
+    const header = document.querySelector('.modal-header');
+    header.innerHTML = `
+      <div class="modal-title" style="color:var(--red,#d64545)">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle;margin-right:6px">
+          <path d="M8 1L1 14h14zM8 6v4M8 11v1"/>
+        </svg>
+        Excluir Colaborador Permanentemente
+      </div>
+    `;
+
+    const body = document.querySelector('.modal-body');
+    body.innerHTML = `
+      <div style="background:color-mix(in srgb,var(--red,#d64545) 8%,var(--bg-2));border:1px solid color-mix(in srgb,var(--red,#d64545) 30%,transparent);border-radius:8px;padding:14px 16px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:700;color:var(--red,#d64545);margin-bottom:6px">⚠ Esta ação é irreversível</div>
+        <div style="font-size:13px;color:var(--text-2);line-height:1.55">
+          Você está prestes a excluir <strong>${esc(nome)}</strong> permanentemente do sistema.<br>
+          Todos os registros vinculados serão apagados:
+          <ul style="margin:8px 0 0 16px;font-size:12px;color:var(--text-3)">
+            <li>Histórico de movimentações</li>
+            <li>Treinamentos registrados</li>
+            <li>Advertências</li>
+            <li>Férias</li>
+            <li>Histórico de campos alterados</li>
+          </ul>
+        </div>
+      </div>
+      <div class="form-field">
+        <label style="color:var(--text-2);font-size:12px">
+          Digite o nome <strong>${esc(nome)}</strong> para confirmar:
+        </label>
+        <input type="text" id="delete-confirm-name" placeholder="${esc(nome)}"
+          style="border-color:var(--border);margin-top:6px" autocomplete="off" />
+      </div>
+    `;
+
+    const footer = document.querySelector('.modal-footer');
+    footer.innerHTML = `
+      <button class="btn-cancel" id="modal-cancel">Cancelar</button>
+      <button class="btn-confirm" id="modal-delete-confirm"
+        style="background:var(--red,#d64545);opacity:0.4;cursor:not-allowed" disabled>
+        Excluir Permanentemente
+      </button>
+    `;
+
+    document.getElementById('modal-cancel').addEventListener('click', SGE.modal.close);
+
+    // Enable confirm button only when name matches exactly
+    const nameInput = document.getElementById('delete-confirm-name');
+    const confirmBtn = document.getElementById('modal-delete-confirm');
+
+    nameInput.addEventListener('input', () => {
+      const matches = nameInput.value.trim() === nome;
+      confirmBtn.disabled = !matches;
+      confirmBtn.style.opacity = matches ? '1' : '0.4';
+      confirmBtn.style.cursor = matches ? 'pointer' : 'not-allowed';
+    });
+
+    confirmBtn.addEventListener('click', async () => {
+      if (nameInput.value.trim() !== nome) return;
+
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = 'Excluindo...';
+
+      const result = await SGE.api.syncDeleteColaborador(col);
+
+      if (result) {
+        SGE.modal.close();
+        SGE.helpers.updateStats();
+        SGE.kanban.render();
+        if (SGE.state.activeView === 'tabela' && SGE.viz) SGE.viz.renderTable();
+        if (SGE.state.activeView === 'grupo' && SGE.viz) SGE.viz.renderGroups();
+        if (SGE.state.activeView === 'search' && SGE.search) SGE.search.render();
+        SGE.helpers.toast(`${nome} excluído permanentemente.`, 'success');
+      } else {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = 'Excluir Permanentemente';
+      }
+    });
+
+    document.getElementById('modal-overlay').classList.add('open');
   }
 };

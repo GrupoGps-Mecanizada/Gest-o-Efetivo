@@ -160,6 +160,16 @@
     height: 13px
 }
 
+.drawer-btn--danger {
+    color: var(--red, #d64545);
+    border-color: color-mix(in srgb, var(--red, #d64545) 30%, transparent);
+}
+
+.drawer-btn--danger:hover {
+    background: color-mix(in srgb, var(--red, #d64545) 12%, var(--bg-2));
+    border-color: var(--red, #d64545);
+}
+
 .drawer-history {
     display: flex;
     flex-direction: column;

@@ -360,6 +360,10 @@ SGE.app = {
                 if (!SGE.auth.hasRole('GESTAO')) return;
                 SGE.drawer.close();
                 SGE.modal.openEdit(col);
+            } else if (action === 'delete') {
+                if (!SGE.auth.hasRole('GESTAO')) return;
+                SGE.drawer.close();
+                SGE.modal.openDelete(col);
             }
         });
     },

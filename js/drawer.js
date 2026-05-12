@@ -69,6 +69,12 @@ SGE.drawer = {
     document.getElementById('drawer-overlay').classList.add('open');
     document.getElementById('drawer').classList.add('open');
 
+    // Show/hide action buttons based on user role
+    const isGestao = SGE.auth.hasRole('GESTAO');
+    document.querySelectorAll('#drawer-footer .drawer-btn').forEach(btn => {
+      btn.style.display = isGestao ? '' : 'none';
+    });
+
     // Load field-level history asynchronously (non-blocking)
     SGE.drawer._loadFieldHistory(col.id);
   },
