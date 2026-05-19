@@ -14,7 +14,7 @@ SGE.CONFIG = {
   usuario: 'admin',
 
   // Available regimes
-  regimes: ['24HS-A', '24HS-B', '24HS-C', '24HS-D', 'ADM', '16HS-5X2', '16HS-6X3', 'SEM REGISTRO'],
+  regimes: ['4X4 - A', '4X4 - B', '4X4 - C', '4X4 - D', 'ADM', '16HS-5X2', 'SEM REGISTRO'],
 
   // Available functions
   funcoes: [
@@ -122,13 +122,12 @@ SGE.CONFIG = {
 
   // Regime → Turno mapping
   turnoMap: {
-    '24HS-A': 'A',
-    '24HS-B': 'B',
-    '24HS-C': 'C',
-    '24HS-D': 'D',
+    '4X4 - A': 'A',
+    '4X4 - B': 'B',
+    '4X4 - C': 'C',
+    '4X4 - D': 'D',
     'ADM': 'ADM',
     '16HS-5X2': '16H',
-    '16HS-6X3': '16H',
     'SEM REGISTRO': 'S/R'
   },
 
@@ -158,10 +157,30 @@ SGE.configManager = {
       const saved = localStorage.getItem('SGE_CUSTOM_CONFIG');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.regimes) SGE.CONFIG.regimes = parsed.regimes;
+
+        // Migrate old regime names before applying saved config
+        const regimeMigration = {
+          '24HS-A': '4X4 - A', '24HS-B': '4X4 - B',
+          '24HS-C': '4X4 - C', '24HS-D': '4X4 - D',
+          '16HS-6X3': null // removed — no longer exists
+        };
+        if (parsed.regimes) {
+          parsed.regimes = parsed.regimes
+            .map(r => regimeMigration.hasOwnProperty(r) ? regimeMigration[r] : r)
+            .filter(Boolean);
+          SGE.CONFIG.regimes = parsed.regimes;
+        }
+        if (parsed.turnoMap) {
+          const migratedMap = {};
+          Object.entries(parsed.turnoMap).forEach(([k, v]) => {
+            const newKey = regimeMigration.hasOwnProperty(k) ? regimeMigration[k] : k;
+            if (newKey) migratedMap[newKey] = v;
+          });
+          SGE.CONFIG.turnoMap = migratedMap;
+        }
+
         if (parsed.funcoes) SGE.CONFIG.funcoes = parsed.funcoes;
         if (parsed.equipTipos) SGE.CONFIG.equipTipos = parsed.equipTipos;
-        if (parsed.turnoMap) SGE.CONFIG.turnoMap = parsed.turnoMap;
         if (parsed.ordemKanban) SGE.CONFIG.ordemKanban = parsed.ordemKanban;
         if (parsed.statuses) SGE.CONFIG.statuses = parsed.statuses;
         if (parsed.motivos) SGE.CONFIG.motivos = parsed.motivos;

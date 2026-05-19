@@ -36,12 +36,13 @@ SGE.helpers = {
      */
     regimeBadgeClass(regime) {
         if (!regime) return 'badge-SEM';
-        if (regime.startsWith('24HS-A')) return 'badge-24A';
-        if (regime.startsWith('24HS-B')) return 'badge-24B';
-        if (regime.startsWith('24HS-C')) return 'badge-24C';
-        if (regime.startsWith('24HS-D')) return 'badge-24D';
-        if (regime.startsWith('ADM')) return 'badge-ADM';
-        if (regime.startsWith('16HS')) return 'badge-16HS';
+        const r = String(regime).toUpperCase().trim();
+        if (r === '4X4 - A' || r === '24HS-A' || r === '4X4-A') return 'badge-24A';
+        if (r === '4X4 - B' || r === '24HS-B' || r === '4X4-B') return 'badge-24B';
+        if (r === '4X4 - C' || r === '24HS-C' || r === '4X4-C') return 'badge-24C';
+        if (r === '4X4 - D' || r === '24HS-D' || r === '4X4-D') return 'badge-24D';
+        if (r.startsWith('ADM')) return 'badge-ADM';
+        if (r.startsWith('16HS')) return 'badge-16HS';
         return 'badge-SEM';
     },
 
