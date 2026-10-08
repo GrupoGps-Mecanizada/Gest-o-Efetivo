@@ -1,5 +1,5 @@
 {
-  "version": "2.4.1",
+  "version": "2.4.2",
   "updated_at": "2026-10-08",
-  "notes": "Matriz sempre abre na aba GERAL"
+  "notes": "Aba TURNO 16HRS segue o cadastro 16 HORAS; encarregados contam como supervisores"
 }

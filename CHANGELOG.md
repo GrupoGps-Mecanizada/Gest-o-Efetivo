@@ -1,5 +1,10 @@
 # CHANGELOG — Gestão de Efetivo
 
+## v2.4.2 — 2026-10-08
+### Corrigido
+- Aba **TURNO 16HRS** agora reúne quem está no cadastro "16 HORAS" (como na planilha), e não mais pelo regime, que nem sempre está preenchido.
+- **Encarregados** contam como Supervisores no resumo (antes podiam cair em SOBRA).
+
 ## v2.4.1 — 2026-10-08
 ### Mudou
 - A Matriz sempre abre na aba **GERAL** (ao entrar no sistema e ao voltar de outra tela). Quando os dados se atualizam sozinhos, a aba que você está vendo não muda.

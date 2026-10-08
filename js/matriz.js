@@ -49,14 +49,15 @@ SGE.matriz = (() => {
         ['PLANEJADOR', /PLANEJ|PROGRAMADOR/],
         ['ALMOXARIFE', /ALMOXARIF/],
         ['ESTAGIÁRIO', /ESTAGI/],
-        ['SUPERVISORES', /SUPERVISOR/],
+        ['SUPERVISORES', /SUPERVISOR|ENCARREGADO/],
     ];
     const funcaoApoio = (c) => {
         const f = maiusculo(c.funcao);
         const achou = FUNCOES_APOIO.find(([, re]) => re.test(f));
         return achou ? achou[0] : c.categoria === 'GESTAO' ? 'OUTRAS FUNÇÕES' : null;
     };
-    const ehTurno16 = (c) => (SGE.equip ? SGE.equip.getTurno(c.regime) === '16H' : false);
+    // turma das 16 horas: no cadastro ela é um 'supervisor' chamado "16 HORAS" (o regime nem sempre está preenchido)
+    const ehTurno16 = (c) => /^16\s*H/.test(maiusculo(c.supervisor).trim());
     function grupoDe(c) {
         const s = maiusculo(c.status);
         if (s === 'DESLIGADO' || s === 'INATIVO') return null; // fora do quadro
