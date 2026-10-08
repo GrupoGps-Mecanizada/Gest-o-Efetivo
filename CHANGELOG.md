@@ -1,5 +1,10 @@
 # CHANGELOG — Gestão de Efetivo
 
+## v2.5.2 — 2026-10-08
+### Mudou
+- Quem tem supervisor mas **não tem placa** aparece na **aba do supervisor**, numa linha sem placa no fim, como na planilha (antes caía em SOBRA). A aba **SOBRA** agora é só de quem está **sem supervisor**.
+- Mover: a opção "Sem equipamento" explica que a pessoa fica na aba do supervisor; para mandar para a SOBRA, escolha SEM SUPERVISOR.
+
 ## v2.5.1 — 2026-10-08
 ### Corrigido
 - Veículo com duas equipes (AV 02, AP 07 e AV 07) aparece em linhas separadas **"EQUIP 1"** e **"EQUIP 2"**, como na planilha. No banco são vagas próprias (equipamento "AV 02 - EQUIP 1" etc.); o nome mostra só o 1º traço como espaço ("AV 02 - EQUIP 1"). Script do banco: equipes-1-e-2-2026-10-08.local.sql (fora do GitHub, tem nomes).

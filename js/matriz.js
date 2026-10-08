@@ -66,9 +66,9 @@ SGE.matriz = (() => {
         if (s.startsWith('FÉRIAS') || s.startsWith('FERIAS')) return 'ferias';
         if (s === 'AFASTADO') return 'atestado';
         if (funcaoApoio(c)) return 'gestao';
-        if (!placaDe(c)) return 'sobra';
-        if (ehTurno16(c)) return 'turno16';
-        return temSupervisor(c) ? 'equipe' : 'sobra';
+        // sobra = sem supervisor; quem tem supervisor e não tem placa fica na aba dele, numa linha sem placa (como na planilha)
+        if (!temSupervisor(c)) return 'sobra';
+        return ehTurno16(c) ? 'turno16' : 'equipe';
     }
     /** mês das férias: a que está em andamento ou a próxima agendada */
     function mesDasFerias(c) {
@@ -86,7 +86,7 @@ SGE.matriz = (() => {
     function abaEquipe(sup, pessoas, opcoes = {}) {
         const porPlaca = new Map();
         for (const c of pessoas) {
-            const p = placaDe(c);
+            const p = placaDe(c) || '';
             if (!porPlaca.has(p)) porPlaca.set(p, { mot: [], op: [] });
             porPlaca.get(p)[ehMotorista(c) ? 'mot' : 'op'].push(c);
         }
@@ -96,7 +96,8 @@ SGE.matriz = (() => {
             if (!porPlaca.has(p)) porPlaca.set(p, { mot: [], op: [] });
         }
         const linhas = [];
-        for (const placa of [...porPlaca.keys()].sort(natural)) {
+        // linhas sem placa vão para o fim da aba, como na planilha
+        for (const placa of [...porPlaca.keys()].sort((a, b) => (a === '') - (b === '') || natural(a, b))) {
             const { mot, op } = porPlaca.get(placa);
             mot.sort(porNome);
             op.sort(porNome);

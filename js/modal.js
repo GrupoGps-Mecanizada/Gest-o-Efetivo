@@ -136,7 +136,7 @@ SGE.modal = {
     };
     return `${vagas.length ? `<optgroup label="Vagas de ${esc(supervisorDestino)}">${vagas.map(opcao).join('')}</optgroup>` : ''}
       <optgroup label="Outros equipamentos (vira vaga do supervisor)">${outros.map(opcao).join('')}</optgroup>
-      <option value="SEM EQUIPAMENTO"${escolhido === 'SEM EQUIPAMENTO' ? ' selected' : ''}>Sem equipamento (sobra)</option>`;
+      <option value="SEM EQUIPAMENTO"${escolhido === 'SEM EQUIPAMENTO' ? ' selected' : ''}>Sem equipamento (fica na aba do supervisor, sem placa; para SOBRA escolha SEM SUPERVISOR)</option>`;
   },
 
   /**
