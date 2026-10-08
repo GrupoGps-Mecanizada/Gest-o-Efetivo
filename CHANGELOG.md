@@ -1,5 +1,24 @@
 # CHANGELOG — Gestão de Efetivo
 
+## v2.1.0 — 2026-10-08
+**Matriz no formato da planilha "EFETIVOS MECANIZADA".**
+
+### Mudou
+- A Matriz agora tem abas, como a planilha:
+  - **GERAL**: Nome Colaborador · Supervisor / Status · Equipamento (mesma ordem da fórmula da planilha).
+  - **Uma aba por supervisor**: título "EQUIPE …" e uma linha por equipamento: PLACA · MOTORISTA · OPERADOR 1 · OPERADOR 2.
+  - **FÉRIAS** (com o mês), **SOBRA** (ativo sem supervisor ou sem equipamento) e **ATESTADO** (afastados).
+- Mesmo visual da planilha: título e cabeçalho azul-escuros, fonte Century Gothic, bordas da tabela.
+- Exportar Excel gera todas as abas nesse formato (com título mesclado e cabeçalho congelado).
+- Dois cliques em qualquer nome (em qualquer aba) abrem o colaborador.
+
+### Saiu
+- Colunas Avisos, Treinamentos e Advertências; opções "Só pendências", "Cores" e "Colunas" (o formato agora é fixo).
+- Desligados e inativos não aparecem na Matriz.
+
+### Segurança
+- `.gitignore` novo: planilhas (.xlsx/.xls/.csv) e .env nunca vão para o GitHub.
+
 ## v2.0.0 — 2026-10-08
 **Mudança grande: Matriz modelo Excel e layout do SST.**
 

@@ -98,7 +98,7 @@
     opacity: .5;
 }
 
-/* janelas de treinamentos/advertências de uma pessoa (Matriz) */
+/* texto das janelas de ação em massa */
 .ac-texto {
     margin-bottom: 14px;
     font-size: 13px;
@@ -108,59 +108,3 @@
 .ac-texto small {
     color: var(--text-3);
 }
-
-.ac-vazio {
-    padding: 24px;
-    border-radius: 8px;
-    background: var(--bg-2);
-    color: var(--text-3);
-    font-size: 13px;
-    text-align: center;
-}
-
-.ac-tabela-caixa {
-    max-height: 300px;
-    overflow: auto;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-}
-
-.ac-tabela {
-    width: 100%;
-    border-collapse: collapse;
-    background: var(--bg-1);
-    font-size: 12.5px;
-}
-
-.ac-tabela th {
-    position: sticky;
-    top: 0;
-    padding: 8px 10px;
-    border-bottom: 1px solid var(--border);
-    background: var(--bg-2);
-    color: var(--text-3);
-    font-size: 10.5px;
-    font-weight: 600;
-    letter-spacing: .05em;
-    text-align: left;
-    text-transform: uppercase;
-}
-
-.ac-tabela td {
-    padding: 8px 10px;
-    border-bottom: 1px solid var(--border);
-    color: var(--text-1);
-}
-
-.ac-selo {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 600;
-}
-
-.ac-ok { background: #C6EFCE; color: #16603a; }
-.ac-atencao { background: #FFEB9C; color: #6b4f00; }
-.ac-ruim { background: #FFC7CE; color: #8f1f1a; }
-.ac-neutro { background: #EDEDED; color: #56606a; }

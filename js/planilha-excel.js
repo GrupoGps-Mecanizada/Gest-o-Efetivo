@@ -1,14 +1,16 @@
 'use strict';
 
 /**
- * SGE — Planilha estilo Excel (Univer, código aberto Apache-2.0)
+ * SGE — Planilha estilo Excel com várias abas (Univer, código aberto Apache-2.0)
  * Mesma planilha da Matriz do SST, em JS puro: seleciona células, linhas e colunas; filtro no cabeçalho;
- * Ctrl+F pesquisa; cores, negrito e bordas; Ctrl+C cola no Excel formatado.
+ * Ctrl+F pesquisa; troca de abas; Ctrl+C cola no Excel formatado.
  * NADA aqui altera os dados: digitar, colar, apagar ou substituir numa célula não vale (a célula volta).
- * Para mudar um dado: dois cliques na linha (a tela decide o que abre) ou a seleção + botões da tela.
+ * Para mudar um dado: dois cliques no nome (a tela decide o que abre) ou a seleção + botões da tela.
  *
- * Sem "piscar": a planilha é criada UMA vez. Se mudam as linhas ou a ordem das colunas, só a pasta de
- * trabalho é trocada; se mudam só valores, só as células que mudaram são reescritas.
+ * Cada aba: { id, nome, titulo?, cabecalho: 'geral'|'equipe', colunas, linhas, chave(l) }.
+ * Coluna: { id, rotulo, largura, centro?, valor(l), pessoa?(l) } — pessoa = id do colaborador da célula.
+ * Uma coluna escondida no fim guarda a chave de cada linha: assim a linha é reconhecida mesmo depois de
+ * filtrar ou classificar.
  *
  * O pacote do Univer (vendor/univer) é o mesmo 1.0.3 do SST, empacotado com scripts/univer-entrada.js.
  */
@@ -16,44 +18,31 @@ window.SGE = window.SGE || {};
 
 SGE.planilha = (() => {
     const TEXTO = 1;
-    const NUMERO = 2;
     const ESQUERDA = 1;
     const CENTRO = 2;
     const DUPLO_CLIQUE = 3;
-    const FINA = 1; // borda fina (como a "Todas as bordas" do Excel)
-    const borda = (rgb) => ({ t: { s: FINA, cl: { rgb } }, b: { s: FINA, cl: { rgb } }, l: { s: FINA, cl: { rgb } }, r: { s: FINA, cl: { rgb } } });
-    const BORDA = borda('#BFBFBF');
-    const CABECALHO = { bd: borda('#8EA9DB'), bg: { rgb: '#1F3864' }, cl: { rgb: '#FFFFFF' }, bl: 1, ht: ESQUERDA, vt: CENTRO, tb: 3, fs: 10 };
-    /** linhas vazias depois dos dados (como no Excel) */
-    const FOLGA = 30;
+    const FINA = 1;
+    const MEDIA = 8;
     const VERSAO = '1.0.3';
+    /** linhas vazias depois dos dados (como no Excel) */
+    const FOLGA = 20;
 
-    /* ─── Datas (aaaa-mm-dd ↔ número de série do Excel) ─── */
-    const RE_ISO = /^\d{4}-\d{2}-\d{2}$/;
-    const DIA_MS = 86400000;
-    const paraSerial = (iso) => {
-        const [a, m, d] = iso.split('-').map(Number);
-        return Math.round(Date.UTC(a, m - 1, d) / DIA_MS) + 25569;
+    /* ─── Formato da planilha "EFETIVOS MECANIZADA" (tema do arquivo original) ─── */
+    const FONTE = 'Century Gothic';
+    const AZUL_EQUIPE = '#253356'; // accent1 escurecido 50% (título e cabeçalho das equipes)
+    const AZUL_GERAL = '#242852'; // dk2 (cabeçalho da aba GERAL)
+    const LINHA_TABELA = '#4A66AC'; // accent1 (bordas do estilo de tabela "Claro 9")
+    const borda = (rgb, s = FINA) => ({ t: { s, cl: { rgb } }, b: { s, cl: { rgb } }, l: { s, cl: { rgb } }, r: { s, cl: { rgb } } });
+    const ESTILO = {
+        titulo: { ff: 'Arial', fs: 11, bl: 1, bg: { rgb: AZUL_EQUIPE }, cl: { rgb: '#F2F2F2' }, ht: CENTRO, vt: CENTRO, bd: borda('#000000', MEDIA) },
+        cabEquipe: { ff: FONTE, fs: 11, bl: 1, bg: { rgb: AZUL_EQUIPE }, cl: { rgb: '#FFFFFF' }, ht: CENTRO, vt: CENTRO, bd: borda(LINHA_TABELA) },
+        cabGeral: { ff: FONTE, fs: 11, bl: 1, bg: { rgb: AZUL_GERAL }, cl: { rgb: '#FFFFFF' }, ht: ESQUERDA, vt: CENTRO },
+        dadoEquipe: { ff: FONTE, fs: 11, ht: ESQUERDA, vt: CENTRO, bd: borda(LINHA_TABELA) },
+        dadoGeral: { ff: FONTE, fs: 11, ht: ESQUERDA, vt: CENTRO },
     };
-    const deSerial = (n) => new Date(Math.round((n - 25569) * DIA_MS)).toISOString().slice(0, 10);
-    const formatarBR = (iso) => (iso ? iso.split('-').reverse().join('/') : '');
 
-    /** Conteúdo da célula como o Univer guarda (datas viram número de série do Excel). */
-    function celula(col, l, limparCor = false) {
-        const v = col.valor(l);
-        const cor = col.cor ? col.cor(l) : undefined;
-        const s = { ht: ESQUERDA, bd: BORDA };
-        if (cor) s.bg = { rgb: cor };
-        else if (limparCor) s.bg = null;
-        if (col.tipo === 'data') s.n = { pattern: 'dd/mm/yyyy' };
-        if (v == null || v === '') return { v: null, s };
-        if (col.tipo === 'data' && typeof v === 'string' && RE_ISO.test(v)) return { v: paraSerial(v), t: NUMERO, s };
-        // coluna de número (matrícula) entra como número, como na planilha; zero à esquerda fica texto
-        if (typeof v === 'number' || (col.tipo === 'numero' && /^[1-9]\d{0,14}$/.test(v))) return { v: Number(v), t: NUMERO, s };
-        return { v: String(v), t: TEXTO, s };
-    }
-    const bruto = (v) => (v == null || (typeof v === 'string' && v.trim() === '') ? null : typeof v === 'number' ? v : String(v).trim());
-    const iguais = (a, b) => (a == null || b == null ? a == b : typeof a === 'number' || typeof b === 'number' ? Number(a) === Number(b) : a === b);
+    const bruto = (v) => (v == null || (typeof v === 'string' && v.trim() === '') ? null : String(v).trim());
+    const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     /* ─── Carregar o pacote (uma vez só) ─── */
     let pacote = null;
@@ -74,7 +63,7 @@ SGE.planilha = (() => {
             s.onerror = () => {
                 pacote = null; // falhou (rede): tenta de novo na próxima
                 s.remove();
-                falha(new Error('Sem internet para abrir a planilha'));
+                falha(new Error('Sem internet para abrir a planilha.'));
             };
             document.head.appendChild(s);
         });
@@ -89,7 +78,7 @@ SGE.planilha = (() => {
         setTimeout(() => quando(() => carregar().catch(() => {})), 3000);
     }
 
-    /* ─── Exportar / imprimir "como está" (port de planilha-visivel do SST) ─── */
+    /* ─── Exportar / imprimir "como está" (port de planilha-visivel do SST, agora com abas e mesclas) ─── */
     function hex(cor) {
         if (!cor) return null;
         const c = String(cor).trim();
@@ -98,8 +87,6 @@ SGE.planilha = (() => {
         const r = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i.exec(c);
         return r ? [r[1], r[2], r[3]].map((x) => Number(x).toString(16).padStart(2, '0')).join('').toUpperCase() : null;
     }
-    const ehData = (s) => /d/i.test((s.n && s.n.pattern) || '') && /y/i.test((s.n && s.n.pattern) || '');
-    const textoCelula = (v, s) => (v == null ? '' : typeof v === 'number' && ehData(s) ? formatarBR(deSerial(v)) : String(v));
     const estiloBorda = (s) => (s === 13 ? 'thick' : s && s >= 8 && s <= 12 ? 'medium' : s === 7 ? 'double' : s === 3 ? 'dotted' : s === 4 ? 'dashed' : 'thin');
     const HORIZ = { 1: 'left', 2: 'center', 3: 'right' };
     const VERT = { 1: 'top', 2: 'middle', 3: 'bottom' };
@@ -120,54 +107,55 @@ SGE.planilha = (() => {
             s.onload = () => ok(window.ExcelJS);
             s.onerror = () => {
                 excelJs = null;
-                falha(new Error('Sem internet para gerar o Excel'));
+                falha(new Error('Sem internet para gerar o Excel.'));
             };
             document.head.appendChild(s);
         });
         return excelJs;
     }
 
-    async function arquivoExcel(r) {
+    /** Arquivo .xlsx com todas as abas como estão (filtros aplicados, cores, mesclas e larguras). */
+    async function arquivoExcel(retratos) {
         const Excel = await carregarExcelJs();
         const wb = new Excel.Workbook();
         wb.creator = 'SGE';
-        const ws = wb.addWorksheet(r.nome.slice(0, 31));
-        ws.headerFooter.oddHeader = `&L&8${marcaDagua().replace(/&/g, '&&')}`;
-        ws.headerFooter.oddFooter = '&R&8Página &P de &N';
-        // impressão pelo Excel: paisagem, cabe na largura, cabeçalho repetido em todas as páginas
-        ws.pageSetup = { orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, printTitlesRow: '1:1' };
-        r.larguras.forEach((px, i) => (ws.getColumn(i + 1).width = Math.max(4, Math.round((px / 7) * 10) / 10)));
-        r.linhas.forEach((linha, ri) => {
-            const row = ws.getRow(ri + 1);
-            row.height = Math.round(linha.altura * 0.75);
-            linha.celulas.forEach((c, ci) => {
-                const cell = row.getCell(ci + 1);
-                const s = c.s;
-                if (c.v != null && c.v !== '') {
-                    cell.value = c.v;
-                    if (typeof c.v === 'number' && ehData(s)) cell.numFmt = 'dd/mm/yyyy';
-                }
-                const bg = hex(s.bg && s.bg.rgb);
-                if (bg) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: `FF${bg}` } };
-                const cor = hex(s.cl && s.cl.rgb);
-                cell.font = {
-                    name: s.ff || 'Arial',
-                    size: s.fs || 10,
-                    bold: s.bl === 1,
-                    italic: s.it === 1,
-                    underline: !!(s.ul && s.ul.s),
-                    strike: !!(s.st && s.st.s),
-                    ...(cor ? { color: { argb: `FF${cor}` } } : {}),
-                };
-                cell.alignment = { horizontal: s.ht ? HORIZ[s.ht] : undefined, vertical: s.vt ? VERT[s.vt] : 'middle', wrapText: s.tb === 3 };
-                if (s.bd) {
-                    const lado = (b) => (b && b.s ? { style: estiloBorda(b.s), color: { argb: `FF${hex(b.cl && b.cl.rgb) || 'BFBFBF'}` } } : undefined);
-                    cell.border = { top: lado(s.bd.t), bottom: lado(s.bd.b), left: lado(s.bd.l), right: lado(s.bd.r) };
-                }
+        const marca = marcaDagua().replace(/&/g, '&&');
+        for (const r of retratos) {
+            const ws = wb.addWorksheet(r.nome.replace(/[\\/?*[\]:]/g, ' ').slice(0, 31));
+            ws.headerFooter.oddHeader = `&L&8${marca}`;
+            ws.headerFooter.oddFooter = '&R&8Página &P de &N';
+            ws.pageSetup = { orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, printTitlesRow: `1:${r.cabecalho + 1}` };
+            r.larguras.forEach((px, i) => (ws.getColumn(i + 1).width = Math.max(4, Math.round((px / 7) * 10) / 10)));
+            r.linhas.forEach((linha, ri) => {
+                const row = ws.getRow(ri + 1);
+                row.height = Math.round(linha.altura * 0.75);
+                linha.celulas.forEach((c, ci) => {
+                    const cell = row.getCell(ci + 1);
+                    const s = c.s;
+                    if (c.v != null && c.v !== '') cell.value = c.v;
+                    const bg = hex(s.bg && s.bg.rgb);
+                    if (bg) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: `FF${bg}` } };
+                    const cor = hex(s.cl && s.cl.rgb);
+                    cell.font = {
+                        name: s.ff || FONTE,
+                        size: s.fs || 11,
+                        bold: s.bl === 1,
+                        italic: s.it === 1,
+                        underline: !!(s.ul && s.ul.s),
+                        strike: !!(s.st && s.st.s),
+                        ...(cor ? { color: { argb: `FF${cor}` } } : {}),
+                    };
+                    cell.alignment = { horizontal: s.ht ? HORIZ[s.ht] : undefined, vertical: s.vt ? VERT[s.vt] : 'middle', wrapText: s.tb === 3 };
+                    if (s.bd) {
+                        const lado = (b) => (b && b.s ? { style: estiloBorda(b.s), color: { argb: `FF${hex(b.cl && b.cl.rgb) || 'BFBFBF'}` } } : undefined);
+                        cell.border = { top: lado(s.bd.t), bottom: lado(s.bd.b), left: lado(s.bd.l), right: lado(s.bd.r) };
+                    }
+                });
             });
-        });
-        ws.views = [{ state: 'frozen', xSplit: 1, ySplit: 1 }];
-        ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: Math.max(1, r.linhas.length), column: r.larguras.length } };
+            for (const m of r.mesclas) ws.mergeCells(m.r1 + 1, m.c1 + 1, m.r2 + 1, m.c2 + 1);
+            ws.views = [{ state: 'frozen', xSplit: 0, ySplit: r.cabecalho + 1 }];
+            if (r.linhas.length > r.cabecalho + 1) ws.autoFilter = { from: { row: r.cabecalho + 1, column: 1 }, to: { row: r.linhas.length, column: r.larguras.length } };
+        }
         return wb.xlsx.writeBuffer();
     }
 
@@ -180,7 +168,6 @@ SGE.planilha = (() => {
         setTimeout(() => URL.revokeObjectURL(url), 10000);
     }
 
-    const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     function css(s) {
         const p = [];
         const bg = hex(s.bg && s.bg.rgb);
@@ -204,27 +191,41 @@ SGE.planilha = (() => {
         return p.join(';');
     }
 
+    /** Página pronta para imprimir a aba aberta (paisagem, cabeçalho repetido, mesclas do título). */
     function htmlImpressao(r) {
         const largura = r.larguras.reduce((a, b) => a + b, 0);
-        const util = 1060; // largura útil de uma folha A4 em paisagem (px, margens de 8 mm)
-        const zoom = Math.min(1, util / Math.max(1, largura));
-        const [cab, ...corpo] = r.linhas;
-        const tr = (l, tag) => `<tr style="height:${l.altura}px">${l.celulas.map((c) => `<${tag} style="${css(c.s)}">${esc(textoCelula(c.v, c.s))}</${tag}>`).join('')}</tr>`;
+        const zoom = Math.min(1, 1060 / Math.max(1, largura)); // largura útil de uma A4 em paisagem
+        const ocupadas = new Set();
+        const inicio = new Map();
+        for (const m of r.mesclas) {
+            inicio.set(`${m.r1}:${m.c1}`, m);
+            for (let a = m.r1; a <= m.r2; a++) for (let b = m.c1; b <= m.c2; b++) if (a !== m.r1 || b !== m.c1) ocupadas.add(`${a}:${b}`);
+        }
+        const tr = (l, ri, tag) =>
+            `<tr style="height:${l.altura}px">${l.celulas
+                .map((c, ci) => {
+                    if (ocupadas.has(`${ri}:${ci}`)) return '';
+                    const m = inicio.get(`${ri}:${ci}`);
+                    const span = m ? ` rowspan="${m.r2 - m.r1 + 1}" colspan="${m.c2 - m.c1 + 1}"` : '';
+                    return `<${tag}${span} style="${css(c.s)}">${esc(c.v == null ? '' : c.v)}</${tag}>`;
+                })
+                .join('')}</tr>`;
+        const cab = r.linhas.slice(0, r.cabecalho + 1);
+        const corpo = r.linhas.slice(r.cabecalho + 1);
         const filtro = r.visiveis < r.total ? `filtrado: ${r.visiveis} de ${r.total} linhas` : `${r.total} linhas`;
-        const hoje = new Date().toLocaleDateString('pt-BR');
         return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>${esc(r.nome)}</title><style>
 @page { size: A4 landscape; margin: 8mm; }
 * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
-body { margin: 0; font-family: Arial, sans-serif; font-size: 10pt; color: #111; }
+body { margin: 0; font-family: '${FONTE}', Arial, sans-serif; font-size: 10pt; color: #111; }
 .topo { display: flex; justify-content: space-between; font-size: 8pt; color: #555; margin-bottom: 4px; }
 table { border-collapse: collapse; table-layout: fixed; zoom: ${zoom.toFixed(3)}; }
 th, td { padding: 1px 4px; overflow: hidden; text-overflow: ellipsis; font-weight: normal; }
 thead { display: table-header-group; }
 tr { page-break-inside: avoid; }
 </style></head><body>
-<div class="topo"><b>${esc(r.nome)} · ${hoje} · ${filtro}</b><span>${esc(marcaDagua())}</span></div>
+<div class="topo"><b>${esc(r.nome)} · ${new Date().toLocaleDateString('pt-BR')} · ${filtro}</b><span>${esc(marcaDagua())}</span></div>
 <table><colgroup>${r.larguras.map((w) => `<col style="width:${w}px">`).join('')}</colgroup>
-<thead>${cab ? tr(cab, 'th') : ''}</thead><tbody>${corpo.map((l) => tr(l, 'td')).join('')}</tbody></table>
+<thead>${cab.map((l, i) => tr(l, i, 'th')).join('')}</thead><tbody>${corpo.map((l, i) => tr(l, i + cab.length, 'td')).join('')}</tbody></table>
 </body></html>`;
     }
 
@@ -249,14 +250,33 @@ tr { page-break-inside: avoid; }
     const ICONE_IMPRIMIR = '<svg viewBox="0 0 24 24" class="pl-ico" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2M7 14h10v7H7z"/></svg>';
     const ICONE_RESETAR = '<svg viewBox="0 0 24 24" class="pl-ico" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg>';
 
+    /* ─── Montagem de cada aba ─── */
+    const cabecalhoDe = (aba) => (aba.titulo ? 2 : 0); // linha do cabeçalho (título ocupa as linhas 0 e 1)
+    const chaveDe = (aba, l) => String(aba.chave(l));
+    const estiloDado = (aba, col) => {
+        const base = aba.cabecalho === 'equipe' ? ESTILO.dadoEquipe : ESTILO.dadoGeral;
+        return col.centro ? { ...base, ht: CENTRO } : base;
+    };
+    const celula = (aba, col, l) => {
+        const v = bruto(col.valor(l));
+        return v == null ? { v: null, s: estiloDado(aba, col) } : { v, t: TEXTO, s: estiloDado(aba, col) };
+    };
+    /** valor certo das células fixas (título e cabeçalho) */
+    function fixa(aba, r, c) {
+        const cab = cabecalhoDe(aba);
+        const colId = aba.colunas.length;
+        if (aba.titulo && r < cab) return r === 0 && c === 0 ? aba.titulo : null;
+        if (r === cab) return c === colId ? 'CHAVE' : aba.colunas[c] ? aba.colunas[c].rotulo : null;
+        return undefined; // não é célula fixa
+    }
+
     /**
      * Cria a planilha dentro de `caixa`.
-     * opcoes: { nome, linhas, colunas, chave(l), aoAbrir(l, colunaId), aoSelecionar(ls), ferramentas(el), dica }
-     * colunas: [{ id, rotulo, largura, tipo?: 'texto'|'data'|'numero', valor(l), cor?(l) }]
-     * Devolve { atualizar(linhas, colunas), exportar(), imprimir(), destruir() }.
+     * opcoes: { nomeArquivo, abas, aoAbrir(pessoaId), aoSelecionar(pessoaIds), ferramentas(el), dica }
+     * Devolve { atualizar(abas), exportar(), imprimir(), tema(escuro), destruir() }.
      */
     function criar(caixa, opcoes) {
-        const props = { dica: 'dois cliques numa linha para abrir o colaborador', ...opcoes };
+        const props = { dica: 'dois cliques num nome abrem o colaborador', nomeArquivo: 'planilha', ...opcoes };
         let ativo = true;
         let pronto = false;
         let univerInst = null;
@@ -277,37 +297,32 @@ tr { page-break-inside: avoid; }
         barra.className = 'planilha-barra-extra';
         const lugarFerramentas = document.createElement('span');
         lugarFerramentas.className = 'pl-ferramentas';
-        const btnExcel = document.createElement('button');
-        btnExcel.type = 'button';
-        btnExcel.className = 'pl-btn';
-        btnExcel.title = 'Exportar para o Excel como está na tela: filtrada (só o que aparece) ou completa, com cores e formatação';
-        btnExcel.innerHTML = `${ICONE_EXCEL}<span>Excel</span>`;
-        const btnImprimir = document.createElement('button');
-        btnImprimir.type = 'button';
-        btnImprimir.className = 'pl-btn';
-        btnImprimir.title = 'Imprimir como está na tela: filtrada ou completa, com cores (folha em paisagem)';
-        btnImprimir.innerHTML = `${ICONE_IMPRIMIR}<span>Imprimir</span>`;
-        const btnResetar = document.createElement('button');
-        btnResetar.type = 'button';
-        btnResetar.className = 'pl-btn pl-btn--resetar';
+        const botao = (cls, titulo, html) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = cls;
+            b.title = titulo;
+            b.innerHTML = html;
+            return b;
+        };
+        const btnExcel = botao('pl-btn', 'Exportar para o Excel como está na tela: todas as abas, filtradas (só o que aparece) ou completas, com o mesmo formato', `${ICONE_EXCEL}<span>Excel</span>`);
+        const btnImprimir = botao('pl-btn', 'Imprimir a aba aberta como está na tela (folha em paisagem)', `${ICONE_IMPRIMIR}<span>Imprimir</span>`);
+        const btnResetar = botao('pl-btn pl-btn--resetar', 'Voltar a planilha ao original: tira filtros, pesquisa, cores, seleção e rolagem (os dados não mudam)', `${ICONE_RESETAR}<span>Resetar</span>`);
         btnResetar.hidden = true;
-        btnResetar.title = 'Voltar a planilha ao original: tira filtros, pesquisa, cores, seleção e rolagem (os dados não mudam)';
-        btnResetar.innerHTML = `${ICONE_RESETAR}<span>Resetar</span>`;
         barra.append(lugarFerramentas, btnExcel, btnImprimir, btnResetar);
         if (props.ferramentas) props.ferramentas(lugarFerramentas);
-
         const setAlterada = (sim) => (btnResetar.hidden = !sim);
 
         async function exportar() {
-            const r = retratar && retratar();
-            if (!r) return;
+            const rs = retratar && retratar();
+            if (!rs || !rs.length) return;
             btnExcel.disabled = true;
             btnExcel.querySelector('span').textContent = 'Gerando…';
             try {
-                const filtrada = r.visiveis < r.total;
+                const filtrada = rs.some((r) => r.visiveis < r.total);
                 const hoje = new Date().toISOString().slice(0, 10);
-                baixar(await arquivoExcel(r), `${r.nome.replace(/[^\w.-]+/g, '-').toLowerCase()}-${hoje}${filtrada ? '-filtrada' : ''}.xlsx`);
-                SGE.helpers.toast(filtrada ? `Exportada filtrada: ${r.visiveis} de ${r.total} linhas.` : `Exportada completa: ${r.total} linhas.`, 'success');
+                baixar(await arquivoExcel(rs), `${props.nomeArquivo}-${hoje}${filtrada ? '-filtrada' : ''}.xlsx`);
+                SGE.helpers.toast(`Exportada${filtrada ? ' filtrada' : ''}: ${rs.length} abas.`, 'success');
             } catch (e) {
                 console.error('[SGE Planilha] exportar', e);
                 SGE.helpers.toast(e.message || 'Não foi possível gerar o Excel.', 'error');
@@ -317,8 +332,8 @@ tr { page-break-inside: avoid; }
             }
         }
         function imprimir() {
-            const r = retratar && retratar();
-            if (r) imprimirHtml(htmlImpressao(r));
+            const rs = retratar && retratar(true);
+            if (rs && rs[0]) imprimirHtml(htmlImpressao(rs[0]));
         }
         btnExcel.addEventListener('click', exportar);
         btnImprimir.addEventListener('click', imprimir);
@@ -328,10 +343,9 @@ tr { page-break-inside: avoid; }
             try {
                 const U = await carregar();
                 if (!ativo) return;
-                const { createUniver, LocaleType, mergeLocales } = U;
-                const criado = createUniver({
-                    locale: LocaleType.PT_BR,
-                    locales: { [LocaleType.PT_BR]: mergeLocales(...U.locais.map((x) => x.default || x)) },
+                const criado = U.createUniver({
+                    locale: U.LocaleType.PT_BR,
+                    locales: { [U.LocaleType.PT_BR]: U.mergeLocales(...U.locais.map((x) => x.default || x)) },
                     darkMode: !!(SGE.darkMode && SGE.darkMode.isDark()),
                     presets: [
                         // abas (Início, Fórmulas…) na mesma linha dos botões de desfazer/refazer
@@ -343,147 +357,194 @@ tr { page-break-inside: avoid; }
                 univerInst = criado.univer;
                 api = criado.univerAPI;
 
-                const vivo = { cols: [], mapa: new Map(), colId: 0, totalLinhas: 0, estrutura: '' };
+                // estado vivo de cada aba (lido pelos eventos do Univer, que são registrados uma vez)
+                let vivo = new Map();
+                let estrutura = '';
                 let unidade = null;
                 let versao = 0;
                 let selecao = null;
                 let comandos = null;
-                // operações do próprio sistema (montar, atualizar, desfazer edição) não contam como "mexeu"
                 let interno = false;
                 let quietoAte = 0;
-                const folha = () => api.getActiveWorkbook() && api.getActiveWorkbook().getActiveSheet();
-                // o id fica como texto (no Efetivo é texto; no SST era número): serve para os dois
-                const idDaLinha = (r) => {
-                    const ws = folha();
-                    const v = ws ? ws.getRange(r, vivo.colId).getRawValue() : null;
+                const pasta = () => api.getActiveWorkbook();
+                const folhaAtiva = () => pasta() && pasta().getActiveSheet();
+                const folhaPorId = (id) => pasta() && pasta().getSheetBySheetId(id);
+                const chaveDaLinha = (ws, info, r) => {
+                    const v = ws.getRange(r, info.aba.colunas.length).getRawValue();
                     return v == null || v === '' ? '' : String(v);
                 };
-                const chaveDe = (l) => String(props.chave(l));
-                const assinatura = (ls, cs) => `${cs.map((c) => `${c.id}:${c.largura}`).join(',')}|${ls.map(chaveDe).join(',')}`;
+                const filtradas = (ws) => {
+                    try {
+                        return new Set((ws.getFilter() && ws.getFilter().getFilteredOutRows()) || []);
+                    } catch (e) {
+                        return new Set();
+                    }
+                };
+                const assinatura = (abas) =>
+                    abas.map((a) => `${a.id}~${a.nome}~${a.titulo || ''}~${a.colunas.map((c) => `${c.id}:${c.largura}`).join(',')}~${a.linhas.map((l) => chaveDe(a, l)).join(',')}`).join('|');
 
                 const aoMudarSelecao = (selections) => {
-                    const ws = folha();
-                    if (!ws || !props.aoSelecionar) return;
-                    let escondidas = new Set();
-                    try {
-                        escondidas = new Set((ws.getFilter() && ws.getFilter().getFilteredOutRows()) || []);
-                    } catch (e) { /* sem filtro ativo */ }
+                    const ws = folhaAtiva();
+                    const info = ws && vivo.get(ws.getSheetId());
+                    if (!info || !props.aoSelecionar) return;
+                    const escondidas = filtradas(ws);
                     const ids = new Set();
                     for (const f of selections) {
-                        const fim = Math.min(f.endRow, vivo.totalLinhas - 1);
-                        for (let r = Math.max(f.startRow, 1); r <= fim; r++) {
+                        const fim = Math.min(f.endRow, info.totalLinhas - 1);
+                        const c0 = Math.max(0, f.startColumn);
+                        const c1 = Math.min(f.endColumn, info.aba.colunas.length - 1);
+                        for (let r = Math.max(f.startRow, info.cab + 1); r <= fim; r++) {
                             if (escondidas.has(r)) continue;
-                            const id = idDaLinha(r);
-                            if (vivo.mapa.has(id)) ids.add(id);
+                            const l = info.mapa.get(chaveDaLinha(ws, info, r));
+                            if (!l) continue;
+                            for (let c = c0; c <= c1; c++) {
+                                const col = info.aba.colunas[c];
+                                const p = col && col.pessoa ? col.pessoa(l) : null;
+                                if (p != null && p !== '') ids.add(p);
+                            }
                         }
                     }
-                    props.aoSelecionar([...ids].map((x) => vivo.mapa.get(x)));
+                    props.aoSelecionar([...ids]);
                 };
 
-                /** cria (ou troca) a pasta de trabalho com estas linhas e colunas */
-                const montar = (dados, cols, manterRolagem = true) => {
-                    const colId = cols.length; // coluna escondida com o id da linha (identifica a linha mesmo com filtro)
-                    const cellData = { 0: {} };
-                    cols.forEach((c, i) => (cellData[0][i] = { v: c.rotulo.toUpperCase(), t: TEXTO, s: CABECALHO }));
-                    cellData[0][colId] = { v: 'ID', t: TEXTO, s: CABECALHO };
-                    dados.forEach((l, r) => {
+                /** dados de uma aba no formato do Univer */
+                function folhaDe(aba) {
+                    const cab = cabecalhoDe(aba);
+                    const colId = aba.colunas.length;
+                    const cellData = {};
+                    const mergeData = [];
+                    if (aba.titulo) {
+                        cellData[0] = { 0: { v: aba.titulo, t: TEXTO, s: ESTILO.titulo } };
+                        cellData[1] = {};
+                        for (let c = 1; c < colId; c++) cellData[0][c] = { s: ESTILO.titulo };
+                        for (let c = 0; c < colId; c++) cellData[1][c] = { s: ESTILO.titulo };
+                        mergeData.push({ startRow: 0, endRow: 1, startColumn: 0, endColumn: colId - 1 });
+                    }
+                    const estiloCab = aba.cabecalho === 'equipe' ? ESTILO.cabEquipe : ESTILO.cabGeral;
+                    cellData[cab] = {};
+                    aba.colunas.forEach((c, i) => (cellData[cab][i] = { v: c.rotulo, t: TEXTO, s: estiloCab }));
+                    cellData[cab][colId] = { v: 'CHAVE', t: TEXTO };
+                    aba.linhas.forEach((l, i) => {
                         const linha = {};
-                        cols.forEach((c, i) => (linha[i] = celula(c, l)));
-                        linha[colId] = { v: chaveDe(l), t: TEXTO };
-                        cellData[r + 1] = linha;
+                        aba.colunas.forEach((c, j) => (linha[j] = celula(aba, c, l)));
+                        linha[colId] = { v: chaveDe(aba, l), t: TEXTO };
+                        cellData[cab + 1 + i] = linha;
                     });
                     const columnData = {};
-                    cols.forEach((c, i) => (columnData[i] = { w: c.largura }));
+                    aba.colunas.forEach((c, i) => (columnData[i] = { w: c.largura }));
                     columnData[colId] = { w: 60, hd: 1 };
+                    const rowData = { [cab]: { h: 26 } };
+                    if (aba.titulo) {
+                        rowData[0] = { h: 20 };
+                        rowData[1] = { h: 20 };
+                    }
+                    const totalLinhas = cab + 1 + aba.linhas.length + FOLGA;
+                    return {
+                        totalLinhas,
+                        dados: {
+                            id: aba.id,
+                            name: aba.nome,
+                            rowCount: totalLinhas,
+                            columnCount: colId + 1,
+                            cellData,
+                            columnData,
+                            rowData,
+                            mergeData,
+                            defaultRowHeight: 22,
+                            freeze: { xSplit: 0, ySplit: cab + 1, startRow: cab + 1, startColumn: 0 },
+                        },
+                    };
+                }
 
-                    // mantém a rolagem ao trocar a pasta (quem filtrou continua olhando o mesmo lugar)
+                /** cria (ou troca) a pasta de trabalho com estas abas */
+                const montar = (abas, manterLugar = true) => {
+                    let abaAtiva = null;
                     let rolagem = null;
                     try {
-                        const ws = folha();
-                        const s = ws && ws.getScrollState && ws.getScrollState();
-                        if (s) rolagem = { r: s.sheetViewStartRow, c: s.sheetViewStartColumn };
+                        const ws = folhaAtiva();
+                        if (ws) {
+                            abaAtiva = ws.getSheetId();
+                            const s = ws.getScrollState && ws.getScrollState();
+                            if (s) rolagem = { r: s.sheetViewStartRow, c: s.sheetViewStartColumn };
+                        }
                     } catch (e) { /* primeira montagem */ }
                     if (selecao) selecao.dispose();
                     if (comandos) comandos.dispose();
                     quietoAte = Date.now() + 1200;
                     setAlterada(false);
+                    const sheets = {};
+                    const novo = new Map();
+                    for (const aba of abas) {
+                        const f = folhaDe(aba);
+                        sheets[aba.id] = f.dados;
+                        novo.set(aba.id, { aba, cab: cabecalhoDe(aba), totalLinhas: f.totalLinhas, mapa: new Map(aba.linhas.map((l) => [chaveDe(aba, l), l])) });
+                    }
+                    vivo = novo;
+                    estrutura = assinatura(abas);
                     const antiga = unidade;
                     unidade = `planilha-${++versao}`;
-                    vivo.cols = cols;
-                    vivo.colId = colId;
-                    vivo.totalLinhas = dados.length + 1 + FOLGA;
-                    vivo.mapa = new Map(dados.map((l) => [chaveDe(l), l]));
-                    vivo.estrutura = assinatura(dados, cols);
-                    api.createWorkbook({
-                        id: unidade,
-                        name: props.nome,
-                        sheetOrder: ['folha'],
-                        sheets: {
-                            folha: {
-                                id: 'folha',
-                                name: props.nome,
-                                rowCount: vivo.totalLinhas,
-                                columnCount: colId + 1,
-                                cellData,
-                                columnData,
-                                rowData: { 0: { h: 46 } },
-                                defaultRowHeight: 24,
-                                freeze: { xSplit: 1, ySplit: 1, startRow: 1, startColumn: 1 },
-                            },
-                        },
-                    });
+                    api.createWorkbook({ id: unidade, name: props.nomeArquivo, sheetOrder: abas.map((a) => a.id), sheets });
                     if (antiga) api.disposeUnit(antiga);
-                    const ws = folha();
-                    if (ws) ws.getRange(0, 0, dados.length + 1, colId).createFilter();
-                    if (manterRolagem && rolagem && (rolagem.r > 1 || rolagem.c > 1)) {
+                    const wb = pasta();
+                    // filtro no cabeçalho de cada aba (como no Excel)
+                    for (const [id, info] of vivo) {
                         try {
-                            if (ws && ws.scrollToCell) ws.scrollToCell(Math.min(rolagem.r, vivo.totalLinhas - 1), Math.min(rolagem.c, colId - 1));
-                        } catch (e) { /* sem rolagem */ }
+                            const ws = folhaPorId(id);
+                            if (ws && info.aba.linhas.length) ws.getRange(info.cab, 0, info.aba.linhas.length + 1, info.aba.colunas.length).createFilter();
+                        } catch (e) { /* aba sem filtro */ }
                     }
-                    const wb = api.getActiveWorkbook();
+                    if (manterLugar && abaAtiva && vivo.has(abaAtiva)) {
+                        try {
+                            const ws = folhaPorId(abaAtiva);
+                            wb.setActiveSheet(ws);
+                            if (rolagem && (rolagem.r > 1 || rolagem.c > 1) && ws.scrollToCell) ws.scrollToCell(rolagem.r, rolagem.c);
+                        } catch (e) { /* fica na primeira aba */ }
+                    }
                     selecao = wb ? wb.onSelectionChange((s) => aoMudarSelecao(s)) : null;
                     comandos = wb
                         ? wb.onCommandExecuted((c) => {
-                              // "cell-edit" é interno do editor (roda sozinho ao abrir); o resto é ação de quem usa
-                              if (!interno && Date.now() > quietoAte && !c.id.includes('cell-edit')) setAlterada(true);
+                              // "cell-edit" é interno do editor; trocar de aba e rolar não contam como "mexeu"
+                              if (interno || Date.now() < quietoAte || /cell-edit|worksheet-activ|scroll|selection/.test(c.id)) return;
+                              setAlterada(true);
                           })
                         : null;
                     if (props.aoSelecionar) props.aoSelecionar([]);
                 };
 
-                /** mesmas linhas e colunas: reescreve só as células cujo valor ou cor mudou */
-                const atualizarCelulas = (novas, cols) => {
-                    const ws = folha();
-                    if (!ws) return;
-                    const antigas = vivo.cols;
-                    const linhaDe = new Map();
-                    for (let r = 1; r < vivo.totalLinhas; r++) {
-                        const x = idDaLinha(r);
-                        if (x) linhaDe.set(x, r);
-                    }
-                    vivo.cols = cols; // antes de mudar as células: assim a mudança não é "desfeita"
+                /** mesma estrutura: reescreve só as células cujo valor mudou */
+                const atualizarCelulas = (abas) => {
                     interno = true;
                     try {
-                        for (const l of novas) {
-                            const k = chaveDe(l);
-                            const r = linhaDe.get(k);
-                            const antes = vivo.mapa.get(k);
-                            if (!r || !antes) continue;
-                            vivo.mapa.set(k, l);
-                            cols.forEach((c, i) => {
-                                const a = antigas[i] ? celula(antigas[i], antes) : {};
-                                const b = celula(c, l);
-                                const corAntes = antigas[i] && antigas[i].cor ? antigas[i].cor(antes) : undefined;
-                                const corDepois = c.cor ? c.cor(l) : undefined;
-                                if (!iguais(bruto(a.v), bruto(b.v)) || corAntes !== corDepois) ws.getRange(r, i).setValue(celula(c, l, true));
-                            });
+                        for (const aba of abas) {
+                            const info = vivo.get(aba.id);
+                            const ws = folhaPorId(aba.id);
+                            if (!info || !ws) continue;
+                            const linhaDe = new Map();
+                            for (let r = info.cab + 1; r < info.totalLinhas; r++) {
+                                const k = chaveDaLinha(ws, info, r);
+                                if (k) linhaDe.set(k, r);
+                            }
+                            const antiga = info.aba;
+                            info.aba = aba;
+                            for (const l of aba.linhas) {
+                                const k = chaveDe(aba, l);
+                                const r = linhaDe.get(k);
+                                const antes = info.mapa.get(k);
+                                info.mapa.set(k, l);
+                                if (!r || !antes) continue;
+                                aba.colunas.forEach((c, i) => {
+                                    const a = antiga.colunas[i] ? bruto(antiga.colunas[i].valor(antes)) : null;
+                                    const b = bruto(c.valor(l));
+                                    if (a !== b) ws.getRange(r, i).setValue(celula(aba, c, l));
+                                });
+                            }
                         }
                     } finally {
                         interno = false;
                     }
                 };
 
-                aplicar = (ls, cs) => (assinatura(ls, cs) !== vivo.estrutura ? montar(ls, cs) : atualizarCelulas(ls, cs));
+                aplicar = (abas) => (assinatura(abas) !== estrutura ? montar(abas) : atualizarCelulas(abas));
 
                 let ultimoAviso = 0;
                 const avisarSoLeitura = () => {
@@ -491,25 +552,33 @@ tr { page-break-inside: avoid; }
                     ultimoAviso = Date.now();
                     SGE.helpers.toast(`A planilha é só para ver e pesquisar: nada aqui muda os dados (${props.dica}).`, 'info');
                 };
+                const folhaDoEvento = (p) => (p.worksheet && p.worksheet.getSheetId ? p.worksheet : folhaAtiva());
 
-                // edição de célula nunca abre; dois cliques abrem o que a tela decidir
+                // edição de célula nunca abre; dois cliques num nome abrem o colaborador
                 api.addEvent(api.Event.BeforeSheetEditStart, (p) => {
                     p.cancel = true;
-                    if (p.row === 0) return;
-                    const l = vivo.mapa.get(idDaLinha(p.row));
-                    if (p.eventType === DUPLO_CLIQUE && l && props.aoAbrir) props.aoAbrir(l, (vivo.cols[p.column] && vivo.cols[p.column].id) || '');
-                    else avisarSoLeitura();
+                    const ws = folhaDoEvento(p);
+                    const info = ws && vivo.get(ws.getSheetId());
+                    if (!info || p.row <= info.cab) return;
+                    const l = info.mapa.get(chaveDaLinha(ws, info, p.row));
+                    const col = info.aba.colunas[p.column];
+                    const pessoa = l && col && col.pessoa ? col.pessoa(l) : null;
+                    if (p.eventType === DUPLO_CLIQUE && pessoa != null && pessoa !== '' && props.aoAbrir) props.aoAbrir(pessoa);
+                    else if (p.eventType !== DUPLO_CLIQUE || !l) avisarSoLeitura();
                 });
 
                 // colou, apagou, recortou, substituiu, arrastou: o valor volta ao que é no sistema
                 let corrigindo = false;
                 api.addEvent(api.Event.SheetValueChanged, (p) => {
-                    const ws = folha();
-                    if (!ws || corrigindo) return;
+                    if (corrigindo) return;
+                    const ws = folhaDoEvento(p);
+                    const info = ws && vivo.get(ws.getSheetId());
+                    if (!info) return;
                     corrigindo = true;
                     interno = true;
                     try {
-                        const { cols, colId, totalLinhas } = vivo;
+                        const { aba, cab, totalLinhas } = info;
+                        const colId = aba.colunas.length;
                         let voltou = false;
                         for (const f of p.effectedRanges) {
                             const r0 = f.getRow();
@@ -520,19 +589,19 @@ tr { page-break-inside: avoid; }
                                 for (let c = c0; c < c1; c++) {
                                     const atualCel = ws.getRange(r, c);
                                     const atual = bruto(atualCel.getRawValue());
-                                    if (r === 0) {
-                                        const certo = c === colId ? 'ID' : cols[c] && cols[c].rotulo.toUpperCase();
-                                        if (certo && atual !== certo) {
-                                            atualCel.setValue({ v: certo, t: TEXTO, s: CABECALHO });
+                                    const certoFixo = fixa(aba, r, c);
+                                    if (certoFixo !== undefined) {
+                                        if (atual !== bruto(certoFixo)) {
+                                            atualCel.setValue({ v: certoFixo, t: TEXTO });
                                             voltou = true;
                                         }
                                         continue;
                                     }
                                     if (c === colId) continue;
-                                    const l = vivo.mapa.get(idDaLinha(r));
-                                    const esperado = l && cols[c] ? bruto(celula(cols[c], l).v) : null;
-                                    if (!iguais(atual, esperado)) {
-                                        atualCel.setValue(l && cols[c] ? celula(cols[c], l, true) : { v: '' });
+                                    const l = info.mapa.get(chaveDaLinha(ws, info, r));
+                                    const esperado = l && aba.colunas[c] ? bruto(aba.colunas[c].valor(l)) : null;
+                                    if (atual !== esperado) {
+                                        atualCel.setValue(l && aba.colunas[c] ? celula(aba, aba.colunas[c], l) : { v: '' });
                                         voltou = true;
                                     }
                                 }
@@ -545,48 +614,57 @@ tr { page-break-inside: avoid; }
                     }
                 });
 
-                montar(props.linhas, props.colunas);
+                montar(props.abas, false);
 
-                // retrato da planilha como está: o que o filtro deixou, colunas visíveis, larguras, cores e formatação
-                retratar = () => {
-                    const wb = api.getActiveWorkbook();
-                    const ws = wb && wb.getActiveSheet();
-                    if (!wb || !ws) return null;
+                // retrato das abas como estão: o que o filtro deixou, colunas visíveis, larguras, estilos e mesclas
+                retratar = (soAtiva = false) => {
+                    const wb = pasta();
+                    if (!wb) return null;
                     const foto = wb.save();
-                    const folhaFoto = foto.sheets[ws.getSheetId()];
-                    if (!folhaFoto) return null;
                     const estilo = (s) => (typeof s === 'string' ? (foto.styles && foto.styles[s]) || {} : s || {});
-                    const cel = folhaFoto.cellData || {};
-                    const lin = folhaFoto.rowData || {};
-                    const col = folhaFoto.columnData || {};
-                    let escondidas = new Set();
-                    try {
-                        escondidas = new Set((ws.getFilter() && ws.getFilter().getFilteredOutRows()) || []);
-                    } catch (e) { /* sem filtro */ }
-                    let ultima = 0;
-                    for (const r of Object.keys(cel).map(Number)) {
-                        if (Object.values(cel[r] || {}).some((c) => c && c.v != null && c.v !== '')) ultima = Math.max(ultima, r);
-                    }
-                    const linhas = [];
-                    for (let r = 0; r <= ultima; r++) if (!escondidas.has(r) && !(lin[r] && lin[r].hd)) linhas.push(r);
-                    const visCols = [];
-                    for (let c = 0; c < vivo.colId; c++) if (!(col[c] && col[c].hd)) visCols.push(c);
-                    return {
-                        nome: props.nome,
-                        larguras: visCols.map((c) => (col[c] && col[c].w) || 88),
-                        linhas: linhas.map((r) => ({
-                            altura: (lin[r] && lin[r].h) || (r === 0 ? 46 : 24),
-                            celulas: visCols.map((c) => {
-                                const d = cel[r] && cel[r][c];
-                                return { v: d && d.v != null ? d.v : null, s: { ...estilo(col[c] && col[c].s), ...estilo(lin[r] && lin[r].s), ...estilo(d && d.s) } };
-                            }),
-                        })),
-                        visiveis: linhas.filter((r) => r > 0).length,
-                        total: vivo.mapa.size,
-                    };
+                    const ids = soAtiva ? [folhaAtiva().getSheetId()] : foto.sheetOrder || [...vivo.keys()];
+                    return ids
+                        .filter((id) => vivo.has(id) && foto.sheets[id])
+                        .map((id) => {
+                            const info = vivo.get(id);
+                            const fs = foto.sheets[id];
+                            const ws = folhaPorId(id);
+                            const cel = fs.cellData || {};
+                            const lin = fs.rowData || {};
+                            const col = fs.columnData || {};
+                            const escondidas = ws ? filtradas(ws) : new Set();
+                            let ultima = info.cab;
+                            for (const r of Object.keys(cel).map(Number)) {
+                                if (Object.entries(cel[r] || {}).some(([c, x]) => Number(c) < info.aba.colunas.length && x && x.v != null && x.v !== '')) ultima = Math.max(ultima, r);
+                            }
+                            const linhas = [];
+                            for (let r = 0; r <= ultima; r++) if (!escondidas.has(r) && !(lin[r] && lin[r].hd)) linhas.push(r);
+                            const visCols = [];
+                            for (let c = 0; c < info.aba.colunas.length; c++) if (!(col[c] && col[c].hd)) visCols.push(c);
+                            const posLinha = new Map(linhas.map((r, i) => [r, i]));
+                            const posCol = new Map(visCols.map((c, i) => [c, i]));
+                            const mesclas = (fs.mergeData || [])
+                                .filter((m) => posLinha.has(m.startRow) && posLinha.has(m.endRow) && posCol.has(m.startColumn) && posCol.has(m.endColumn))
+                                .map((m) => ({ r1: posLinha.get(m.startRow), r2: posLinha.get(m.endRow), c1: posCol.get(m.startColumn), c2: posCol.get(m.endColumn) }));
+                            return {
+                                nome: fs.name || info.aba.nome,
+                                cabecalho: info.cab,
+                                larguras: visCols.map((c) => (col[c] && col[c].w) || 88),
+                                mesclas,
+                                linhas: linhas.map((r) => ({
+                                    altura: (lin[r] && lin[r].h) || 22,
+                                    celulas: visCols.map((c) => {
+                                        const d = cel[r] && cel[r][c];
+                                        return { v: d && d.v != null ? d.v : null, s: { ...estilo(col[c] && col[c].s), ...estilo(lin[r] && lin[r].s), ...estilo(d && d.s) } };
+                                    }),
+                                })),
+                                visiveis: linhas.filter((r) => r > info.cab).length,
+                                total: info.mapa.size,
+                            };
+                        });
                 };
                 // "Resetar": planilha de volta ao original (sem filtros, cores, seleção, pesquisa e rolagem)
-                resetar = () => montar(props.linhas, props.colunas, false);
+                resetar = () => montar([...vivo.values()].map((i) => i.aba), true);
 
                 // espaço para os botões da tela no começo da barra da planilha (antes do "desfazer")
                 const acharBarra = () => {
@@ -594,7 +672,6 @@ tr { page-break-inside: avoid; }
                     const cab = area.querySelector('header[data-u-comp="headerbar"]');
                     if (!cab) return void requestAnimationFrame(acharBarra);
                     cab.prepend(barra);
-                    // a barra da planilha começa depois dos nossos botões (a largura muda quando o "Resetar" aparece)
                     observador = new ResizeObserver(() => (cab.style.paddingLeft = barra.offsetWidth ? `${barra.offsetWidth + 10}px` : ''));
                     observador.observe(barra);
                 };
@@ -602,9 +679,9 @@ tr { page-break-inside: avoid; }
                 pronto = true;
                 abrindo.remove();
                 if (pendente) {
-                    const [ls, cs] = pendente;
+                    const abas = pendente;
                     pendente = null;
-                    aplicar(ls, cs);
+                    aplicar(abas);
                 }
             } catch (e) {
                 console.error('[SGE Planilha]', e);
@@ -614,12 +691,11 @@ tr { page-break-inside: avoid; }
         })();
 
         return {
-            /** linhas ou colunas novas (filtros, layout, dados salvos): sem recriar a planilha */
-            atualizar(linhas, colunas) {
-                props.linhas = linhas;
-                props.colunas = colunas;
-                if (pronto && aplicar) aplicar(linhas, colunas);
-                else pendente = [linhas, colunas];
+            /** abas novas (filtros, dados salvos): sem recriar a planilha quando dá */
+            atualizar(abas) {
+                props.abas = abas;
+                if (pronto && aplicar) aplicar(abas);
+                else pendente = abas;
             },
             exportar,
             imprimir,
@@ -633,7 +709,6 @@ tr { page-break-inside: avoid; }
                 ativo = false;
                 if (observador) observador.disconnect();
                 const u = univerInst;
-                // descarta depois do navegador terminar de desenhar (o Univer desmonta a própria árvore)
                 setTimeout(() => u && u.dispose(), 0);
                 caixa.innerHTML = '';
             },

@@ -1,5 +1,5 @@
 {
-  "version": "2.0.0",
+  "version": "2.1.0",
   "updated_at": "2026-10-08",
-  "notes": "Matriz modelo Excel (igual ao SST) no lugar de Kanban, Tabela, Grupo e Alocações; layout do SST com cores e fonte do sge-core"
+  "notes": "Matriz no formato da planilha EFETIVOS MECANIZADA: aba GERAL, uma aba por supervisor, Férias, Sobra e Atestado"
 }

@@ -2,7 +2,7 @@
 
 /**
  * SGE — Ações sobre colaboradores (usadas pela Matriz)
- * Janelas de treinamentos e advertências de uma pessoa, edição em massa e treinamento em massa.
+ * Edição em massa e treinamento em massa dos colaboradores selecionados.
  * Vieram da antiga Tabela (excel-table.js), agora com todo texto do banco escapado.
  */
 window.SGE = window.SGE || {};
@@ -12,9 +12,6 @@ SGE.acoesColaborador = {
         return SGE.helpers.escapeHtml(v);
     },
 
-    _fmt(d) {
-        return d ? new Date(d).toLocaleDateString('pt-BR') : '—';
-    },
 
     opcoes(chave) {
         const cfg = SGE.CONFIG;
@@ -24,82 +21,6 @@ SGE.acoesColaborador = {
         if (chave === 'statuses') return cfg.statuses || [];
         if (chave === 'supervisores') return (SGE.state.supervisores || []).filter((s) => s.ativo).map((s) => s.nome);
         return [];
-    },
-
-    _tabela(cabecalhos, linhas) {
-        const th = cabecalhos.map((c) => `<th>${c}</th>`).join('');
-        return `<div class="ac-tabela-caixa"><table class="ac-tabela"><thead><tr>${th}</tr></thead><tbody>${linhas}</tbody></table></div>`;
-    },
-
-    /* ─── Treinamentos de uma pessoa ─── */
-    abrirTreinamentos(colabId) {
-        const colab = SGE.state.colaboradores.find((c) => c.id === colabId);
-        if (!colab) return;
-        const esc = this._esc;
-        const lista = (SGE.state.colaboradorTreinamentos || []).filter((t) => t.employee_id === colabId);
-        const hoje = new Date();
-        const situacao = (t) => {
-            if (!t.data_validade) return { cls: 'ac-neutro', rotulo: 'Sem validade' };
-            const dias = Math.floor((new Date(t.data_validade) - hoje) / 86400000);
-            if (dias < 0) return { cls: 'ac-ruim', rotulo: 'Vencido' };
-            if (dias < 30) return { cls: 'ac-atencao', rotulo: `${dias}d` };
-            return { cls: 'ac-ok', rotulo: 'Válido' };
-        };
-        const linhas = lista
-            .map((t) => {
-                const s = situacao(t);
-                return `<tr><td>${esc(t.treinamento_nome || '—')}</td><td>${this._fmt(t.data_realizacao)}</td><td>${this._fmt(t.data_validade)}</td><td><span class="ac-selo ${s.cls}">${s.rotulo}</span></td></tr>`;
-            })
-            .join('');
-        const corpo = document.createElement('div');
-        corpo.innerHTML = lista.length
-            ? this._tabela(['Treinamento', 'Realizado', 'Vence', 'Situação'], linhas)
-            : '<p class="ac-vazio">Nenhum treinamento registrado para este colaborador.</p>';
-        SGE.modal.open(`Treinamentos — ${colab.nome}`, corpo, [
-            { label: 'Fechar', action: () => SGE.modal.close() },
-            {
-                label: '+ Vincular treinamento',
-                class: 'btn-confirm',
-                action: () => {
-                    SGE.modal.close();
-                    if (SGE.treinamentos && SGE.treinamentos._openVinculoModal) {
-                        SGE.navigation.switchView('treinamentos');
-                        setTimeout(() => SGE.treinamentos._openVinculoModal(), 350);
-                    }
-                },
-            },
-        ]);
-    },
-
-    /* ─── Advertências de uma pessoa ─── */
-    abrirAdvertencias(colabId) {
-        const colab = SGE.state.colaboradores.find((c) => c.id === colabId);
-        if (!colab) return;
-        const esc = this._esc;
-        const lista = (SGE.state.advertencias || []).filter((a) => a.employee_id === colabId);
-        const tipos = { VERBAL: ['ac-neutro', 'Verbal'], ESCRITA: ['ac-atencao', 'Escrita'], SUSPENSAO: ['ac-ruim', 'Suspensão'] };
-        const linhas = lista
-            .map((w) => {
-                const [cls, rotulo] = tipos[w.tipo] || ['ac-neutro', w.tipo || '—'];
-                return `<tr><td>${this._fmt(w.data_aplicacao)}</td><td><span class="ac-selo ${cls}">${esc(rotulo)}</span></td><td>${esc(w.motivo || '—')}</td></tr>`;
-            })
-            .join('');
-        const corpo = document.createElement('div');
-        corpo.innerHTML = lista.length ? this._tabela(['Data', 'Tipo', 'Motivo'], linhas) : '<p class="ac-vazio">Nenhuma advertência registrada.</p>';
-        SGE.modal.open(`Advertências — ${colab.nome}`, corpo, [
-            { label: 'Fechar', action: () => SGE.modal.close() },
-            {
-                label: '+ Registrar advertência',
-                class: 'btn-confirm',
-                action: () => {
-                    SGE.modal.close();
-                    if (SGE.advertencias && SGE.advertencias._openRegistarModal) {
-                        SGE.navigation.switchView('advertencias');
-                        setTimeout(() => SGE.advertencias._openRegistarModal(), 350);
-                    }
-                },
-            },
-        ]);
     },
 
     /* ─── Edição em massa ─── */
