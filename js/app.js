@@ -125,10 +125,7 @@ SGE.app = {
                     if (parsed.setores) SGE.state.setores = parsed.setores;
                     if (parsed.movimentacoes) SGE.state.movimentacoes = parsed.movimentacoes;
                     if (parsed.equipamentos) SGE.state.equipamentos = parsed.equipamentos;
-                    if (parsed.treinamentosCatalogo) SGE.state.treinamentosCatalogo = parsed.treinamentosCatalogo;
-                    if (parsed.colaboradorTreinamentos) SGE.state.colaboradorTreinamentos = parsed.colaboradorTreinamentos;
                     if (parsed.ferias) SGE.state.ferias = parsed.ferias;
-                    if (parsed.advertencias) SGE.state.advertencias = parsed.advertencias;
 
                     SGE.state.dataLoaded = true;
                     usedCache = true;
@@ -163,9 +160,7 @@ SGE.app = {
             setStatus('Conectando ao banco de dados Supabase...');
             await Promise.all([
                 SGE.api.loadData(),
-                SGE.api.loadFerias(),
-                SGE.api.loadTreinamentos(),
-                SGE.api.loadAdvertencias()
+                SGE.api.loadFerias()
             ]);
             setStatus('Montando interface');
         }
@@ -297,7 +292,7 @@ SGE.app = {
             });
         });
 
-        // Submenus da barra de cima (Efetivo, Segurança, usuário): abrem no clique, fecham fora ou com Esc
+        // Submenus da barra de cima (Efetivo, usuário): abrem no clique, fecham fora ou com Esc
         document.querySelectorAll('.barra-suspenso').forEach(caixa => {
             const botao = caixa.querySelector('[aria-haspopup]');
             if (!botao) return;

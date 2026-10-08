@@ -18,7 +18,6 @@ SGE.matriz = (() => {
         pessoa: 'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM4 21a8 8 0 0 1 16 0',
         mover: 'M5 12h14M13 6l6 6-6 6',
         editar: 'M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4',
-        treinamento: 'M22 10v6M2 10l10-5 10 5-10 5zM6 12v5c3 3 9 3 12 0v-5',
         ferramentas: 'M4 6h9m4 0h3M4 12h3m4 0h9M4 18h11m4 0h1M15 4v4M9 10v4M17 16v4',
         fechar: 'M6 6l12 12M18 6 6 18',
         expandir: 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5',
@@ -350,8 +349,7 @@ SGE.matriz = (() => {
                 ${gestao ? item({ acao: 'editar', rotulo: 'Editar dados', d: ICONE.editar }) : ''}`;
         } else if (sel.length > 1) {
             selecao = `<p class="mz-sel-nome">${sel.length} colaboradores selecionados</p>
-                ${gestao ? item({ acao: 'massa', rotulo: 'Editar os selecionados', d: ICONE.editar, primario: true }) : ''}
-                ${gestao ? item({ acao: 'treino-massa', rotulo: 'Vincular treinamento', d: ICONE.treinamento }) : ''}`;
+                ${gestao ? item({ acao: 'massa', rotulo: 'Editar os selecionados', d: ICONE.editar, primario: true }) : ''}`;
         }
         caixa.innerHTML = `
             <div class="mz-busca">
@@ -459,7 +457,6 @@ SGE.matriz = (() => {
             mover: () => um && SGE.modal.openMoveSelector(um),
             editar: () => um && SGE.modal.openEdit(um),
             massa: () => SGE.acoesColaborador.editarEmMassa(sel.map((c) => c.id), render),
-            'treino-massa': () => SGE.acoesColaborador.vincularTreinamentoEmMassa(sel.map((c) => c.id), render),
         };
         // "Limpar tudo" deixa a janela aberta; as outras ações fecham
         if (b.dataset.acao !== 'limpar') fecharPainel();

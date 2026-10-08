@@ -1,5 +1,15 @@
 # CHANGELOG — Gestão de Efetivo
 
+## v2.3.0 — 2026-10-08
+### Corrigido
+- **Nitidez da planilha**: com o Windows ampliado (125%, 150%) a área de desenho caía numa fração de pixel e o navegador borrava. Agora cada desenho é alinhado ao pixel exato da tela (também ao mudar o zoom).
+
+### Novo
+- Abas da Matriz na cor azul da planilha original (#0070C0), também no Excel exportado.
+
+### Saiu
+- **Treinamentos e Advertências** (menu Segurança, telas, abas Capacitação e Disciplinar do Painel, opções do Exportar e vínculo de treinamento em massa): já são controlados em outro sistema. Ao excluir um colaborador, os registros antigos dele nessas tabelas continuam sendo apagados do banco.
+
 ## v2.2.0 — 2026-10-08
 ### Novo
 - Aba **RELAÇÃO DE EFETIVOS MECANIZADA** (primeira aba, como na planilha): título "EFETIVO MECANIZADA", contagem por função (motorista, operador, coordenador, técnico de segurança, mecânico, planejador, almoxarife, feristas, estagiário, sobra, supervisores) com o total, e a tabela SUPERVISORES · MOTORISTA · OPERADOR.

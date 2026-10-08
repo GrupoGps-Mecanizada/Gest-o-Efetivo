@@ -2,7 +2,7 @@
 
 /**
  * SGE — Ações sobre colaboradores (usadas pela Matriz)
- * Edição em massa e treinamento em massa dos colaboradores selecionados.
+ * Edição em massa dos colaboradores selecionados.
  * Vieram da antiga Tabela (excel-table.js), agora com todo texto do banco escapado.
  */
 window.SGE = window.SGE || {};
@@ -95,45 +95,5 @@ SGE.acoesColaborador = {
             console.error('[SGE Massa]', err);
             SGE.helpers.toast('Erro ao atualizar: ' + (err.message || 'falha'), 'error');
         }
-    },
-
-    /* ─── Treinamento em massa ─── */
-    vincularTreinamentoEmMassa(ids, aoTerminar) {
-        if (!SGE.auth.hasRole('GESTAO')) return SGE.helpers.toast('Seu perfil não pode vincular treinamentos.', 'error');
-        const catalogo = SGE.state.treinamentosCatalogo || [];
-        if (!catalogo.length) return SGE.helpers.toast('Nenhum treinamento no catálogo. Crie primeiro em Segurança → Treinamentos.', 'info');
-        const esc = this._esc;
-        const corpo = document.createElement('div');
-        corpo.innerHTML = `
-            <p class="ac-texto">Vincular treinamento a <strong>${ids.length}</strong> colaborador(es) selecionado(s).</p>
-            <div class="form-field"><label>Treinamento</label>
-                <select id="mass-tr-id"><option value="">-- Selecione --</option>
-                ${catalogo.map((t) => `<option value="${esc(t.id)}">${esc(t.nome)}</option>`).join('')}</select></div>
-            <div class="form-field"><label>Data de realização</label><input type="date" id="mass-tr-date" value="${new Date().toISOString().slice(0, 10)}"></div>
-            <div class="form-field"><label>Data de validade (opcional)</label><input type="date" id="mass-tr-expiry"></div>`;
-        SGE.modal.open('Vincular treinamento em massa', corpo, [
-            { label: 'Cancelar', action: () => SGE.modal.close() },
-            {
-                label: `Vincular em ${ids.length}`,
-                class: 'btn-confirm',
-                action: async () => {
-                    const trId = corpo.querySelector('#mass-tr-id').value;
-                    const data = corpo.querySelector('#mass-tr-date').value;
-                    const validade = corpo.querySelector('#mass-tr-expiry').value;
-                    if (!trId) return SGE.helpers.toast('Selecione um treinamento', 'error');
-                    if (!data) return SGE.helpers.toast('Informe a data de realização', 'error');
-                    try {
-                        for (const empId of ids) {
-                            await SGE.api.syncTreinamento({ action: 'add', treinamento_id: trId, data_realizacao: data, data_validade: validade || null, employee_id: empId });
-                        }
-                        SGE.helpers.toast(`Treinamento vinculado a ${ids.length} colaboradores!`, 'success');
-                        SGE.modal.close();
-                        if (aoTerminar) aoTerminar();
-                    } catch (e) {
-                        SGE.helpers.toast('Erro ao vincular: ' + e.message, 'error');
-                    }
-                },
-            },
-        ]);
     },
 };

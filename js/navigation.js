@@ -9,7 +9,7 @@ window.SGE = window.SGE || {};
 SGE.navigation = {
 
     // Valid view names for hash restoration
-    _validViews: ['viz', 'matriz', 'search', 'history', 'settings', 'ferias', 'treinamentos', 'advertencias'],
+    _validViews: ['viz', 'matriz', 'search', 'history', 'settings', 'ferias'],
 
     // Menu por assunto (igual ao SST): cada tela pertence a uma seção da barra de cima
     _secoes: {
@@ -18,8 +18,6 @@ SGE.navigation = {
         ferias: ['efetivo', 'Efetivo', 'Férias'],
         history: ['efetivo', 'Efetivo', 'Histórico'],
         search: ['efetivo', 'Efetivo', 'Pesquisa'],
-        treinamentos: ['seguranca', 'Segurança', 'Treinamentos'],
-        advertencias: ['seguranca', 'Segurança', 'Advertências'],
         settings: ['config', 'Configurações', 'Configurações'],
     },
 
@@ -131,12 +129,6 @@ SGE.navigation = {
                     break;
                 case 'ferias':
                     if (SGE.ferias) SGE.ferias.render();
-                    break;
-                case 'treinamentos':
-                    if (SGE.treinamentos) SGE.treinamentos.render();
-                    break;
-                case 'advertencias':
-                    if (SGE.advertencias) SGE.advertencias.render();
                     break;
             }
         } catch (err) {
@@ -442,8 +434,6 @@ SGE.navigation = {
             case 'history': SGE.history.render(); break;
             case 'settings': SGE.settings.render(); break;
             case 'ferias': if (SGE.ferias) SGE.ferias.render(); break;
-            case 'treinamentos': if (SGE.treinamentos) SGE.treinamentos.render(); break;
-            case 'advertencias': if (SGE.advertencias) SGE.advertencias.render(); break;
         }
     }
 };

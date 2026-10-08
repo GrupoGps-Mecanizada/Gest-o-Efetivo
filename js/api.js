@@ -73,9 +73,6 @@ SGE.api = {
             { schema: 'gps_mec', table: 'efetivo_gps_mec_equipamentos', event: '*' },
             { schema: 'gps_mec', table: 'efetivo_gps_mec_movimentacoes', event: 'INSERT' },
             { schema: 'gps_mec', table: 'efetivo_gps_mec_ferias', event: '*' },
-            { schema: 'gps_mec', table: 'efetivo_gps_mec_advertencias', event: '*' },
-            { schema: 'gps_mec', table: 'efetivo_gps_mec_catalogo_treinamentos', event: '*' },
-            { schema: 'gps_mec', table: 'efetivo_gps_mec_colaborador_treinamentos', event: '*' },
             { schema: 'gps_compartilhado', table: 'gps_configuracoes_sistema', event: '*' }
         ];
 
@@ -226,8 +223,6 @@ SGE.api = {
         if (v === 'search' && SGE.search) SGE.search.render();
         if (v === 'history' && SGE.history) SGE.history.render();
         if (v === 'ferias' && SGE.ferias) SGE.ferias.render();
-        if (v === 'treinamentos' && SGE.treinamentos) SGE.treinamentos.render();
-        if (v === 'advertencias' && SGE.advertencias) SGE.advertencias.render();
     },
 
     /**
@@ -242,10 +237,7 @@ SGE.api = {
                 setores: SGE.state.setores,
                 movimentacoes: SGE.state.movimentacoes,
                 equipamentos: SGE.state.equipamentos,
-                treinamentosCatalogo: SGE.state.treinamentosCatalogo,
-                colaboradorTreinamentos: SGE.state.colaboradorTreinamentos,
-                ferias: SGE.state.ferias,
-                advertencias: SGE.state.advertencias
+                ferias: SGE.state.ferias
             };
             localStorage.setItem('SGE_CACHE', JSON.stringify(cachePayload));
         } catch (e) {
@@ -264,9 +256,7 @@ SGE.api = {
         if (immediate) {
             await Promise.all([
                 this.loadData(true),
-                this.loadFerias(),
-                this.loadTreinamentos(),
-                this.loadAdvertencias()
+                this.loadFerias()
             ]);
         }
     },
@@ -848,146 +838,6 @@ SGE.api = {
         }
     },
 
-    /* ──────── TREINAMENTOS API ──────── */
-
-    async loadTreinamentos() {
-        if (!window.supabase) return;
-        try {
-            const [
-                { data: catalogo, error: e1 },
-                { data: vinculos, error: e2 }
-            ] = await Promise.all([
-                supabase.schema('gps_mec').from('efetivo_gps_mec_catalogo_treinamentos').select('*').order('nome'),
-                supabase.schema('gps_mec').from('efetivo_gps_mec_colaborador_treinamentos').select('*, employees:efetivo_gps_mec_colaboradores(name, matricula_gps), treinamentos_catalogo:efetivo_gps_mec_catalogo_treinamentos(nome)').order('created_at', { ascending: false })
-            ]);
-            if (e1) return this._handleError(e1, 'Carregar Catálogo Treinamentos');
-            if (e2) return this._handleError(e2, 'Carregar Vínculos Treinamentos');
-            SGE.state.treinamentosCatalogo = catalogo || [];
-            SGE.state.colaboradorTreinamentos = (vinculos || []).map(v => ({
-                ...v,
-                employee_name: v.employees ? v.employees.name : 'Desconhecido',
-                employee_matricula: v.employees ? (v.employees.matricula_gps || 'S/ MAT') : 'S/ MAT',
-                treinamento_nome: v.treinamentos_catalogo ? v.treinamentos_catalogo.nome : 'Desconhecido'
-            }));
-        } catch (e) {
-            console.error('SGE loadTreinamentos failed:', e);
-        }
-    },
-
-    async syncTreinamentoCatalogo(action, data) {
-        if (!window.supabase) return null;
-        this.updateSyncBar(true);
-        try {
-            let result;
-            if (action === 'create') {
-                const { data: ins, error } = await supabase.schema('gps_mec').from('efetivo_gps_mec_catalogo_treinamentos').insert({
-                    nome: data.nome,
-                    descricao: data.descricao || null,
-                    validade_meses: data.validade_meses ? parseInt(data.validade_meses) : null
-                }).select();
-                if (error) throw error;
-                result = ins?.[0];
-            } else if (action === 'update') {
-                const patch = {};
-                if (data.nome !== undefined) patch.nome = data.nome;
-                if (data.descricao !== undefined) patch.descricao = data.descricao;
-                if (data.validade_meses !== undefined) patch.validade_meses = data.validade_meses ? parseInt(data.validade_meses) : null;
-                patch.updated_at = new Date();
-                const { error } = await supabase.schema('gps_mec').from('efetivo_gps_mec_catalogo_treinamentos').update(patch).eq('id', data.id);
-                if (error) throw error;
-                result = true;
-            } else if (action === 'delete') {
-                // Delete related associations first
-                await supabase.schema('gps_mec').from('efetivo_gps_mec_colaborador_treinamentos').delete().eq('treinamento_id', data.id);
-                const { error } = await supabase.schema('gps_mec').from('efetivo_gps_mec_catalogo_treinamentos').delete().eq('id', data.id);
-                if (error) throw error;
-                // Synchronously update local state for instant feedback
-                if (SGE.state.treinamentosCatalogo) {
-                    SGE.state.treinamentosCatalogo = SGE.state.treinamentosCatalogo.filter(t => t.id !== data.id);
-                }
-                if (SGE.state.colaboradorTreinamentos) {
-                    SGE.state.colaboradorTreinamentos = SGE.state.colaboradorTreinamentos.filter(v => v.treinamento_id !== data.id);
-                }
-                result = true;
-            }
-            this.updateSyncBar(false);
-            return result;
-        } catch (e) {
-            this.updateSyncBar(false);
-            return this._handleError(e, `Treinamento Catálogo (${action})`);
-        }
-    },
-
-    async syncColaboradorTreinamento(action, data) {
-        if (!window.supabase) return null;
-        this.updateSyncBar(true);
-        try {
-            let result;
-            if (action === 'create') {
-                const { data: ins, error } = await supabase.schema('gps_mec').from('efetivo_gps_mec_colaborador_treinamentos').insert({
-                    employee_id: data.employee_id,
-                    treinamento_id: data.treinamento_id,
-                    data_conclusao: data.data_conclusao || null,
-                    validade: data.validade || null,
-                    anexo_url: data.anexo_url || null
-                }).select();
-                if (error) throw error;
-                result = ins?.[0];
-            } else if (action === 'update' || action === 'renovar') {
-                const patch = {
-                    updated_at: new Date()
-                };
-                if (data.data_conclusao !== undefined) patch.data_conclusao = data.data_conclusao;
-                if (data.validade !== undefined) patch.validade = data.validade;
-                if (data.revogado !== undefined) patch.revogado = data.revogado;
-                if (data.data_revogacao !== undefined) patch.data_revogacao = data.data_revogacao;
-                if (data.motivo_revogacao !== undefined) patch.motivo_revogacao = data.motivo_revogacao;
-
-                const { error } = await supabase.schema('gps_mec').from('efetivo_gps_mec_colaborador_treinamentos').update(patch).eq('id', data.id);
-                if (error) throw error;
-                result = true;
-            } else if (action === 'delete') {
-                const { error } = await supabase.schema('gps_mec').from('efetivo_gps_mec_colaborador_treinamentos').delete().eq('id', data.id);
-                if (error) throw error;
-                // Synchronously update local state for instant feedback
-                if (SGE.state.colaboradorTreinamentos) {
-                    SGE.state.colaboradorTreinamentos = SGE.state.colaboradorTreinamentos.filter(v => v.id !== data.id);
-                }
-                result = true;
-            }
-            this.updateSyncBar(false);
-            return result;
-        } catch (e) {
-            this.updateSyncBar(false);
-            return this._handleError(e, `Vínculo Treinamento (${action})`);
-        }
-    },
-
-    async syncColaboradorTreinamentoLote(data) {
-        if (!window.supabase) return null;
-        this.updateSyncBar(true);
-        try {
-            const inserts = data.employee_ids.map(id => ({
-                employee_id: id,
-                treinamento_id: data.treinamento_id,
-                data_conclusao: data.data_conclusao || null,
-                validade: data.validade || null,
-                anexo_url: data.anexo_url || null
-            }));
-
-            const { data: ins, error } = await supabase.schema('gps_mec').from('efetivo_gps_mec_colaborador_treinamentos').insert(inserts).select();
-            if (error) throw error;
-
-            this.updateSyncBar(false);
-            return ins;
-        } catch (e) {
-            this.updateSyncBar(false);
-            return this._handleError(e, `Vínculo Treinamento em Lote`);
-        }
-    },
-
-    /* ──────── FÉRIAS API ──────── */
-
     async loadFerias() {
         if (!window.supabase) return;
         try {
@@ -1048,53 +898,6 @@ SGE.api = {
         } catch (e) {
             this.updateSyncBar(false);
             return this._handleError(e, `Férias (${action})`);
-        }
-    },
-
-    /* ──────── ADVERTÊNCIAS API ──────── */
-
-    async loadAdvertencias() {
-        if (!window.supabase) return;
-        try {
-            const { data, error } = await supabase.schema('gps_mec').from('efetivo_gps_mec_advertencias').select('*, employees:efetivo_gps_mec_colaboradores(name, matricula_gps)').order('data_aplicacao', { ascending: false });
-            if (error) return this._handleError(error, 'Carregar Advertências');
-            SGE.state.advertencias = (data || []).map(a => ({
-                ...a,
-                employee_name: a.employees ? a.employees.name : 'Desconhecido',
-                employee_matricula: a.employees ? (a.employees.matricula_gps || 'S/ MAT') : 'S/ MAT'
-            }));
-        } catch (e) {
-            console.error('SGE loadAdvertencias failed:', e);
-        }
-    },
-
-    async syncAdvertencia(action, data) {
-        if (!window.supabase) return null;
-        this.updateSyncBar(true);
-        try {
-            let result;
-            if (action === 'create') {
-                const { data: ins, error } = await supabase.schema('gps_mec').from('efetivo_gps_mec_advertencias').insert({
-                    employee_id: data.employee_id,
-                    tipo: data.tipo,
-                    data_aplicacao: data.data_aplicacao || new Date().toISOString().split('T')[0],
-                    motivo: data.motivo,
-                    dias_suspensao: data.tipo === 'SUSPENSAO' ? (parseInt(data.dias_suspensao) || 0) : 0,
-                    anexo_url: data.anexo_url || null,
-                    aplicador: data.aplicador || (SGE.auth.currentUser ? (SGE.auth.currentUser.nome || SGE.auth.currentUser.usuario) : 'Sistema')
-                }).select();
-                if (error) throw error;
-                result = ins?.[0];
-            } else if (action === 'delete') {
-                const { error } = await supabase.schema('gps_mec').from('efetivo_gps_mec_advertencias').delete().eq('id', data.id);
-                if (error) throw error;
-                result = true;
-            }
-            this.updateSyncBar(false);
-            return result;
-        } catch (e) {
-            this.updateSyncBar(false);
-            return this._handleError(e, `Advertência (${action})`);
         }
     }
 };

@@ -30,8 +30,6 @@ SGE.dashboard = {
     // Profissional SVG Icons (Lucide style)
     icons: {
         executivo: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>`,
-        capacitacao: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`,
-        disciplinar: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
         operacional: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>`,
         efetivoTotal: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
         ativos: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
@@ -57,8 +55,6 @@ SGE.dashboard = {
                 <!-- TABS -->
                 <div class="tabs">
                     <button class="dash-tab-btn ${this.activeTab === 'executivo' ? 'active' : ''}" data-tab="executivo">${this.icons.executivo} Executivo</button>
-                    <button class="dash-tab-btn ${this.activeTab === 'capacitacao' ? 'active' : ''}" data-tab="capacitacao">${this.icons.capacitacao} Capacitação</button>
-                    <button class="dash-tab-btn ${this.activeTab === 'disciplinar' ? 'active' : ''}" data-tab="disciplinar">${this.icons.disciplinar} Disciplinar</button>
                     <button class="dash-tab-btn ${this.activeTab === 'operacional' ? 'active' : ''}" data-tab="operacional">${this.icons.operacional} Operacional</button>
                 </div>
 
@@ -77,8 +73,6 @@ SGE.dashboard = {
         // Current Tab
         const content = document.getElementById('dashboard-content');
         if (this.activeTab === 'executivo') this.renderExecutivo(colabs, content);
-        if (this.activeTab === 'capacitacao') this.renderCapacitacao(colabs, content);
-        if (this.activeTab === 'disciplinar') this.renderDisciplinar(colabs, content);
         if (this.activeTab === 'operacional') this.renderOperacional(colabs, content);
     },
 
@@ -245,238 +239,6 @@ SGE.dashboard = {
     },
 
     /* ═══════════════════ TAB CAPACITAÇÃO ═══════════════════ */
-    renderCapacitacao(data, container) {
-        const binds = (SGE.state.colaboradorTreinamentos || []);
-        const activeIds = new Set(data.map(c => c.id));
-        const activeBinds = binds.filter(b => activeIds.has(b.employee_id));
-
-        let expiredCount = 0;
-        let valid = 0;
-        let vencer30 = 0;
-        let vencer60 = 0;
-        const now = new Date();
-        const d30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-        const d60 = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
-
-        activeBinds.forEach(b => {
-            if (!b.validade) return;
-            const v = new Date(b.validade);
-            if (v < now) expiredCount++;
-            else if (v < d30) vencer30++;
-            else if (v < d60) vencer60++;
-            else valid++;
-        });
-
-        const trainedIds = new Set(activeBinds.map(b => b.employee_id));
-        const semTreino = data.length - trainedIds.size;
-        const coverRate = data.length > 0 ? (trainedIds.size / data.length * 100) : 0;
-
-        container.innerHTML = `
-            <div class="dash-tab-content active">
-                <div class="kpi-grid">
-                    <div class="kpi-card"><div class="kpi-icon" style="color:${this.theme.indigo}">${this.icons.cobertura}</div><div class="kpi-body"><h4>Cobertura</h4><div class="kpi-val" style="color:${this.theme.indigo}">${coverRate.toFixed(1)}%</div><div class="kpi-sub">${trainedIds.size} colaboradores</div></div></div>
-                    <div class="kpi-card"><div class="kpi-icon" style="color:${this.theme.teal}">${this.icons.ativos}</div><div class="kpi-body"><h4>Certificados OK</h4><div class="kpi-val" style="color:${this.theme.teal}">${valid}</div><div class="kpi-sub">Válidos</div></div></div>
-                    <div class="kpi-card"><div class="kpi-icon" style="color:${this.theme.rose}">${this.icons.vencidos}</div><div class="kpi-body"><h4>Vencidos</h4><div class="kpi-val" style="color:${this.theme.rose}">${expiredCount}</div><div class="kpi-sub">Reciclagem urgente</div></div></div>
-                    <div class="kpi-card"><div class="kpi-icon" style="color:${this.theme.amber}">${this.icons.vencer30}</div><div class="kpi-body"><h4>Vencendo 30d</h4><div class="kpi-val" style="color:${this.theme.amber}">${vencer30}</div><div class="kpi-sub">Alerta de prazo</div></div></div>
-                    <div class="kpi-card"><div class="kpi-icon" style="color:${this.theme.blue}">${this.icons.ferias}</div><div class="kpi-body"><h4>Vencendo 60d</h4><div class="kpi-val">${vencer60}</div><div class="kpi-sub">Planejamento</div></div></div>
-                    <div class="kpi-card"><div class="kpi-icon" style="color:${this.theme.text3}">${this.icons.semMatricula}</div><div class="kpi-body"><h4>Sem Treino</h4><div class="kpi-val" style="color:${this.theme.text3}">${semTreino}</div><div class="kpi-sub">Nenhum registro</div></div></div>
-                </div>
-
-                <div class="charts-grid">
-                    <div class="chart-card span-4">
-                        <div class="chart-header"><span class="chart-title">Status dos Certificados</span></div>
-                        <div class="chart-container"><canvas id="c-cert"></canvas></div>
-                    </div>
-                    <div class="chart-card span-8">
-                        <div class="chart-header"><span class="chart-title">Cursos mais Realizados</span><span class="chart-hint">Top 6</span></div>
-                        <div class="chart-container"><canvas id="c-courses"></canvas></div>
-                    </div>
-                </div>
-
-                <div class="chart-card span-12">
-                    <div class="chart-header"><span class="chart-title" style="color:var(--red)">🚨 Alertas: Vencidos ou a Vencer em 30 dias (${expiredCount + vencer30})</span></div>
-                    <div class="data-table-wrap">
-                        <table class="data-table">
-                            <thead><tr><th>Colaborador</th><th>Supervisor</th><th>Treinamento</th><th>Validade</th><th>Status</th></tr></thead>
-                            <tbody id="alert-tbody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        this.destroyCharts();
-        if (!this.initChartDefaults()) return;
-
-        // Doughnut Status
-        this.charts.certStatus = new Chart(document.getElementById('c-cert'), {
-            type: 'doughnut',
-            data: {
-                labels: ['Válidos', 'Vencidos', 'Até 30d', 'Até 60d'],
-                datasets: [{ data: [valid, expiredCount, vencer30, vencer60], backgroundColor: [this.theme.teal, this.theme.rose, this.theme.amber, this.theme.blue] }]
-            },
-            options: { cutout: '65%', plugins: { legend: { position: 'bottom' } } }
-        });
-
-        // Top Courses
-        const courseCount = {};
-        const catMap = {};
-        (SGE.state.treinamentosCatalogo || []).forEach(t => catMap[t.id] = t.nome);
-        activeBinds.forEach(b => {
-            const n = catMap[b.treinamento_id] || 'Desconhecido';
-            courseCount[n] = (courseCount[n] || 0) + 1;
-        });
-        const cSorted = Object.entries(courseCount).sort((a, b) => b[1] - a[1]).slice(0, 6);
-
-        this.charts.courses = new Chart(document.getElementById('c-courses'), {
-            type: 'bar',
-            data: {
-                labels: cSorted.map(i => i[0]),
-                datasets: [{ data: cSorted.map(i => i[1]), backgroundColor: this.theme.blue + 'cc', borderRadius: 4 }]
-            },
-            options: { plugins: { legend: { display: false } } }
-        });
-
-        // Table Alerts
-        const alertBody = document.getElementById('alert-tbody');
-        const alertList = activeBinds.filter(b => {
-            if (!b.validade) return false;
-            const v = new Date(b.validade);
-            return v < d30;
-        }).sort((a, b) => new Date(a.validade) - new Date(b.validade)).slice(0, 10);
-
-        const colMap = {};
-        data.forEach(c => colMap[c.id] = c);
-
-        alertBody.innerHTML = alertList.map(b => {
-            const col = colMap[b.employee_id] || { nome: 'Desconhecido', supervisor: '—' };
-            const vDate = new Date(b.validade);
-            const isExpired = vDate < now;
-            return `
-                <tr>
-                    <td>${col.nome}</td>
-                    <td>${col.supervisor}</td>
-                    <td>${catMap[b.treinamento_id] || '—'}</td>
-                    <td>${vDate.toLocaleDateString()}</td>
-                    <td><span class="dash-badge ${isExpired ? 'red' : 'amber'}">${isExpired ? 'Vencido' : 'Próximo'}</span></td>
-                </tr>
-            `;
-        }).join('') || '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-3)">Nenhum alerta crítico no momento</td></tr>';
-    },
-
-    /* ═══════════════════ TAB DISCIPLINAR ═══════════════════ */
-    renderDisciplinar(data, container) {
-        const activeIds = new Set(data.map(c => c.id));
-        const advs = (SGE.state.advertencias || []).filter(a => activeIds.has(a.employee_id));
-        const ferias = (SGE.state.ferias || []).filter(f => activeIds.has(f.employee_id));
-        const movs = (SGE.state.movimentacoes || []).filter(m => activeIds.has(m.colaborador_id));
-
-        const suspensionDays = advs.reduce((acc, curr) => acc + (parseInt(curr.dias_suspensao) || 0), 0);
-        const reincidentes = new Set();
-        const advCounts = {};
-        advs.forEach(a => {
-            advCounts[a.employee_id] = (advCounts[a.employee_id] || 0) + 1;
-            if (advCounts[a.employee_id] >= 2) reincidentes.add(a.employee_id);
-        });
-
-        const fAtivas = ferias.filter(f => f.status === 'EM_ANDAMENTO').length;
-        const fAgendadas = ferias.filter(f => f.status === 'AGENDADA').length;
-
-        container.innerHTML = `
-            <div class="dash-tab-content active">
-                <div class="kpi-grid">
-                    <div class="kpi-card"><div class="kpi-icon" style="color:${this.theme.rose}">${this.icons.disciplinar}</div><div class="kpi-body"><h4>Total Advertências</h4><div class="kpi-val" style="color:${this.theme.rose}">${advs.length}</div><div class="kpi-sub">Histórico acumulado</div></div></div>
-                    <div class="kpi-card"><div class="kpi-icon" style="color:${this.theme.rose}">${this.icons.vencidos}</div><div class="kpi-body"><h4>Dias Suspensão</h4><div class="kpi-val" style="color:${this.theme.rose}">${suspensionDays}</div><div class="kpi-sub">Afastados p/ disciplina</div></div></div>
-                    <div class="kpi-card"><div class="kpi-icon" style="color:${this.theme.amber}">${this.icons.alert}</div><div class="kpi-body"><h4>Reincidentes</h4><div class="kpi-val" style="color:${this.theme.amber}">${reincidentes.size}</div><div class="kpi-sub">Colabs com 2+ ocorrências</div></div></div>
-                    <div class="kpi-card"><div class="kpi-icon" style="color:${this.theme.blue}">${this.icons.efetivoTotal}</div><div class="kpi-body"><h4>Movimentações</h4><div class="kpi-val">${movs.length}</div><div class="kpi-sub">Histórico de transferências</div></div></div>
-                    <div class="kpi-card"><div class="kpi-icon" style="color:${this.theme.teal}">${this.icons.ferias}</div><div class="kpi-body"><h4>Férias Hoje</h4><div class="kpi-val" style="color:${this.theme.teal}">${fAtivas}</div><div class="kpi-sub">Em gozo no momento</div></div></div>
-                    <div class="kpi-card"><div class="kpi-icon" style="color:${this.theme.amber}">${this.icons.vencer30}</div><div class="kpi-body"><h4>Agendadas</h4><div class="kpi-val">${fAgendadas}</div><div class="kpi-sub">Próximos períodos</div></div></div>
-                </div>
-
-                <div class="charts-grid">
-                    <div class="chart-card span-4">
-                        <div class="chart-header"><span class="chart-title">Gravidade Disciplinar</span></div>
-                        <div class="chart-container"><canvas id="c-grav"></canvas></div>
-                    </div>
-                    <div class="chart-card span-4">
-                        <div class="chart-header"><span class="chart-title">Status de Férias</span></div>
-                        <div class="chart-container"><canvas id="c-ferias"></canvas></div>
-                    </div>
-                    <div class="chart-card span-4">
-                        <div class="chart-header"><span class="chart-title">Ranking de Aplicadores</span></div>
-                        <div class="chart-container"><canvas id="c-aplic"></canvas></div>
-                    </div>
-                </div>
-                
-                <div class="charts-grid">
-                    <div class="chart-card span-12">
-                        <div class="chart-header"><span class="chart-title">Evolução de Movimentações — Últimos meses</span></div>
-                        <div class="chart-container" style="max-height:220px"><canvas id="c-movs"></canvas></div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        this.destroyCharts();
-        if (!this.initChartDefaults()) return;
-
-        // Gravidade
-        const gravMap = { VERBAL: 0, ESCRITA: 0, SUSPENSAO: 0 };
-        advs.forEach(a => gravMap[a.tipo] = (gravMap[a.tipo] || 0) + 1);
-
-        this.charts.grav = new Chart(document.getElementById('c-grav'), {
-            type: 'bar',
-            data: {
-                labels: ['Verbal', 'Escrita', 'Suspensão'],
-                datasets: [{ data: [gravMap.VERBAL, gravMap.ESCRITA, gravMap.SUSPENSAO], backgroundColor: [this.theme.amber, this.theme.orange, this.theme.rose], borderRadius: 4 }]
-            },
-            options: { plugins: { legend: { display: false } } }
-        });
-
-        // Férias Status
-        this.charts.ferias = new Chart(document.getElementById('c-ferias'), {
-            type: 'polarArea',
-            data: {
-                labels: ['Ativas', 'Agendadas', 'Concluídas'],
-                datasets: [{ data: [fAtivas, fAgendadas, ferias.filter(f => f.status === 'CONCLUIDA').length], backgroundColor: [this.theme.teal + 'aa', this.theme.amber + 'aa', this.theme.text3 + 'aa'] }]
-            },
-            options: { plugins: { legend: { position: 'bottom' } } }
-        });
-
-        // Aplicadores
-        const aplicMap = {};
-        advs.forEach(a => { if (a.aplicador) aplicMap[a.aplicador] = (aplicMap[a.aplicador] || 0) + 1; });
-        const appSorted = Object.entries(aplicMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
-
-        this.charts.aplic = new Chart(document.getElementById('c-aplic'), {
-            type: 'bar',
-            data: {
-                labels: appSorted.map(i => i[0]),
-                datasets: [{ data: appSorted.map(i => i[1]), backgroundColor: this.theme.purple + 'cc', borderRadius: 4 }]
-            },
-            options: { indexAxis: 'y', plugins: { legend: { display: false } } }
-        });
-
-        // Movimentacoes Evolution
-        const monthMap = {};
-        movs.forEach(m => {
-            const d = new Date(m.created_at);
-            const key = d.toLocaleString('pt-BR', { month: 'short', year: '2-digit' }).toUpperCase();
-            monthMap[key] = (monthMap[key] || 0) + 1;
-        });
-        const months = Object.keys(monthMap).slice(-6); // Last 6
-
-        this.charts.movs = new Chart(document.getElementById('c-movs'), {
-            type: 'line',
-            data: {
-                labels: months,
-                datasets: [{ label: 'Transferências', data: months.map(m => monthMap[m]), borderColor: this.theme.blue, backgroundColor: this.theme.blue + '33', fill: true, tension: 0.3 }]
-            },
-            options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-        });
-    },
-
-    /* ═══════════════════ TAB OPERACIONAL ═══════════════════ */
     renderOperacional(data, container) {
         const ops = data.filter(c => c.categoria === 'OPERACIONAL');
         const eqSet = new Set();

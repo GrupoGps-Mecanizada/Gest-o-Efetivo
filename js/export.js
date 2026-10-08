@@ -18,9 +18,7 @@ SGE.export = {
                     type: 'select',
                     options: [
                         { value: 'colaboradores', label: 'Efetivo (Completo)' },
-                        { value: 'advertencias', label: 'Advertências & Suspensões' },
                         { value: 'ferias', label: 'Programação de Férias' },
-                        { value: 'treinamentos', label: 'Treinamentos Realizados' },
                         { value: 'historico', label: 'Histórico de Movimentações' }
                     ]
                 },
@@ -59,23 +57,6 @@ SGE.export = {
                 Status: c.status,
                 Equipamento: c.equipamento || ''
             }));
-        } else if (base === 'advertencias') {
-            title = 'SGE_Advertencias';
-            const colMap = {};
-            (SGE.state.colaboradores || []).forEach(c => colMap[c.id] = c);
-
-            data = (SGE.state.advertencias || []).map(a => {
-                const c = colMap[a.employee_id] || {};
-                return {
-                    ID: c.matricula_gps || '',
-                    Colaborador: c.nome || 'Desconhecido',
-                    Tipo: a.tipo,
-                    Motivo: a.motivo,
-                    Aplicador: a.aplicador || '',
-                    Dias_Suspensao: a.dias_suspensao || 0,
-                    Data_Aplicacao: a.data_aplicacao ? SGE.helpers.formatDate(a.data_aplicacao).split(',')[0] : ''
-                };
-            });
         } else if (base === 'ferias') {
             title = 'SGE_Ferias';
             const colMap = {};
@@ -92,16 +73,6 @@ SGE.export = {
                     Dias: Math.ceil((new Date(f.data_retorno) - new Date(f.data_inicio)) / (1000 * 60 * 60 * 24)) || 0
                 };
             });
-        } else if (base === 'treinamentos') {
-            title = 'SGE_Treinamentos';
-            data = (SGE.state.colaboradorTreinamentos || []).map(t => ({
-                ID: t.employee_matricula || '',
-                Colaborador: t.employee_name || '',
-                Treinamento: t.treinamento_nome || '',
-                Data_Conclusao: t.data_conclusao ? SGE.helpers.formatDate(t.data_conclusao).split(',')[0] : '',
-                Validade: t.validade ? SGE.helpers.formatDate(t.validade).split(',')[0] : '',
-                Status: t.revogado ? 'Revogado' : (!t.validade ? 'Sem Validade' : (new Date(t.validade + 'T00:00:00') < new Date() ? 'Vencido' : 'Válido'))
-            }));
         } else if (base === 'historico') {
             title = 'SGE_Historico_Movimentacoes';
             data = (SGE.state.movimentacoes || []).map(m => ({

@@ -34,6 +34,7 @@ SGE.planilha = (() => {
     const AZUL_EQUIPE = '#253356'; // accent1 escurecido 50% (título e cabeçalho das equipes)
     const AZUL_GERAL = '#242852'; // dk2 (cabeçalho da aba GERAL)
     const LINHA_TABELA = '#4A66AC'; // accent1 (bordas do estilo de tabela "Claro 9")
+    const COR_ABA = '#0070C0'; // cor das abas na planilha original
     const borda = (rgb, s = FINA) => ({ t: { s, cl: { rgb } }, b: { s, cl: { rgb } }, l: { s, cl: { rgb } }, r: { s, cl: { rgb } } });
     const ESTILO = {
         titulo: { ff: 'Arial', fs: 11, bl: 1, bg: { rgb: AZUL_EQUIPE }, cl: { rgb: '#F2F2F2' }, ht: CENTRO, vt: CENTRO, bd: borda('#000000', MEDIA) },
@@ -124,6 +125,7 @@ SGE.planilha = (() => {
         const marca = marcaDagua().replace(/&/g, '&&');
         for (const r of retratos) {
             const ws = wb.addWorksheet(r.nome.replace(/[\\/?*[\]:]/g, ' ').slice(0, 31));
+            ws.properties.tabColor = { argb: `FF${COR_ABA.slice(1)}` };
             ws.headerFooter.oddHeader = `&L&8${marca}`;
             ws.headerFooter.oddFooter = '&R&8Página &P de &N';
             ws.pageSetup = { orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, printTitlesRow: `1:${r.cabecalho + 1}` };
@@ -252,6 +254,54 @@ tr { page-break-inside: avoid; }
     const ICONE_IMPRIMIR = '<svg viewBox="0 0 24 24" class="pl-ico" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2M7 14h10v7H7z"/></svg>';
     const ICONE_RESETAR = '<svg viewBox="0 0 24 24" class="pl-ico" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg>';
 
+    /**
+     * Nitidez: com o Windows ampliado (125%, 150%) a área de desenho pode cair numa fração de pixel da tela
+     * (ex.: 178,75) e o navegador borra para encaixar. Aqui cada desenho é deslocado (menos de 1 pixel) para
+     * começar num pixel exato da tela. Roda de novo quando a tela muda de tamanho ou de zoom.
+     */
+    function manterNitido(area) {
+        let pedido = 0;
+        const alinhar = () => {
+            pedido = 0;
+            const dpr = window.devicePixelRatio || 1;
+            area.querySelectorAll('canvas').forEach((cv) => {
+                cv.style.translate = '';
+                const r = cv.getBoundingClientRect();
+                if (!r.width) return;
+                const dx = (Math.round(r.left * dpr) - r.left * dpr) / dpr;
+                const dy = (Math.round(r.top * dpr) - r.top * dpr) / dpr;
+                if (Math.abs(dx) > 0.001 || Math.abs(dy) > 0.001) cv.style.translate = `${dx.toFixed(3)}px ${dy.toFixed(3)}px`;
+            });
+        };
+        const agendar = () => {
+            if (!pedido) pedido = requestAnimationFrame(() => requestAnimationFrame(alinhar));
+        };
+        const tamanho = new ResizeObserver(agendar);
+        tamanho.observe(area);
+        // o Univer troca/redimensiona os desenhos sozinho: alinha de novo quando isso acontece
+        const mudancas = new MutationObserver(agendar);
+        mudancas.observe(area, { childList: true, subtree: true, attributes: true, attributeFilter: ['width', 'height'] });
+        let zoom = null;
+        const vigiarZoom = () => {
+            if (zoom) zoom.removeEventListener('change', aoMudarZoom);
+            zoom = window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
+            zoom.addEventListener('change', aoMudarZoom);
+        };
+        const aoMudarZoom = () => {
+            vigiarZoom();
+            agendar();
+        };
+        vigiarZoom();
+        window.addEventListener('resize', agendar);
+        agendar();
+        return () => {
+            tamanho.disconnect();
+            mudancas.disconnect();
+            if (zoom) zoom.removeEventListener('change', aoMudarZoom);
+            window.removeEventListener('resize', agendar);
+        };
+    }
+
     /* ─── Montagem de cada aba ─── */
     const cabecalhoDe = (aba) => (aba.titulo ? 2 : 0); // linha do cabeçalho (título ocupa as linhas 0 e 1)
     const chaveDe = (aba, l) => String(aba.chave(l));
@@ -292,6 +342,7 @@ tr { page-break-inside: avoid; }
         let aplicar = null;
         let pendente = null;
         let observador = null;
+        let pararNitidez = null;
 
         caixa.classList.add('pl');
         caixa.innerHTML = '<div class="pl-area"></div><div class="pl-abrindo">Abrindo planilha…</div>';
@@ -459,6 +510,7 @@ tr { page-break-inside: avoid; }
                             rowData,
                             mergeData,
                             defaultRowHeight: 22,
+                            tabColor: COR_ABA,
                             freeze: { xSplit: 0, ySplit: cab + 1, startRow: cab + 1, startColumn: 0 },
                         },
                     };
@@ -685,6 +737,7 @@ tr { page-break-inside: avoid; }
                     observador.observe(barra);
                 };
                 acharBarra();
+                pararNitidez = manterNitido(area);
                 pronto = true;
                 abrindo.remove();
                 if (pendente) {
@@ -717,6 +770,7 @@ tr { page-break-inside: avoid; }
             destruir() {
                 ativo = false;
                 if (observador) observador.disconnect();
+                if (pararNitidez) pararNitidez();
                 const u = univerInst;
                 setTimeout(() => u && u.dispose(), 0);
                 caixa.innerHTML = '';

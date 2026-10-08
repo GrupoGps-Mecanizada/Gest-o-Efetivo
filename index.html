@@ -38,8 +38,6 @@
   <link rel="stylesheet" href="css/modal.css?v=2.0.0" />
   <link rel="stylesheet" href="css/toast.css?v=2.0.0" />
   <link rel="stylesheet" href="css/ferias.css?v=2.0.0" />
-  <link rel="stylesheet" href="css/treinamentos.css?v=2.0.0" />
-  <link rel="stylesheet" href="css/advertencias.css?v=2.0.0" />
   <link rel="stylesheet" href="css/hub.css?v=2.0.0" />
   <link rel="stylesheet" href="css/componentes.css?v=2.0.0" />
   <link rel="stylesheet" href="css/dark-mode.css?v=2.0.0" />
@@ -170,27 +168,6 @@
           </div>
         </div>
 
-        <div class="barra-suspenso">
-          <button type="button" class="barra-secao" data-secao="seguranca" aria-haspopup="menu" aria-expanded="false">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            Segurança
-            <svg class="barra-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-          </button>
-          <div class="barra-submenu" role="menu">
-            <p class="barra-submenu-texto">Segurança e documentação das pessoas</p>
-            <div class="barra-grupo">
-              <button type="button" role="menuitem" class="barra-subitem" data-view="treinamentos">
-                <span class="barra-subitem-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5zM6 12v5c3 3 9 3 12 0v-5"/></svg></span>
-                <span class="barra-subitem-texto"><b>Treinamentos</b><small>Catálogo, vínculos e validades</small></span>
-              </button>
-              <button type="button" role="menuitem" class="barra-subitem" data-view="advertencias">
-                <span class="barra-subitem-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/></svg></span>
-                <span class="barra-subitem-texto"><b>Advertências</b><small>Registros disciplinares</small></span>
-              </button>
-            </div>
-          </div>
-        </div>
-
         <button type="button" class="barra-secao" data-secao="config" data-view="settings" title="Regras do sistema, cadastros e dados">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
           Configurações
@@ -300,15 +277,6 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2"/></svg>
             Histórico
           </button>
-          <p class="nav-menu-secao">Segurança</p>
-          <button class="nav-menu-item" data-view="treinamentos">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5zM6 12v5c3 3 9 3 12 0v-5"/></svg>
-            Treinamentos
-          </button>
-          <button class="nav-menu-item" data-view="advertencias">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/></svg>
-            Advertências
-          </button>
           <p class="nav-menu-secao">Configurações</p>
           <button class="nav-menu-item" data-view="settings">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
@@ -392,12 +360,6 @@
 
       <!-- FERIAS VIEW -->
       <div id="ferias-view" class="view"></div>
-
-      <!-- TREINAMENTOS VIEW -->
-      <div id="treinamentos-view" class="view"></div>
-
-      <!-- ADVERTENCIAS VIEW -->
-      <div id="advertencias-view" class="view"></div>
 
       <!-- SETTINGS VIEW -->
       <div id="settings-view" class="view"></div>
@@ -500,8 +462,6 @@
   <script src="js/dashboard.js?v=2.0.0"></script>
   <script src="js/equip.js?v=2.0.0"></script>
   <script src="js/ferias.js?v=2.0.0"></script>
-  <script src="js/treinamentos.js?v=2.0.0"></script>
-  <script src="js/advertencias.js?v=2.0.0"></script>
   <script src="js/settings.js?v=2.0.0"></script>
   <script src="js/navigation.js?v=2.0.0"></script>
   <script src="js/particles.js?v=2.0.0"></script>
