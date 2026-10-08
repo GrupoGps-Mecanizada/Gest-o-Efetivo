@@ -7,8 +7,9 @@
  * NADA aqui altera os dados: digitar, colar, apagar ou substituir numa célula não vale (a célula volta).
  * Para mudar um dado: dois cliques no nome (a tela decide o que abre) ou a seleção + botões da tela.
  *
- * Cada aba: { id, nome, titulo?, cabecalho: 'geral'|'equipe', colunas, linhas, chave(l) }.
- * Coluna: { id, rotulo, largura, centro?, valor(l), pessoa?(l) } — pessoa = id do colaborador da célula.
+ * Cada aba: { id, nome, titulo?, estiloTitulo?, semFiltro?, cabecalho: 'geral'|'equipe', colunas, linhas, chave(l) }.
+ * Coluna: { id, rotulo, largura, centro?, valor(l), pessoa?(l), estilo?(l) } — pessoa = id do colaborador da
+ * célula; estilo = ajuste do visual só daquela linha (ex.: cabeçalho de uma segunda tabela no resumo).
  * Uma coluna escondida no fim guarda a chave de cada linha: assim a linha é reconhecida mesmo depois de
  * filtrar ou classificar.
  *
@@ -18,6 +19,7 @@ window.SGE = window.SGE || {};
 
 SGE.planilha = (() => {
     const TEXTO = 1;
+    const NUMERO = 2;
     const ESQUERDA = 1;
     const CENTRO = 2;
     const DUPLO_CLIQUE = 3;
@@ -154,7 +156,7 @@ SGE.planilha = (() => {
             });
             for (const m of r.mesclas) ws.mergeCells(m.r1 + 1, m.c1 + 1, m.r2 + 1, m.c2 + 1);
             ws.views = [{ state: 'frozen', xSplit: 0, ySplit: r.cabecalho + 1 }];
-            if (r.linhas.length > r.cabecalho + 1) ws.autoFilter = { from: { row: r.cabecalho + 1, column: 1 }, to: { row: r.linhas.length, column: r.larguras.length } };
+            if (r.filtro && r.linhas.length > r.cabecalho + 1) ws.autoFilter = { from: { row: r.cabecalho + 1, column: 1 }, to: { row: r.linhas.length, column: r.larguras.length } };
         }
         return wb.xlsx.writeBuffer();
     }
@@ -258,8 +260,12 @@ tr { page-break-inside: avoid; }
         return col.centro ? { ...base, ht: CENTRO } : base;
     };
     const celula = (aba, col, l) => {
-        const v = bruto(col.valor(l));
-        return v == null ? { v: null, s: estiloDado(aba, col) } : { v, t: TEXTO, s: estiloDado(aba, col) };
+        const extra = col.estilo ? col.estilo(l) : null;
+        const s = extra ? { ...estiloDado(aba, col), ...extra } : estiloDado(aba, col);
+        const valor = col.valor(l);
+        if (typeof valor === 'number') return { v: valor, t: NUMERO, s }; // contagens entram como número
+        const v = bruto(valor);
+        return v == null ? { v: null, s } : { v, t: TEXTO, s };
     };
     /** valor certo das células fixas (título e cabeçalho) */
     function fixa(aba, r, c) {
@@ -414,10 +420,11 @@ tr { page-break-inside: avoid; }
                     const cellData = {};
                     const mergeData = [];
                     if (aba.titulo) {
-                        cellData[0] = { 0: { v: aba.titulo, t: TEXTO, s: ESTILO.titulo } };
+                        const st = aba.estiloTitulo ? { ...ESTILO.titulo, ...aba.estiloTitulo } : ESTILO.titulo;
+                        cellData[0] = { 0: { v: aba.titulo, t: TEXTO, s: st } };
                         cellData[1] = {};
-                        for (let c = 1; c < colId; c++) cellData[0][c] = { s: ESTILO.titulo };
-                        for (let c = 0; c < colId; c++) cellData[1][c] = { s: ESTILO.titulo };
+                        for (let c = 1; c < colId; c++) cellData[0][c] = { s: st };
+                        for (let c = 0; c < colId; c++) cellData[1][c] = { s: st };
                         mergeData.push({ startRow: 0, endRow: 1, startColumn: 0, endColumn: colId - 1 });
                     }
                     const estiloCab = aba.cabecalho === 'equipe' ? ESTILO.cabEquipe : ESTILO.cabGeral;
@@ -435,8 +442,9 @@ tr { page-break-inside: avoid; }
                     columnData[colId] = { w: 60, hd: 1 };
                     const rowData = { [cab]: { h: 26 } };
                     if (aba.titulo) {
-                        rowData[0] = { h: 20 };
-                        rowData[1] = { h: 20 };
+                        const h = aba.estiloTitulo && aba.estiloTitulo.fs > 14 ? 30 : 20; // título grande (resumo)
+                        rowData[0] = { h };
+                        rowData[1] = { h };
                     }
                     const totalLinhas = cab + 1 + aba.linhas.length + FOLGA;
                     return {
@@ -490,7 +498,7 @@ tr { page-break-inside: avoid; }
                     for (const [id, info] of vivo) {
                         try {
                             const ws = folhaPorId(id);
-                            if (ws && info.aba.linhas.length) ws.getRange(info.cab, 0, info.aba.linhas.length + 1, info.aba.colunas.length).createFilter();
+                            if (ws && info.aba.linhas.length && !info.aba.semFiltro) ws.getRange(info.cab, 0, info.aba.linhas.length + 1, info.aba.colunas.length).createFilter();
                         } catch (e) { /* aba sem filtro */ }
                     }
                     if (manterLugar && abaAtiva && vivo.has(abaAtiva)) {
@@ -649,6 +657,7 @@ tr { page-break-inside: avoid; }
                             return {
                                 nome: fs.name || info.aba.nome,
                                 cabecalho: info.cab,
+                                filtro: !info.aba.semFiltro,
                                 larguras: visCols.map((c) => (col[c] && col[c].w) || 88),
                                 mesclas,
                                 linhas: linhas.map((r) => ({

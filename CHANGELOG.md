@@ -1,5 +1,14 @@
 # CHANGELOG — Gestão de Efetivo
 
+## v2.2.0 — 2026-10-08
+### Novo
+- Aba **RELAÇÃO DE EFETIVOS MECANIZADA** (primeira aba, como na planilha): título "EFETIVO MECANIZADA", contagem por função (motorista, operador, coordenador, técnico de segurança, mecânico, planejador, almoxarife, feristas, estagiário, sobra, supervisores) com o total, e a tabela SUPERVISORES · MOTORISTA · OPERADOR.
+- Aba própria **TURNO 16HRS 7H AS 15H** para quem trabalha no regime 16HS (sai da aba do supervisor).
+
+### Mudou
+- Funções de apoio (coordenador, técnico de segurança, mecânico, planejador, almoxarife, estagiário, supervisor) não entram mais em SOBRA: aparecem na GERAL com a função e são contadas no resumo.
+- No resumo, ATESTADO e OUTRAS FUNÇÕES só aparecem quando há alguém (assim o total fecha com o quadro).
+
 ## v2.1.0 — 2026-10-08
 **Matriz no formato da planilha "EFETIVOS MECANIZADA".**
 

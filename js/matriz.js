@@ -2,9 +2,9 @@
 
 /**
  * SGE — Matriz do efetivo (modelo Excel)
- * Mesmo formato da planilha "EFETIVOS MECANIZADA": aba GERAL (Nome · Supervisor/Status · Equipamento),
- * uma aba por supervisor (PLACA · MOTORISTA · OPERADOR 1 · OPERADOR 2, uma linha por equipamento)
- * e as abas FÉRIAS, SOBRA e ATESTADO. A planilha é só para ver e pesquisar: dois cliques num nome
+ * Mesmo formato da planilha "EFETIVOS MECANIZADA": aba RELAÇÃO (resumo com contagens), aba GERAL
+ * (Nome · Supervisor/Status · Equipamento), uma aba por supervisor (PLACA · MOTORISTA · OPERADOR 1 ·
+ * OPERADOR 2, uma linha por equipamento), TURNO 16HRS e as abas FÉRIAS, SOBRA e ATESTADO. A planilha é só para ver e pesquisar: dois cliques num nome
  * abrem o colaborador. Botão "Ferramentas" no canto: buscar, filtrar, exportar, imprimir e agir na seleção.
  */
 window.SGE = window.SGE || {};
@@ -42,13 +42,31 @@ SGE.matriz = (() => {
         if (c.equipamento && c.equipamento !== 'SEM EQUIPAMENTO' && c.equipamento !== 'NÃO INFORMADA') return maiusculo(c.equipamento).replace(/-/g, ' ');
         return null;
     }
+    /** funções de apoio (não são equipe de caminhão): linha própria no resumo, na ordem da planilha */
+    const FUNCOES_APOIO = [
+        ['COORDENADOR', /COORDENADOR/],
+        ['TECNICO DE SEGURANÇA', /SEGURAN/],
+        ['MECANICO (SERVITEC)', /MEC[AÂ]NIC/],
+        ['PLANEJADOR', /PLANEJ|PROGRAMADOR/],
+        ['ALMOXARIFE', /ALMOXARIF/],
+        ['ESTAGIÁRIO', /ESTAGI/],
+        ['SUPERVISORES', /SUPERVISOR/],
+    ];
+    const funcaoApoio = (c) => {
+        const f = maiusculo(c.funcao);
+        const achou = FUNCOES_APOIO.find(([, re]) => re.test(f));
+        return achou ? achou[0] : c.categoria === 'GESTAO' ? 'OUTRAS FUNÇÕES' : null;
+    };
+    const ehTurno16 = (c) => (SGE.equip ? SGE.equip.getTurno(c.regime) === '16H' : false);
     function grupoDe(c) {
         const s = maiusculo(c.status);
         if (s === 'DESLIGADO' || s === 'INATIVO') return null; // fora do quadro
         if (s.startsWith('FÉRIAS') || s.startsWith('FERIAS')) return 'ferias';
         if (s === 'AFASTADO') return 'atestado';
-        if (c.categoria === 'GESTAO') return 'gestao';
-        return temSupervisor(c) && placaDe(c) ? 'equipe' : 'sobra';
+        if (funcaoApoio(c)) return 'gestao';
+        if (!placaDe(c)) return 'sobra';
+        if (ehTurno16(c)) return 'turno16';
+        return temSupervisor(c) ? 'equipe' : 'sobra';
     }
     /** mês das férias: a que está em andamento ou a próxima agendada */
     function mesDasFerias(c) {
@@ -63,7 +81,7 @@ SGE.matriz = (() => {
     const colPessoa = (id, rotulo, largura, campo) => ({ id, rotulo, largura, valor: (l) => (l[campo] ? l[campo].nome : null), pessoa: (l) => (l[campo] ? l[campo].id : null) });
 
     /** aba de um supervisor: uma linha por equipamento, com motorista e até dois operadores */
-    function abaEquipe(sup, pessoas) {
+    function abaEquipe(sup, pessoas, opcoes = {}) {
         const porPlaca = new Map();
         for (const c of pessoas) {
             const p = placaDe(c);
@@ -82,9 +100,10 @@ SGE.matriz = (() => {
         const tipos = SGE.CONFIG.equipTipos || {};
         const nomes = [...new Set(pessoas.map((c) => SGE.equip && SGE.equip.parseEquip(c.equipamento)).filter((x) => x && tipos[x.sigla]).map((x) => maiusculo(tipos[x.sigla].nome)))];
         return {
-            id: `sup-${sup.id}`,
-            nome: maiusculo(sup.nome),
-            titulo: `EQUIPE ${nomes.length ? nomes.join(' E ') : maiusculo(sup.nome)}`,
+            id: opcoes.id || `sup-${sup.id}`,
+            nome: opcoes.nome || maiusculo(sup.nome),
+            rotuloGeral: opcoes.rotuloGeral || maiusculo(sup.nome),
+            titulo: opcoes.semEquipe ? nomes.join(' E ') || maiusculo(sup.nome) : `EQUIPE ${nomes.length ? nomes.join(' E ') : maiusculo(sup.nome)}`,
             cabecalho: 'equipe',
             chave: (l) => l.chave,
             linhas,
@@ -122,12 +141,12 @@ SGE.matriz = (() => {
     function abaGeral(equipes, listas, gestao) {
         const linhas = [];
         for (const aba of equipes) {
-            for (const campo of ['mot', 'op1', 'op2']) for (const l of aba.linhas) if (l[campo]) linhas.push({ c: l[campo], sup: aba.nome, eq: l.placa });
+            for (const campo of ['mot', 'op1', 'op2']) for (const l of aba.linhas) if (l[campo]) linhas.push({ c: l[campo], sup: aba.rotuloGeral, eq: l.placa });
         }
         for (const aba of listas) {
             for (const campo of ['mot', 'op']) for (const l of aba.linhas) if (l[campo]) linhas.push({ c: l[campo], sup: aba.nome, eq: NAO_APLICAVEL });
         }
-        for (const c of gestao) linhas.push({ c, sup: 'GESTÃO', eq: NAO_APLICAVEL });
+        for (const c of gestao) linhas.push({ c, sup: funcaoApoio(c) || 'GESTÃO', eq: NAO_APLICAVEL });
         return {
             id: 'geral',
             nome: 'GERAL',
@@ -138,6 +157,70 @@ SGE.matriz = (() => {
                 { id: 'nome', rotulo: 'Nome Colaborador', largura: 254, valor: (l) => l.c.nome, pessoa: (l) => l.c.id },
                 { id: 'sup', rotulo: 'Supervisor / Status', largura: 160, valor: (l) => l.sup },
                 { id: 'eq', rotulo: 'Equipamento', largura: 144, valor: (l) => l.eq },
+            ],
+        };
+    }
+
+    /** aba RELAÇÃO: contagens por função e por supervisor (como a primeira aba da planilha) */
+    function abaRelacao(grupos, equipes, turno) {
+        const conta = (lista, motorista) => lista.filter((c) => ehMotorista(c) === motorista).length;
+        const operacao = [...grupos.equipe, ...grupos.turno16];
+        const apoio = new Map();
+        for (const c of grupos.gestao) apoio.set(funcaoApoio(c), (apoio.get(funcaoApoio(c)) || 0) + 1);
+        const qtd = (nome) => apoio.get(nome) || 0;
+        const funcoes = [
+            ['MOTORISTA', conta(operacao, true)],
+            ['OPERADOR DE EQUIPAMENTOS', conta(operacao, false)],
+            ['COORDENADOR', qtd('COORDENADOR')],
+            ['TECNICO DE SEGURANÇA', qtd('TECNICO DE SEGURANÇA')],
+            ['MECANICO (SERVITEC)', qtd('MECANICO (SERVITEC)')],
+            ['PLANEJADOR', qtd('PLANEJADOR')],
+            ['ALMOXARIFE', qtd('ALMOXARIFE')],
+            ['FERISTAS MOTORISTA', conta(grupos.ferias, true)],
+            ['FERISTAS OPERADOR', conta(grupos.ferias, false)],
+            ['ESTAGIÁRIO', qtd('ESTAGIÁRIO')],
+            ['SOBRA MOTORISTA', conta(grupos.sobra, true)],
+            ['SOBRA OPERADOR', conta(grupos.sobra, false)],
+            // linhas que não existem na planilha só aparecem se houver alguém (assim o total fecha)
+            ...(grupos.atestado.length ? [['ATESTADO', grupos.atestado.length]] : []),
+            ...(qtd('OUTRAS FUNÇÕES') ? [['OUTRAS FUNÇÕES', qtd('OUTRAS FUNÇÕES')]] : []),
+            ['SUPERVISORES', qtd('SUPERVISORES')],
+        ];
+        const total = funcoes.reduce((s, [, n]) => s + n, 0);
+        const linhas = funcoes.map(([a, b]) => ({ chave: `f:${a}`, a, b }));
+        linhas.push({ chave: 'total', a: 'TOTAL DE EFETIVO', b: total });
+        linhas.push({ chave: 'vazio', tipo: 'vazio' });
+        linhas.push({ chave: 'cab2', tipo: 'cab2', a: 'SUPERVISORES', b: 'MOTORISTA', c: 'OPERADOR' });
+        for (const aba of [...equipes, ...(turno ? [turno] : [])]) {
+            let m = 0;
+            let o = 0;
+            for (const l of aba.linhas) {
+                if (l.mot) m++;
+                if (l.op1) o++;
+                if (l.op2) o++;
+            }
+            linhas.push({ chave: `s:${aba.id}`, a: aba.rotuloGeral, b: m, c: o });
+        }
+        const PRETA = { t: { s: 1, cl: { rgb: '#000000' } }, b: { s: 1, cl: { rgb: '#000000' } }, l: { s: 1, cl: { rgb: '#000000' } }, r: { s: 1, cl: { rgb: '#000000' } } };
+        const estilo = (l, col) => {
+            if (l.tipo === 'vazio') return { bd: null };
+            if (col === 'c' && l.c == null && l.tipo !== 'cab2') return { bd: null }; // a 1ª tabela só tem 2 colunas
+            const base = { ff: 'Arial', fs: 11, bl: 1, bd: PRETA, ht: col === 'a' && l.chave.startsWith('s:') ? 1 : 2 };
+            return l.tipo === 'cab2' ? { ...base, bg: { rgb: '#1F054F' }, cl: { rgb: '#FFFFFF' } } : base;
+        };
+        return {
+            id: 'relacao',
+            nome: 'RELAÇÃO DE EFETIVOS MECANIZADA',
+            titulo: 'EFETIVO MECANIZADA',
+            estiloTitulo: { ff: 'Arial', fs: 26, bl: 0, bg: { rgb: '#FFFFFF' }, cl: { rgb: '#253356' }, bd: null },
+            semFiltro: true,
+            cabecalho: 'equipe',
+            chave: (l) => l.chave,
+            linhas,
+            colunas: [
+                { id: 'a', rotulo: 'FUNÇÃO', largura: 260, valor: (l) => l.a, estilo: (l) => estilo(l, 'a') },
+                { id: 'b', rotulo: 'QUANTIDADE', largura: 120, centro: true, valor: (l) => l.b, estilo: (l) => estilo(l, 'b') },
+                { id: 'c', rotulo: '', largura: 120, centro: true, valor: (l) => l.c, estilo: (l) => estilo(l, 'c') },
             ],
         };
     }
@@ -153,7 +236,7 @@ SGE.matriz = (() => {
     }
 
     function montarAbas() {
-        const grupos = { equipe: [], ferias: [], sobra: [], atestado: [], gestao: [] };
+        const grupos = { equipe: [], turno16: [], ferias: [], sobra: [], atestado: [], gestao: [] };
         for (const c of pessoasVisiveis()) {
             const g = grupoDe(c);
             if (g) grupos[g].push(c);
@@ -167,8 +250,12 @@ SGE.matriz = (() => {
         const cadastrados = (SGE.state.supervisores || []).filter((s) => porSup.has(s.nome));
         const extras = [...porSup.keys()].filter((n) => !cadastrados.some((s) => s.nome === n)).map((n, i) => ({ id: `x${i}`, nome: n }));
         const equipes = [...cadastrados, ...extras].map((s) => abaEquipe(s, porSup.get(s.nome)));
+        const turno = grupos.turno16.length
+            ? abaEquipe({ id: 'turno16', nome: 'TURNO 16HRS' }, grupos.turno16, { id: 'turno16', nome: 'TURNO 16HRS 7H AS 15H', rotuloGeral: 'TURNO 16HRS', semEquipe: true })
+            : null;
         const listas = [abaLista('ferias', 'FÉRIAS', grupos.ferias, true), abaLista('sobra', 'SOBRA', grupos.sobra, false), abaLista('atestado', 'ATESTADO', grupos.atestado, false)];
-        return [abaGeral(equipes, listas, grupos.gestao.sort(porNome)), ...equipes, ...listas];
+        const comTurno = turno ? [...equipes, turno] : equipes;
+        return [abaRelacao(grupos, equipes, turno), abaGeral(comTurno, listas, grupos.gestao.sort(porNome)), ...comTurno, ...listas];
     }
 
     const colaborador = (id) => (SGE.state.colaboradores || []).find((c) => String(c.id) === String(id));
@@ -284,7 +371,7 @@ SGE.matriz = (() => {
             ${selecao}
             <div class="mz-ajuda">
                 <p><b>${pessoas} de ${total} pessoas</b> · só para ver e pesquisar (Ctrl+F); nada ali altera os dados.</p>
-                <p>Abas embaixo: GERAL, uma por supervisor, Férias, Sobra e Atestado. Dois cliques num nome abrem o colaborador; selecione nomes para agir em vários.</p>
+                <p>Abas embaixo: Relação (resumo), GERAL, uma por supervisor, Turno 16hrs, Férias, Sobra e Atestado. Dois cliques num nome abrem o colaborador; selecione nomes para agir em vários.</p>
                 <p>Cores e formatação feitas na planilha são temporárias.</p>
             </div>`;
         const campo = caixa.querySelector('.mz-busca-campo');

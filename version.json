@@ -1,5 +1,5 @@
 {
-  "version": "2.1.0",
+  "version": "2.2.0",
   "updated_at": "2026-10-08",
-  "notes": "Matriz no formato da planilha EFETIVOS MECANIZADA: aba GERAL, uma aba por supervisor, Férias, Sobra e Atestado"
+  "notes": "Matriz: aba RELAÇÃO DE EFETIVOS (resumo) e aba própria do TURNO 16HRS"
 }
