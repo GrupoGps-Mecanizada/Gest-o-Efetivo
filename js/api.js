@@ -221,13 +221,10 @@ SGE.api = {
         const v = SGE.state.activeView;
         SGE.helpers.updateStats();
 
-        if (v === 'kanban' && !(SGE.state.drag && SGE.state.drag.cardData)) SGE.kanban.render();
+        if (v === 'matriz' && SGE.matriz) SGE.matriz.render();
         if (v === 'viz' && SGE.dashboard) SGE.dashboard.render();
-        if (v === 'equip' && SGE.equip) SGE.equip.render();
         if (v === 'search' && SGE.search) SGE.search.render();
         if (v === 'history' && SGE.history) SGE.history.render();
-        if (v === 'tabela' && SGE.viz) SGE.viz.renderTable();
-        if (v === 'grupo' && SGE.viz) SGE.viz.renderGroups();
         if (v === 'ferias' && SGE.ferias) SGE.ferias.render();
         if (v === 'treinamentos' && SGE.treinamentos) SGE.treinamentos.render();
         if (v === 'advertencias' && SGE.advertencias) SGE.advertencias.render();

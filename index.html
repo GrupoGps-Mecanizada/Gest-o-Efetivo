@@ -10,7 +10,7 @@
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self' https:;
     script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.sheetjs.com https://grupogps-mecanizada.github.io;
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com https://grupogps-mecanizada.github.io;
     font-src 'self' https://fonts.gstatic.com;
     img-src 'self' data: blob:;
     connect-src 'self' https://*.supabase.co wss://*.supabase.co https://grupogps-mecanizada.github.io https://cdn.jsdelivr.net;
@@ -18,37 +18,38 @@
     base-uri 'self';
   " />
   <title>EFETIVO - GPS - MECANIZADA</title>
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="favicon-180x180.png">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
+  <!-- Visual padrão do SGE (núcleo comum) -->
+  <link rel="stylesheet" href="https://grupogps-mecanizada.github.io/sge-core/v1/sge-core.css" />
+
   <!-- CSS Modules -->
-  <link rel="stylesheet" href="css/variables.css?v=1.0.1" />
-  <link rel="stylesheet" href="css/base.css?v=1.0.1" />
-  <link rel="stylesheet" href="css/auth.css?v=1.0.1" />
-  <link rel="stylesheet" href="css/topbar.css?v=1.0.1" />
-  <link rel="stylesheet" href="css/filterbar.css?v=1.0.1" />
-  <link rel="stylesheet" href="css/kanban.css?v=1.0.1" />
-  <link rel="stylesheet" href="css/search.css?v=1.0.1" />
-  <link rel="stylesheet" href="css/history.css?v=1.0.1" />
-  <link rel="stylesheet" href="css/settings.css?v=1.0.1" />
-  <link rel="stylesheet" href="css/viz.css?v=1.0.1" />
-  <link rel="stylesheet" href="css/dashboard.css?v=1.0.1" />
-  <link rel="stylesheet" href="css/equip.css?v=1.0.1" />
-  <link rel="stylesheet" href="css/drawer.css?v=1.0.1" />
-  <link rel="stylesheet" href="css/modal.css?v=1.0.1" />
-  <link rel="stylesheet" href="css/toast.css?v=1.0.1" />
-  <link rel="stylesheet" href="css/ferias.css?v=1.0.1" />
-  <link rel="stylesheet" href="css/treinamentos.css?v=1.0.1" />
-  <link rel="stylesheet" href="css/advertencias.css?v=1.0.1" />
-  <link rel="stylesheet" href="css/hub.css?v=1.0.1" />
-  <link rel="stylesheet" href="css/dark-mode.css?v=1.0.0" />
-  <link rel="stylesheet" href="css/excel-table.css?v=1.0.0" />
-  <link rel="stylesheet" href="css/print.css?v=1.0.0" media="print" />
+  <link rel="stylesheet" href="css/variables.css?v=2.0.0" />
+  <link rel="stylesheet" href="css/base.css?v=2.0.0" />
+  <link rel="stylesheet" href="css/auth.css?v=2.0.0" />
+  <link rel="stylesheet" href="css/topbar.css?v=2.0.0" />
+  <link rel="stylesheet" href="css/filterbar.css?v=2.0.0" />
+  <link rel="stylesheet" href="css/search.css?v=2.0.0" />
+  <link rel="stylesheet" href="css/history.css?v=2.0.0" />
+  <link rel="stylesheet" href="css/settings.css?v=2.0.0" />
+  <link rel="stylesheet" href="css/dashboard.css?v=2.0.0" />
+  <link rel="stylesheet" href="css/drawer.css?v=2.0.0" />
+  <link rel="stylesheet" href="css/modal.css?v=2.0.0" />
+  <link rel="stylesheet" href="css/toast.css?v=2.0.0" />
+  <link rel="stylesheet" href="css/ferias.css?v=2.0.0" />
+  <link rel="stylesheet" href="css/treinamentos.css?v=2.0.0" />
+  <link rel="stylesheet" href="css/advertencias.css?v=2.0.0" />
+  <link rel="stylesheet" href="css/hub.css?v=2.0.0" />
+  <link rel="stylesheet" href="css/componentes.css?v=2.0.0" />
+  <link rel="stylesheet" href="css/dark-mode.css?v=2.0.0" />
+  <!-- Layout do SST com as cores e a fonte do sge-core (por último: vale sobre os anteriores) -->
+  <link rel="stylesheet" href="css/tema-sst.css?v=2.0.0" />
+  <link rel="stylesheet" href="css/matriz.css?v=2.0.0" />
+  <link rel="stylesheet" href="css/print.css?v=2.0.0" media="print" />
 </head>
 
-<body>
+<body class="sge">
   <!-- ==================== LOGIN SCREEN ==================== -->
   <div id="login-screen" class="hidden">
     <canvas id="bg-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.25;"></canvas>
@@ -115,310 +116,231 @@
       }
     </style>
 
-    <!-- ==================== TOPBAR ==================== -->
+    <!-- ==================== BARRA SUPERIOR (layout do SST) ==================== -->
     <div id="global-sync-bar"></div>
-    <div id="topbar">
+    <header id="topbar" class="barra">
 
-      <!-- LEFT: Menu Button -->
-      <div id="topbar-left">
-        <button id="nav-menu-btn" class="topbar-icon-btn" aria-label="Menu de Navegação" title="Menu">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
+      <!-- logo e nome do sistema (clique: Painel) -->
+      <button type="button" id="logo-home" class="barra-marca" title="Ir para o Painel">
+        <span class="barra-logo"><img src="favicon.svg" alt="SGE" /></span>
+        <span class="barra-nome">
+          <span class="barra-nome-sistema">SGE <span class="barra-ponto">·</span> Grupo GPS</span>
+          <span class="barra-nome-area">Gestão de Efetivo · Mecanizada</span>
+        </span>
+      </button>
+      <span class="barra-divisor" aria-hidden="true"></span>
+
+      <!-- menu por assunto: Início é link direto; os demais abrem um submenu com as telas explicadas -->
+      <nav class="barra-menu" aria-label="Menu principal">
+        <button type="button" class="barra-secao" data-secao="inicio" data-view="viz" title="Visão geral do efetivo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/></svg>
+          Início
         </button>
 
-        <!-- SGE Hub Tree Button -->
-        <button id="hub-menu-btn" class="topbar-icon-btn hub-btn-explicit" title="Ecossistema SGE" aria-label="Abrir Ecossistema SGE">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round">
-            <rect x="3" y="3" width="7" height="7"></rect>
-            <rect x="14" y="3" width="7" height="7"></rect>
-            <rect x="14" y="14" width="7" height="7"></rect>
-            <rect x="3" y="14" width="7" height="7"></rect>
-          </svg>
-          <span style="font-size: 13px; font-weight: 600; letter-spacing: 0.05em;">Ecossistema</span>
-        </button>
-      </div>
-
-      <!-- CENTER: Colorful Logo (No longer in topbar, hidden but still required if scripts check for it, or we can just move it here and modify topbar later) -->
-      <!-- We will remove it from the center topbar later, for now we will place it in the navigation per user request -->
-
-      <!-- Navigation Dropdown Overlay -->
-      <!-- SGE HUB Dropdown Overlay -->
-      <div id="hub-dropdown-overlay" class="hub-dropdown-overlay hidden">
-        <div class="hub-dropdown-panel" onclick="event.stopPropagation()">
-          <div class="hub-header">
-            <div class="hub-header-title">
-              <span class="brand">SGE Ecossistema</span>
-              <span class="sys">Grupo GPS</span>
+        <div class="barra-suspenso">
+          <button type="button" class="barra-secao" data-secao="efetivo" aria-haspopup="menu" aria-expanded="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Efetivo
+            <svg class="barra-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="barra-submenu" role="menu">
+            <p class="barra-submenu-texto">Consultar e organizar o quadro de pessoas</p>
+            <div class="barra-grupo">
+              <p class="barra-grupo-titulo">Quadro</p>
+              <button type="button" role="menuitem" class="barra-subitem" data-view="matriz">
+                <span class="barra-subitem-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3h16v18H4zM8 8l4 5m0-5-4 5M15 8h2M15 12h2M15 16h2"/></svg></span>
+                <span class="barra-subitem-texto"><b>Matriz</b><small>Planilha do efetivo, igual ao Excel</small></span>
+              </button>
+              <button type="button" role="menuitem" class="barra-subitem" data-view="search">
+                <span class="barra-subitem-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 21l-4.3-4.3M17 10.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z"/></svg></span>
+                <span class="barra-subitem-texto"><b>Pesquisa</b><small>Achar alguém por nome, ID ou supervisor</small></span>
+              </button>
             </div>
-            <button id="hub-close-btn" class="hub-close-btn" aria-label="Fechar Ecossistema SGE">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-          </div>
-          <div class="hub-body" id="hub-tree-body">
-            <!-- Dynamic Hub Tree will be built here via hub.js -->
-          </div>
-        </div>
-      </div>
-
-      <div id="nav-menu-overlay" class="nav-menu-overlay hidden" role="dialog" aria-label="Menu de Navegação" aria-modal="true">
-        <div class="nav-menu-panel" role="navigation" aria-label="Menu principal">
-          <div class="nav-menu-header"
-            style="justify-content: flex-start; padding: 20px 16px; position: relative; align-items: center; min-height: 90px;">
-            <div class="sidebar-logo" id="logo-home"
-              style="display: flex; justify-content: flex-start; align-items: center; cursor: pointer; width: 100%;"
-              title="Voltar ao Dashboard">
-              <svg width="100%" height="60" viewBox="30 45 550 130" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <style type="text/css">
-                    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
-
-                    text {
-                      font-family: 'Open Sans', 'Roboto', 'Arial', sans-serif;
-                    }
-                  </style>
-                </defs>
-                <g text-anchor="start">
-                  <text x="50" y="110" font-size="42" font-weight="700" fill="#002D5C">Grupo GPS</text>
-                  <line x1="300" y1="55" x2="300" y2="155" stroke="#757575" stroke-width="1.5" />
-                  <g transform="translate(315, 0)">
-                    <text x="0" y="102" font-size="30" font-weight="600" fill="#1E6B8C">MECANIZADA</text>
-                    <text x="0" y="137" font-size="20" font-weight="400" fill="#757575">CONTROLE DE EFETIVO</text>
-                    <text x="235" y="158" font-size="12" font-weight="400" fill="#757575" text-anchor="end">By
-                      SGE</text>
-                  </g>
-                </g>
-              </svg>
-            </div>
-          </div>
-          <div class="nav-menu-body" style="padding-top: 32px;">
-            <button class="nav-menu-item" data-view="viz">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                <rect x="1" y="1" width="14" height="14" rx="2" />
-                <path d="M1 6h14" />
-                <path d="M5 6v9" />
-              </svg>
-              Dashboard Executivo
-            </button>
-            <button class="nav-menu-item" data-view="tabela">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-              </svg>
-              Gestão de Efetivo
-            </button>
-            <button class="nav-menu-item" data-view="treinamentos">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-              </svg>
-              Segurança e Documentação
-            </button>
-            <button class="nav-menu-item" data-view="settings">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                <circle cx="8" cy="8" r="3" />
-                <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.5 1.5M11.5 11.5L13 13M3 13l1.5-1.5M11.5 4.5L13 3" />
-              </svg>
-              Configurações
-            </button>
-          </div>
-          <!-- Menu Footer: User Info + Stats -->
-          <div class="nav-menu-footer">
-            <div class="nav-menu-stats">
-              <div class="nav-menu-stat">Total: <strong id="stat-total-menu">—</strong></div>
-              <div class="nav-menu-stat">Ativos: <strong id="stat-ativos-menu">—</strong></div>
-              <div class="nav-menu-stat">Sem ID: <strong id="stat-semid-menu">—</strong></div>
-            </div>
-            <div id="nav-menu-user" class="nav-menu-user-info">
-              <!-- Populated by auth.js -->
+            <div class="barra-grupo">
+              <p class="barra-grupo-titulo">Acompanhamento</p>
+              <button type="button" role="menuitem" class="barra-subitem" data-view="ferias">
+                <span class="barra-subitem-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM12 4v1M17.66 6.34l-.7.7M20 12h-1M17.66 17.66l-.7-.7M12 20v-1M6.34 17.66l.7-.7M4 12h1M6.34 6.34l.7.7"/></svg></span>
+                <span class="barra-subitem-texto"><b>Férias</b><small>Quem está e quem vai sair de férias</small></span>
+              </button>
+              <button type="button" role="menuitem" class="barra-subitem" data-view="history">
+                <span class="barra-subitem-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2"/></svg></span>
+                <span class="barra-subitem-texto"><b>Histórico</b><small>Movimentações entre supervisores</small></span>
+              </button>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- RIGHT: Filter + Refresh -->
-      <div id="topbar-right">
-        <!-- Global Search in Topbar -->
-        <style>
-          .topbar-search-wrapper input:focus {
-            background: var(--bg-1) !important;
-            border-color: var(--accent) !important;
-            box-shadow: 0 0 0 3px var(--accent-glow);
-            width: 260px !important;
-          }
-        </style>
-        <div class="topbar-search-wrapper"
-          style="margin-right:16px; position:relative; display:flex; align-items:center;">
-          <input type="text" id="global-search" placeholder="Pesquisar..." autocomplete="off"
-            aria-label="Pesquisar colaboradores"
-            style="width: 200px; padding: 8px 14px 8px 38px; border: 1px solid transparent; border-radius: 20px; background: var(--bg-2); color: var(--text-1); font-size: 13px; font-weight: 500; outline: none; transition: all 0.3s ease; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);" />
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"
-            style="position:absolute; left:14px; width:14px; height:14px; color:var(--text-3); pointer-events:none;">
-            <circle cx="7" cy="7" r="5" />
-            <path d="M11 11l3 3" />
-          </svg>
+        <div class="barra-suspenso">
+          <button type="button" class="barra-secao" data-secao="seguranca" aria-haspopup="menu" aria-expanded="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Segurança
+            <svg class="barra-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="barra-submenu" role="menu">
+            <p class="barra-submenu-texto">Segurança e documentação das pessoas</p>
+            <div class="barra-grupo">
+              <button type="button" role="menuitem" class="barra-subitem" data-view="treinamentos">
+                <span class="barra-subitem-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5zM6 12v5c3 3 9 3 12 0v-5"/></svg></span>
+                <span class="barra-subitem-texto"><b>Treinamentos</b><small>Catálogo, vínculos e validades</small></span>
+              </button>
+              <button type="button" role="menuitem" class="barra-subitem" data-view="advertencias">
+                <span class="barra-subitem-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/></svg></span>
+                <span class="barra-subitem-texto"><b>Advertências</b><small>Registros disciplinares</small></span>
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div id="topbar-user" style="display:none;"></div>
-
-        <!-- Dark Mode Toggle -->
-        <button id="dark-mode-btn" class="topbar-icon-btn" title="Modo Noturno" aria-label="Alternar Modo Noturno">
-          <svg id="dark-mode-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-          </svg>
-          <svg id="dark-mode-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
-            <circle cx="12" cy="12" r="5"/>
-            <line x1="12" y1="1" x2="12" y2="3"/>
-            <line x1="12" y1="21" x2="12" y2="23"/>
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-            <line x1="1" y1="12" x2="3" y2="12"/>
-            <line x1="21" y1="12" x2="23" y2="12"/>
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-          </svg>
+        <button type="button" class="barra-secao" data-secao="config" data-view="settings" title="Regras do sistema, cadastros e dados">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+          Configurações
         </button>
+      </nav>
 
-        <!-- Export Button -->
-        <button id="topbar-export-btn" class="topbar-icon-btn" title="Exportar Dados" aria-label="Exportar Dados">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
+      <!-- celular: onde estou -->
+      <div class="barra-celular-titulo">
+        <span class="barra-nome-sistema">SGE · Efetivo</span>
+        <span id="barra-local" class="barra-local"></span>
+      </div>
+
+      <div class="barra-espaco"></div>
+
+      <!-- busca rápida (vai para a Pesquisa) -->
+      <label class="barra-busca" title="Pesquisar colaboradores">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 21l-4.3-4.3M17 10.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z"/></svg>
+        <input type="text" id="global-search" placeholder="Buscar colaborador…" autocomplete="off" aria-label="Pesquisar colaboradores" />
+      </label>
+
+      <!-- filtros (valem para a Matriz e o Painel) -->
+      <button id="filter-toggle-btn" class="barra-icone filter-btn" title="Filtros" aria-label="Abrir filtros">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>
+        <span id="filter-count-badge" class="filter-count-badge hidden">0</span>
+      </button>
+
+      <!-- exportar dados -->
+      <button id="topbar-export-btn" class="barra-icone barra-so-computador" title="Exportar dados" aria-label="Exportar dados">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4-4m4 4 4-4M4 19h16"/></svg>
+      </button>
+
+      <!-- outros sistemas do SGE -->
+      <button id="hub-menu-btn" class="barra-icone barra-so-computador" title="Ecossistema SGE (outros sistemas)" aria-label="Abrir Ecossistema SGE">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>
+      </button>
+
+      <!-- tema claro/escuro -->
+      <button id="dark-mode-btn" class="barra-icone" title="Tema claro ou escuro" aria-label="Alternar tema">
+        <svg id="dark-mode-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg>
+        <svg id="dark-mode-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" style="display:none"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor"/></svg>
+      </button>
+
+      <!-- usuário -->
+      <div class="barra-suspenso barra-suspenso--direita barra-so-computador" id="barra-usuario">
+        <button type="button" class="barra-avatar" aria-haspopup="menu" aria-expanded="false" aria-label="Usuário">
+          <span id="barra-avatar-letras">?</span>
         </button>
+        <div class="barra-submenu barra-submenu--usuario" role="menu">
+          <div class="barra-usuario-topo">
+            <span class="barra-avatar barra-avatar--grande" id="barra-avatar-letras-2">?</span>
+            <span class="barra-usuario-nome"><b id="barra-usuario-nome">—</b><small id="barra-usuario-perfil">—</small></span>
+          </div>
+          <button type="button" role="menuitem" class="barra-subitem barra-subitem--simples" id="barra-sair">
+            <span class="barra-subitem-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg></span>
+            <span class="barra-subitem-texto"><b>Sair</b></span>
+          </button>
+        </div>
+      </div>
 
-        <!-- Filter Dropdown Button -->
-        <button id="filter-toggle-btn" class="topbar-icon-btn filter-btn" title="Filtros" aria-label="Abrir Filtros">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round">
-            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-          </svg>
-          <span id="filter-count-badge" class="filter-count-badge hidden">0</span>
-        </button>
+      <!-- celular: abre o menu lateral -->
+      <button id="nav-menu-btn" class="barra-icone barra-so-celular" aria-label="Abrir menu" title="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div id="topbar-user" hidden></div>
+    </header>
 
+    <!-- Ecossistema SGE (outros sistemas) -->
+    <div id="hub-dropdown-overlay" class="hub-dropdown-overlay hidden">
+      <div class="hub-dropdown-panel" onclick="event.stopPropagation()">
+        <div class="hub-header">
+          <div class="hub-header-title">
+            <span class="brand">SGE Ecossistema</span>
+            <span class="sys">Grupo GPS</span>
+          </div>
+          <button id="hub-close-btn" class="hub-close-btn" aria-label="Fechar Ecossistema SGE">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+        <div class="hub-body" id="hub-tree-body"></div>
       </div>
     </div>
 
-    <!-- ==================== FILTER DROPDOWN PANEL ==================== -->
+    <!-- Menu lateral do celular (como no SST: escuro, à direita, agrupado por assunto) -->
+    <div id="nav-menu-overlay" class="nav-menu-overlay hidden" role="dialog" aria-label="Menu" aria-modal="true">
+      <div class="nav-menu-panel" role="navigation" aria-label="Menu principal">
+        <div id="nav-menu-user" class="nav-menu-user-info"></div>
+        <div class="nav-menu-body">
+          <p class="nav-menu-secao">Início</p>
+          <button class="nav-menu-item" data-view="viz">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/></svg>
+            Painel
+          </button>
+          <p class="nav-menu-secao">Efetivo</p>
+          <button class="nav-menu-item" data-view="matriz">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3h16v18H4zM8 8l4 5m0-5-4 5M15 8h2M15 12h2M15 16h2"/></svg>
+            Matriz
+          </button>
+          <button class="nav-menu-item" data-view="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 21l-4.3-4.3M17 10.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z"/></svg>
+            Pesquisa
+          </button>
+          <button class="nav-menu-item" data-view="ferias">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM12 4v1M17.66 6.34l-.7.7M20 12h-1M17.66 17.66l-.7-.7M12 20v-1M6.34 17.66l.7-.7M4 12h1M6.34 6.34l.7.7"/></svg>
+            Férias
+          </button>
+          <button class="nav-menu-item" data-view="history">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2"/></svg>
+            Histórico
+          </button>
+          <p class="nav-menu-secao">Segurança</p>
+          <button class="nav-menu-item" data-view="treinamentos">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5zM6 12v5c3 3 9 3 12 0v-5"/></svg>
+            Treinamentos
+          </button>
+          <button class="nav-menu-item" data-view="advertencias">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/></svg>
+            Advertências
+          </button>
+          <p class="nav-menu-secao">Configurações</p>
+          <button class="nav-menu-item" data-view="settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+            Configurações
+          </button>
+        </div>
+        <div class="nav-menu-footer">
+          <div class="nav-menu-stats">
+            <div class="nav-menu-stat">Total: <strong id="stat-total-menu">—</strong></div>
+            <div class="nav-menu-stat">Ativos: <strong id="stat-ativos-menu">—</strong></div>
+            <div class="nav-menu-stat">Sem ID: <strong id="stat-semid-menu">—</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== FILTROS ==================== -->
     <div id="filter-dropdown-panel" class="filter-dropdown-panel hidden">
       <div class="filter-dropdown-header">
         <span>Filtros</span>
-        <button id="filter-clear-all" class="filter-clear-btn">Limpar Tudo</button>
+        <button id="filter-clear-all" class="filter-clear-btn">Limpar tudo</button>
       </div>
       <div class="filter-dropdown-body" id="filter-dropdown-body">
-        <!-- Built dynamically by SGE.navigation.buildFilterDropdown() -->
+        <!-- Montado por SGE.navigation.buildFilterDropdown() -->
       </div>
     </div>
 
     <!-- ==================== MAIN CONTENT ==================== -->
     <div id="main">
 
-      <!-- GESTÃO DE EFETIVO TABS -->
-      <div id="gestao-tabs" class="tabs" style="display: none; padding: 0 24px; padding-top: 24px; margin-bottom: 0;">
-        <button class="dash-tab-btn" data-view="kanban">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-            <rect x="1" y="1" width="4" height="14" rx="1" />
-            <rect x="6" y="1" width="4" height="10" rx="1" />
-            <rect x="11" y="1" width="4" height="12" rx="1" />
-          </svg>
-          Kanban
-        </button>
-        <button class="dash-tab-btn" data-view="tabela">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-            <rect x="1" y="2" width="14" height="12" rx="2" />
-            <path d="M1 6h14M5 2v12M11 2v12" />
-          </svg>
-          Tabela
-        </button>
-        <button class="dash-tab-btn" data-view="grupo">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="4" cy="4" r="2" />
-            <circle cx="12" cy="4" r="2" />
-            <circle cx="8" cy="11" r="2" />
-            <path d="M4 6v2a2 2 0 002 2h4a2 2 0 002-2V6" />
-          </svg>
-          Grupo
-        </button>
-        <button class="dash-tab-btn" data-view="equip">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-            <rect x="1" y="1" width="6" height="6" rx="1" />
-            <rect x="9" y="1" width="6" height="6" rx="1" />
-            <rect x="1" y="9" width="6" height="6" rx="1" />
-            <rect x="9" y="9" width="6" height="6" rx="1" />
-          </svg>
-          Alocações
-        </button>
-        <button class="dash-tab-btn" data-view="ferias">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-            <path
-              d="M12 4v1M17.66 6.34l-.7.7M20 12h-1M17.66 17.66l-.7-.7M12 20v-1M6.34 17.66l.7-.7M4 12h1M6.34 6.34l.7.7" />
-          </svg>
-          Gestão de Férias
-        </button>
-        <button class="dash-tab-btn" data-view="history">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="8" cy="8" r="6" />
-            <path d="M8 4v4l3 2" />
-          </svg>
-          Histórico
-        </button>
-        <button class="dash-tab-btn" data-view="search">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="7" cy="7" r="5" />
-            <path d="M11 11l3 3" />
-          </svg>
-          Pesquisa
-        </button>
-      </div>
-
-      <!-- SEGURANÇA E DOCUMENTAÇÃO TABS -->
-      <div id="seguranca-tabs" class="tabs"
-        style="display: none; padding: 0 24px; padding-top: 24px; margin-bottom: 0;">
-        <button class="dash-tab-btn" data-view="treinamentos">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-            <path d="M6 12v5c3 3 9 3 12 0v-5" />
-          </svg>
-          Treinamentos
-        </button>
-        <button class="dash-tab-btn" data-view="advertencias">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-            <line x1="12" y1="9" x2="12" y2="13" />
-            <line x1="12" y1="17" x2="12.01" y2="17" />
-          </svg>
-          Advertências
-        </button>
-      </div>
-
-      <!-- KANBAN VIEW -->
-      <div id="kanban-wrap">
-        <button class="kanban-arrow left hidden" id="kanban-arrow-left">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <div id="kanban-view" class="view active"></div>
-        <button class="kanban-arrow right hidden" id="kanban-arrow-right">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      </div>
+      <!-- MATRIZ (planilha estilo Excel, igual ao SST) -->
+      <div id="matriz-view" class="view"></div>
 
       <!-- SEARCH VIEW -->
       <div id="search-view" class="view">
@@ -467,19 +389,6 @@
 
       <!-- VISUALIZATION VIEW (DASHBOARD) -->
       <div id="viz-view" class="view"></div>
-
-      <!-- TABELA VIEW -->
-      <div id="tabela-view" class="view">
-        <div id="tabela-content"></div>
-      </div>
-
-      <!-- GRUPO VIEW -->
-      <div id="grupo-view" class="view">
-        <div id="grupo-content"></div>
-      </div>
-
-      <!-- EQUIPMENT VIEW -->
-      <div id="equip-view" class="view"></div>
 
       <!-- FERIAS VIEW -->
       <div id="ferias-view" class="view"></div>
@@ -557,8 +466,8 @@
   <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 
   <!-- JS Modules (order matters — dependencies first) -->
-  <script src="js/config.js?v=1.0.1"></script>
-  <script src="js/supabase-config.js?v=1.0.1"></script>
+  <script src="js/config.js?v=2.0.0"></script>
+  <script src="js/supabase-config.js?v=2.0.0"></script>
 
   <!-- DEV MODE: bypass SSO automático em ambiente local (file:// / localhost)
        SSO não consegue redirecionar de volta para file://, portanto o bypass
@@ -578,35 +487,35 @@
   <!-- Ticket Widget: suporte SGE flutuante — abre chamados para o SGE Central -->
   <script src="https://grupogps-mecanizada.github.io/SGE-CENTRAL/js/sge-ticket-widget.js?v=1"></script>
 
-  <script src="js/state.js?v=1.0.1"></script>
-  <script src="js/api.js?v=1.0.1"></script>
-  <script src="js/export.js?v=1.0.1"></script>
-  <script src="js/auth.js?v=1.0.1"></script>
-  <script src="js/sge-session-ping.js?v=1.0.1"></script>
-  <script src="js/helpers.js?v=1.0.1"></script>
-  <script src="js/kanban.js?v=1.0.1"></script>
-  <script src="js/drawer.js?v=1.0.1"></script>
-  <script src="js/modal.js?v=1.0.1"></script>
-  <script src="js/search.js?v=1.0.1"></script>
-  <script src="js/history.js?v=1.0.1"></script>
-  <script src="js/dashboard.js?v=1.0.1"></script>
-  <script src="js/viz.js?v=1.0.1"></script>
-  <script src="js/equip.js?v=1.0.1"></script>
-  <script src="js/ferias.js?v=1.0.1"></script>
-  <script src="js/treinamentos.js?v=1.0.1"></script>
-  <script src="js/advertencias.js?v=1.0.1"></script>
-  <script src="js/settings.js?v=1.0.1"></script>
-  <script src="js/navigation.js?v=1.0.1"></script>
-  <script src="js/particles.js?v=1.0.1"></script>
-  <script src="js/hub.js?v=1.0.1"></script>
-  <script src="js/dark-mode.js?v=1.0.0"></script>
-  <script src="js/excel-table.js?v=1.0.0"></script>
-  <script src="js/app.js?v=1.0.1"></script>
-  <script src="js/dev-mode.js?v=1.0.0"></script>
+  <script src="js/state.js?v=2.0.0"></script>
+  <script src="js/api.js?v=2.0.0"></script>
+  <script src="js/export.js?v=2.0.0"></script>
+  <script src="js/auth.js?v=2.0.0"></script>
+  <script src="js/sge-session-ping.js?v=2.0.0"></script>
+  <script src="js/helpers.js?v=2.0.0"></script>
+  <script src="js/drawer.js?v=2.0.0"></script>
+  <script src="js/modal.js?v=2.0.0"></script>
+  <script src="js/search.js?v=2.0.0"></script>
+  <script src="js/history.js?v=2.0.0"></script>
+  <script src="js/dashboard.js?v=2.0.0"></script>
+  <script src="js/equip.js?v=2.0.0"></script>
+  <script src="js/ferias.js?v=2.0.0"></script>
+  <script src="js/treinamentos.js?v=2.0.0"></script>
+  <script src="js/advertencias.js?v=2.0.0"></script>
+  <script src="js/settings.js?v=2.0.0"></script>
+  <script src="js/navigation.js?v=2.0.0"></script>
+  <script src="js/particles.js?v=2.0.0"></script>
+  <script src="js/hub.js?v=2.0.0"></script>
+  <script src="js/dark-mode.js?v=2.0.0"></script>
+  <script src="js/planilha-excel.js?v=2.0.0"></script>
+  <script src="js/acoes-colaborador.js?v=2.0.0"></script>
+  <script src="js/matriz.js?v=2.0.0"></script>
+  <script src="js/app.js?v=2.0.0"></script>
+  <script src="js/dev-mode.js?v=2.0.0"></script>
   <!-- Push Notifications: notifica movimentações quando a aba está em segundo plano -->
-  <script src="js/notifications.js?v=1.0.0"></script>
+  <script src="js/notifications.js?v=2.0.0"></script>
   <!-- Auto-Update: detecta novas versões e atualiza todos os navegadores automaticamente -->
-  <script src="js/updater.js?v=1.0.0"></script>
+  <script src="js/updater.js?v=2.0.0"></script>
 </body>
 
 </html>

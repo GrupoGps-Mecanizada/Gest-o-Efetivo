@@ -18,7 +18,7 @@ SGE.state = {
     advertencias: [],
     usuarios: [],
     filtros: { regime: [], funcao: [], status: [], alocacao: [], equipTurno: [], supervisor: [], categoria: [] },
-    activeView: 'kanban',
+    activeView: 'matriz',
     drawerColaborador: null,
     pendingMove: null,
     modalContext: null, // 'move' | 'edit' | 'moveSelector'

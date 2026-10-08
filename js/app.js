@@ -178,11 +178,13 @@ SGE.app = {
 
         // Setup event listeners before switching view so everything is ready
         SGE.app.setupNavigation();
+        SGE.app.preencherUsuario();
         SGE.app.setupDrawer();
         SGE.app.setupModal();
         SGE.app.setupSearch();
         SGE.app.setupHistory();
-        SGE.app.setupKanbanArrows();
+
+        if (SGE.planilha) SGE.planilha.precarregar();
 
         // Restore the view the user was on before the page reload (from URL hash)
         const initialView = SGE.navigation.getInitialView();
@@ -284,8 +286,8 @@ SGE.app = {
             });
         }
 
-        // View toggle logic for sidebar and dashboard internal tabs
-        const viewButtons = document.querySelectorAll('.nav-menu-item[data-view], .dash-tab-btn[data-view]');
+        // Telas: menu do celular, botões e submenus da barra de cima
+        const viewButtons = document.querySelectorAll('.nav-menu-item[data-view], .barra-secao[data-view], .barra-subitem[data-view]');
         viewButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 SGE.navigation.switchView(btn.dataset.view);
@@ -293,6 +295,25 @@ SGE.app = {
                     closeMenu();
                 }
             });
+        });
+
+        // Submenus da barra de cima (Efetivo, Segurança, usuário): abrem no clique, fecham fora ou com Esc
+        document.querySelectorAll('.barra-suspenso').forEach(caixa => {
+            const botao = caixa.querySelector('[aria-haspopup]');
+            if (!botao) return;
+            botao.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const abrir = !caixa.classList.contains('aberto');
+                SGE.app.fecharSuspensos();
+                caixa.classList.toggle('aberto', abrir);
+                botao.setAttribute('aria-expanded', String(abrir));
+            });
+        });
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.barra-suspenso')) SGE.app.fecharSuspensos();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') SGE.app.fecharSuspensos();
         });
 
         // ── Global Export Button ──
@@ -338,6 +359,32 @@ SGE.app = {
         // Push a dummy state so the first back doesn't leave the page
         history.pushState({ sge: true, view: SGE.state.activeView }, '');
         SGE.app._historyPushCount++;
+    },
+
+    /** Menu do usuário na barra de cima (iniciais, nome, perfil e Sair) */
+    preencherUsuario() {
+        const u = SGE.auth.currentUser;
+        if (!u) return;
+        const nome = u.nome || u.usuario || 'Usuário';
+        const iniciais = nome.split(/s+/).filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase() || '?';
+        const perfis = { SUPER: 'Super administrador', ADM: 'Administrador', GESTAO: 'Gestão', VISAO: 'Visualização' };
+        const texto = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+        texto('barra-avatar-letras', iniciais);
+        texto('barra-avatar-letras-2', iniciais);
+        texto('barra-usuario-nome', nome);
+        texto('barra-usuario-perfil', `${perfis[u.perfil] || u.perfil} · ${u.email || ''}`);
+        const botao = document.querySelector('#barra-usuario .barra-avatar');
+        if (botao) botao.setAttribute('aria-label', `Usuário ${nome}`);
+        const sair = document.getElementById('barra-sair');
+        if (sair) sair.onclick = () => SGE.auth.logout();
+    },
+
+    fecharSuspensos() {
+        document.querySelectorAll('.barra-suspenso.aberto').forEach(caixa => {
+            caixa.classList.remove('aberto');
+            const botao = caixa.querySelector('[aria-haspopup]');
+            if (botao) botao.setAttribute('aria-expanded', 'false');
+        });
     },
 
     setupDrawer() {
@@ -419,26 +466,6 @@ SGE.app = {
         });
     },
 
-    setupKanbanArrows() {
-        const kv = document.getElementById('kanban-view');
-        const leftBtn = document.getElementById('kanban-arrow-left');
-        const rightBtn = document.getElementById('kanban-arrow-right');
-
-        if (leftBtn) {
-            leftBtn.addEventListener('click', () => {
-                kv.scrollBy({ left: -300, behavior: 'smooth' });
-            });
-        }
-        if (rightBtn) {
-            rightBtn.addEventListener('click', () => {
-                kv.scrollBy({ left: 300, behavior: 'smooth' });
-            });
-        }
-        if (kv) {
-            kv.addEventListener('scroll', () => SGE.kanban.updateArrows());
-            setTimeout(() => SGE.kanban.updateArrows(), 300);
-        }
-    }
 };
 
 // Bootstrap on DOM ready

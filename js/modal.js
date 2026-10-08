@@ -173,7 +173,7 @@ SGE.modal = {
 
     SGE.modal.close();
     SGE.helpers.updateStats();
-    SGE.kanban.render();
+    SGE.navigation._refreshViews();
 
     // ── Undo: mostra toast com botão "Desfazer" por 10s ──
     let undid = false;
@@ -191,7 +191,7 @@ SGE.modal = {
             colaborador.regime = regOld;
             SGE.state.movimentacoes.shift(); // remove the optimistic entry
             SGE.helpers.updateStats();
-            SGE.kanban.render();
+            SGE.navigation._refreshViews();
             SGE.helpers.toast('Movimentação desfeita.', 'info');
         }
     );
@@ -397,7 +397,7 @@ SGE.modal = {
 
     SGE.modal.close();
     SGE.helpers.updateStats();
-    SGE.kanban.render();
+    SGE.navigation._refreshViews();
     SGE.helpers.toast(`${colaborador.nome} atualizado`);
 
     // Sync with backend — pass complete data with field-level diff
@@ -738,10 +738,7 @@ SGE.modal = {
       if (result) {
         SGE.modal.close();
         SGE.helpers.updateStats();
-        SGE.kanban.render();
-        if (SGE.state.activeView === 'tabela' && SGE.viz) SGE.viz.renderTable();
-        if (SGE.state.activeView === 'grupo' && SGE.viz) SGE.viz.renderGroups();
-        if (SGE.state.activeView === 'search' && SGE.search) SGE.search.render();
+        SGE.navigation._refreshViews();
         SGE.helpers.toast(`${nome} excluído permanentemente.`, 'success');
       } else {
         confirmBtn.disabled = false;

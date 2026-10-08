@@ -1,0 +1,166 @@
+/* ===================== COMPONENTES COMUNS =====================
+ * Peças que eram do Kanban/Tabela e continuam em uso em outras telas
+ * (Pesquisa, janelas de edição, edição em massa da Matriz).
+ */
+
+/* selos (Pesquisa) */
+.card-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 10.5px;
+    font-weight: 500;
+}
+
+.badge-24A { background: #e8f5ee; color: #1a7a42; border: 1px solid #b5ddc5; }
+.badge-24B { background: #e6eef9; color: #2c5ea8; border: 1px solid #b0c8e8; }
+.badge-24C { background: #fdf0e4; color: #b06318; border: 1px solid #ecc9a0; }
+.badge-24D { background: #f3ecfb; color: #7b49b0; border: 1px solid #d0b8e8; }
+.badge-ADM { background: #eef0f4; color: #5a6676; border: 1px solid #c8ced8; }
+.badge-16HS { background: #fdf5e0; color: #9a7510; border: 1px solid #e8d699; }
+.badge-SEM { background: #fce8e8; color: #c43030; border: 1px solid #e8b0b0; }
+.badge-cat-op { background: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; font-size: 9.5px; }
+.badge-cat-ges { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; font-size: 9.5px; }
+
+/* janela de edição do colaborador */
+.edit-modal-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+@media (max-width: 480px) {
+    .edit-modal-form {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* edição em massa */
+.mass-edit-modal {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+@media (max-width: 480px) {
+    .mass-edit-modal {
+        grid-template-columns: 1fr;
+    }
+}
+
+.mass-field-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.mass-field-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.mass-field-checkbox-row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+.mass-field-checkbox-row label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-2);
+    cursor: pointer;
+}
+
+.mass-field-item select {
+    width: 100%;
+    min-height: 38px;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-1);
+    color: var(--text-1);
+}
+
+.mass-field-item select:disabled {
+    opacity: .5;
+}
+
+/* janelas de treinamentos/advertências de uma pessoa (Matriz) */
+.ac-texto {
+    margin-bottom: 14px;
+    font-size: 13px;
+    color: var(--text-2);
+}
+
+.ac-texto small {
+    color: var(--text-3);
+}
+
+.ac-vazio {
+    padding: 24px;
+    border-radius: 8px;
+    background: var(--bg-2);
+    color: var(--text-3);
+    font-size: 13px;
+    text-align: center;
+}
+
+.ac-tabela-caixa {
+    max-height: 300px;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+.ac-tabela {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-1);
+    font-size: 12.5px;
+}
+
+.ac-tabela th {
+    position: sticky;
+    top: 0;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-2);
+    color: var(--text-3);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-align: left;
+    text-transform: uppercase;
+}
+
+.ac-tabela td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-1);
+}
+
+.ac-selo {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.ac-ok { background: #C6EFCE; color: #16603a; }
+.ac-atencao { background: #FFEB9C; color: #6b4f00; }
+.ac-ruim { background: #FFC7CE; color: #8f1f1a; }
+.ac-neutro { background: #EDEDED; color: #56606a; }

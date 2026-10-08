@@ -14,7 +14,8 @@ SGE.darkMode = {
         const prefersD = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
         const isDark = saved !== null ? saved === 'true' : prefersD;
 
-        if (isDark) this._apply(true);
+        // sempre grava o tema (claro também): o sge-core segue o sistema operacional se não houver escolha
+        this._apply(isDark);
 
         const btn = document.getElementById('dark-mode-btn');
         if (btn) {
@@ -39,6 +40,9 @@ SGE.darkMode = {
 
     _apply(dark) {
         document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+        // mesmo tema para o sge-core (ele lê data-tema)
+        document.documentElement.setAttribute('data-tema', dark ? 'escuro' : 'claro');
+        if (SGE.matriz) SGE.matriz.tema(dark);
         const moon = document.getElementById('dark-mode-icon-moon');
         const sun = document.getElementById('dark-mode-icon-sun');
         if (moon) moon.style.display = dark ? 'none' : '';

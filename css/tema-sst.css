@@ -1,0 +1,285 @@
+/* ===================== TEMA: layout do SST com as cores e a fonte do sge-core =====================
+ * Carregado depois de todos os outros CSS: troca as cores antigas do Efetivo (--bg-*, --accent, --text-*)
+ * pelas do sge-core (--sge-*) e aplica as formas do SST (camadas, cantos, sombras).
+ * Os valores --sge-* abaixo são cópia do sge-core v1: valem mesmo se o sge-core.css não carregar
+ * (sem internet ou ainda não publicado). Mudou a cor no sge-core? Mude aqui também.
+ */
+
+:root {
+    color-scheme: light;
+
+    /* sge-core v1 (tema claro) */
+    --sge-marca: #1B3A6B;
+    --sge-marca-escura: #0d1b2e;
+    --sge-destaque: #1d4ed8;
+    --sge-destaque-hover: #1e40af;
+    --sge-destaque-suave: #1d4ed814;
+    --sge-sucesso: #15803d;
+    --sge-alerta: #b45309;
+    --sge-perigo: #c62828;
+    --sge-info: #0369a1;
+    --sge-fundo: #f0f3f8;
+    --sge-superficie: #ffffff;
+    --sge-superficie-2: #f5f7fb;
+    --sge-borda: #e1e6ef;
+    --sge-texto: #111827;
+    --sge-texto-2: #4b5563;
+    --sge-texto-3: #6b7280;
+    --sge-fonte: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --sge-fonte-mono: 'SF Mono', 'Fira Code', Consolas, monospace;
+    --sge-raio: 10px;
+    --sge-raio-pequeno: 6px;
+    --sge-sombra: 0 1px 3px rgba(15, 23, 42, .08), 0 4px 12px rgba(15, 23, 42, .06);
+    --sge-sombra-forte: 0 12px 40px rgba(15, 23, 42, .25);
+    --sge-toque: 44px;
+
+    /* barra superior escura do SST, no azul-marinho do logo do SGE */
+    --nav: var(--sge-marca-escura);
+    --nav-texto: #eef1f6;
+    --nav-suave: #a2aab8;
+    --nav-hover: rgba(255, 255, 255, .08);
+    --nav-ativo: rgba(255, 255, 255, .14);
+    --nav-borda: #1f2c42;
+
+    /* camadas (SST) */
+    --sombra-1: 0 1px 2px rgba(16, 24, 40, .05), 0 1px 3px rgba(16, 24, 40, .05);
+    --sombra-2: 0 4px 12px -2px rgba(16, 24, 40, .08), 0 2px 4px -2px rgba(16, 24, 40, .05);
+    --sombra-3: 0 12px 32px -8px rgba(16, 24, 40, .18), 0 4px 8px -4px rgba(16, 24, 40, .06);
+    --sombra-4: 0 24px 64px -12px rgba(16, 24, 40, .3);
+
+    /* nomes antigos do Efetivo → sge-core (todas as telas mudam juntas) */
+    --bg-0: var(--sge-fundo);
+    --bg-1: var(--sge-superficie);
+    --bg-2: var(--sge-superficie-2);
+    --bg-3: #e9edf4;
+    --bg-4: #dde3ec;
+    --border: var(--sge-borda);
+    --border-bright: #c5ccd6;
+    --accent: var(--sge-destaque);
+    --accent-dim: var(--sge-destaque-hover);
+    --accent-glow: var(--sge-destaque-suave);
+    --text-1: var(--sge-texto);
+    --text-2: var(--sge-texto-2);
+    --text-3: var(--sge-texto-3);
+    --green: var(--sge-sucesso);
+    --orange: #c2410c;
+    --purple: #6d28d9;
+    --yellow: var(--sge-alerta);
+    --red: var(--sge-perigo);
+    --danger: var(--sge-perigo);
+    --cyan: var(--sge-info);
+    --font-display: var(--sge-fonte);
+    --font-mono: var(--sge-fonte);
+    --radius: 12px;
+    --shadow: var(--sombra-1);
+    --shadow-lg: var(--sombra-3);
+}
+
+/* tema escuro (botão de tema grava data-theme="dark"; o sge-core lê data-tema="escuro") */
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --sge-destaque: #3b82f6;
+    --sge-destaque-hover: #60a5fa;
+    --sge-destaque-suave: #3b82f61f;
+    --sge-sucesso: #22c55e;
+    --sge-alerta: #f59e0b;
+    --sge-perigo: #ef4444;
+    --sge-info: #38bdf8;
+    --sge-fundo: #0b1220;
+    --sge-superficie: #111a2c;
+    --sge-superficie-2: #16213a;
+    --sge-borda: #24324d;
+    --sge-texto: #f1f5f9;
+    --sge-texto-2: #cbd5e1;
+    --sge-texto-3: #94a3b8;
+
+    --nav: #070e1a;
+    --nav-borda: #1a253a;
+    --nav-hover: rgba(255, 255, 255, .07);
+    --nav-ativo: rgba(255, 255, 255, .12);
+
+    --sombra-1: 0 1px 2px rgba(0, 0, 0, .4);
+    --sombra-2: 0 4px 12px -2px rgba(0, 0, 0, .45);
+    --sombra-3: 0 12px 32px -8px rgba(0, 0, 0, .6);
+    --sombra-4: 0 24px 64px -12px rgba(0, 0, 0, .7);
+
+    --bg-0: var(--sge-fundo);
+    --bg-1: var(--sge-superficie);
+    --bg-2: var(--sge-superficie-2);
+    --bg-3: #1c2945;
+    --bg-4: #243352;
+    --border: var(--sge-borda);
+    --border-bright: #33456a;
+    --accent: var(--sge-destaque);
+    --accent-dim: var(--sge-destaque-hover);
+    --accent-glow: var(--sge-destaque-suave);
+    --text-1: var(--sge-texto);
+    --text-2: var(--sge-texto-2);
+    --text-3: var(--sge-texto-3);
+    --green: var(--sge-sucesso);
+    --orange: #fb923c;
+    --purple: #a78bfa;
+    --yellow: var(--sge-alerta);
+    --red: var(--sge-perigo);
+    --danger: var(--sge-perigo);
+    --cyan: var(--sge-info);
+    --shadow: var(--sombra-1);
+    --shadow-lg: var(--sombra-3);
+}
+
+/* ── Base ── */
+body,
+body.sge {
+    background: var(--sge-fundo);
+    color: var(--sge-texto);
+    font-family: var(--sge-fonte);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+    font-family: inherit;
+}
+
+:focus-visible {
+    outline: 3px solid var(--sge-destaque);
+    outline-offset: 2px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-bright);
+}
+
+/* ── Tela de carregamento no fundo do sistema ── */
+#loading-screen {
+    background: var(--sge-fundo) !important;
+}
+
+/* ── Cartões e painéis no estilo do SST: borda leve + sombra suave ── */
+.kpi-card,
+.chart-card,
+.mini-card,
+.settings-card,
+.settings-section,
+.ferias-card,
+.treinamento-card,
+.result-card,
+.search-result-card {
+    border: 1px solid var(--sge-borda);
+    border-radius: 14px;
+    background: var(--sge-superficie);
+    box-shadow: var(--sombra-1);
+}
+
+/* abas internas (Painel, Configurações): seletor segmentado do SST */
+.dash-tab-btn.active {
+    color: var(--sge-destaque);
+}
+
+/* ── Telas de lista (Férias, Advertências, Histórico, Treinamentos): margens das páginas do SST ── */
+#ferias-table-view,
+#advertencias-table-view,
+#history-view {
+    gap: 16px;
+    padding: 24px 32px;
+}
+
+@media (max-width: 767px) {
+    #ferias-table-view,
+    #advertencias-table-view,
+    #history-view {
+        padding: 16px;
+    }
+}
+
+#history-table-wrap {
+    border: 1px solid var(--sge-borda);
+    border-radius: 12px;
+    background: var(--sge-superficie);
+    box-shadow: var(--sombra-1);
+}
+
+.history-filter-input {
+    min-height: 38px;
+    border-color: var(--sge-borda);
+    border-radius: 8px;
+    background: var(--sge-superficie);
+    font-size: 13px;
+}
+
+/* ── Janela (modal): painel do SST ── */
+#modal {
+    border: 1px solid var(--sge-borda);
+    border-radius: 16px;
+    background: var(--sge-superficie);
+    box-shadow: var(--sombra-4);
+}
+
+#modal-overlay {
+    background: rgba(2, 6, 23, .45);
+}
+
+/* ── Painel lateral do colaborador ── */
+#drawer {
+    background: var(--sge-superficie);
+    border-left: 1px solid var(--sge-borda);
+    box-shadow: var(--sombra-4);
+}
+
+/* ── Painel de filtros (abre abaixo da barra) ── */
+.filter-dropdown-panel {
+    position: fixed;
+    top: 70px;
+    right: 16px;
+    z-index: 850; /* acima da Matriz em tela cheia */
+    width: 340px;
+    max-width: calc(100vw - 32px);
+    max-height: calc(100dvh - 90px);
+    border: 1px solid var(--sge-borda);
+    border-radius: 14px;
+    background: var(--sge-superficie);
+    box-shadow: var(--sombra-4);
+}
+
+@media (max-width: 767px) {
+    .filter-dropdown-panel {
+        top: 64px;
+        right: 8px;
+        left: 8px;
+        width: auto;
+        max-width: none;
+    }
+}
+
+/* ── Botões de toque grandes no celular e tablet (sge-core: 44px) ── */
+@media (pointer: coarse) {
+    .btn-confirm,
+    .btn-cancel,
+    .drawer-btn {
+        min-height: var(--sge-toque);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+    }
+}

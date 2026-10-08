@@ -31,61 +31,7 @@
     color: var(--text-1);
 }
 
-/* ===== TOPBAR ===== */
-[data-theme="dark"] #topbar {
-    background: var(--bg-1);
-    border-bottom-color: var(--border);
-}
-
-[data-theme="dark"] .hub-btn-explicit {
-    background: var(--bg-3);
-    color: var(--text-1);
-    border-color: var(--border);
-}
-
-[data-theme="dark"] .hub-btn-explicit:hover {
-    background: var(--bg-4);
-}
-
-[data-theme="dark"] #global-search {
-    background: var(--bg-2) !important;
-    color: var(--text-1) !important;
-    border-color: var(--border) !important;
-}
-
-[data-theme="dark"] #global-search::placeholder {
-    color: var(--text-3);
-}
-
-/* ===== NAV MENU ===== */
-[data-theme="dark"] .nav-menu-panel {
-    background: var(--bg-1);
-    border-right-color: var(--border);
-}
-
-[data-theme="dark"] .nav-menu-header {
-    border-bottom-color: var(--border);
-    color: var(--text-1);
-}
-
-[data-theme="dark"] .nav-menu-footer {
-    background: var(--bg-2);
-    border-top-color: var(--border);
-}
-
-[data-theme="dark"] .nav-menu-item {
-    color: var(--text-2);
-}
-
-[data-theme="dark"] .nav-menu-item:hover {
-    background: var(--bg-3);
-    color: var(--accent);
-}
-
-[data-theme="dark"] .nav-menu-item.active {
-    background: var(--accent-glow);
-    color: var(--accent);
-}
+/* Barra superior e menu: escuros nos dois temas (topbar.css) */
 
 /* ===== DASHBOARD ===== */
 [data-theme="dark"] .kpi-card {

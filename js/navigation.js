@@ -9,7 +9,19 @@ window.SGE = window.SGE || {};
 SGE.navigation = {
 
     // Valid view names for hash restoration
-    _validViews: ['viz', 'kanban', 'search', 'history', 'tabela', 'grupo', 'equip', 'settings', 'ferias', 'treinamentos', 'advertencias'],
+    _validViews: ['viz', 'matriz', 'search', 'history', 'settings', 'ferias', 'treinamentos', 'advertencias'],
+
+    // Menu por assunto (igual ao SST): cada tela pertence a uma seção da barra de cima
+    _secoes: {
+        viz: ['inicio', 'Início', 'Painel'],
+        matriz: ['efetivo', 'Efetivo', 'Matriz'],
+        ferias: ['efetivo', 'Efetivo', 'Férias'],
+        history: ['efetivo', 'Efetivo', 'Histórico'],
+        search: ['efetivo', 'Efetivo', 'Pesquisa'],
+        treinamentos: ['seguranca', 'Segurança', 'Treinamentos'],
+        advertencias: ['seguranca', 'Segurança', 'Advertências'],
+        settings: ['config', 'Configurações', 'Configurações'],
+    },
 
     /**
      * Save scroll position for current active view before leaving
@@ -23,19 +35,6 @@ SGE.navigation = {
                 SGE.state.scrollPositions[viewName] = viewEl.scrollTop;
             }
 
-            // Kanban: also save main horizontal scroll + each column scroll
-            if (viewName === 'kanban') {
-                const kv = document.getElementById('kanban-view');
-                if (kv) {
-                    const kanbanState = { scrollLeft: kv.scrollLeft, cols: {} };
-                    kv.querySelectorAll('.col-body').forEach(cb => {
-                        if (cb.dataset.supervisor) {
-                            kanbanState.cols[cb.dataset.supervisor] = cb.scrollTop;
-                        }
-                    });
-                    SGE.state.scrollPositions['_kanban'] = kanbanState;
-                }
-            }
 
             // Persist to sessionStorage so it survives a hash-triggered reload
             sessionStorage.setItem('SGE_SCROLL', JSON.stringify(SGE.state.scrollPositions));
@@ -53,23 +52,6 @@ SGE.navigation = {
                 const pos = SGE.state.scrollPositions[viewName];
                 if (viewEl && pos) {
                     viewEl.scrollTop = pos;
-                }
-
-                // Kanban: restore horizontal + per-column scroll
-                if (viewName === 'kanban') {
-                    const kanbanState = SGE.state.scrollPositions['_kanban'];
-                    const kv = document.getElementById('kanban-view');
-                    if (kv && kanbanState) {
-                        kv.scrollLeft = kanbanState.scrollLeft || 0;
-                        if (kanbanState.cols) {
-                            kv.querySelectorAll('.col-body').forEach(cb => {
-                                const sup = cb.dataset.supervisor;
-                                if (sup && kanbanState.cols[sup]) {
-                                    cb.scrollTop = kanbanState.cols[sup];
-                                }
-                            });
-                        }
-                    }
                 }
             } catch (e) { /* ignore */ }
         });
@@ -93,55 +75,28 @@ SGE.navigation = {
             history.pushState({ view: viewName }, '', `#${viewName}`);
         }
 
-        // Map which sidebar item should be highlighted
-        const gestaoViews = ['kanban', 'tabela', 'grupo', 'equip', 'ferias', 'history', 'search'];
-        const segurancaViews = ['treinamentos', 'advertencias'];
+        // Saiu da Matriz: fecha as ferramentas e a tela cheia dela
+        if (viewName !== 'matriz' && SGE.matriz) SGE.matriz.sair();
 
-        let sidebarActiveView = viewName;
-        if (gestaoViews.includes(viewName)) sidebarActiveView = 'tabela';
-        if (segurancaViews.includes(viewName)) sidebarActiveView = 'treinamentos';
-
-        // Clear active states globally on the sidebar
-        document.querySelectorAll('.nav-menu-item[data-view]').forEach(el => {
-            el.classList.remove('active');
+        // Realce da barra de cima (seção e tela) e do menu do celular
+        const [secao, rotuloSecao, rotuloTela] = SGE.navigation._secoes[viewName] || ['', '', ''];
+        document.querySelectorAll('.barra-secao[data-secao]').forEach(el => {
+            el.classList.toggle('ativo', el.dataset.secao === secao);
         });
-
-        // Update active nav menu item
-        const activeBtn = document.querySelector(`.nav-menu-item[data-view="${sidebarActiveView}"]`);
-        if (activeBtn) {
-            activeBtn.classList.add('active');
-        }
-
-        // Show or hide main tab bars
-        const gestaoTabs = document.getElementById('gestao-tabs');
-        if (gestaoTabs) {
-            gestaoTabs.style.display = gestaoViews.includes(viewName) ? 'flex' : 'none';
-        }
-
-        const segurancaTabs = document.getElementById('seguranca-tabs');
-        if (segurancaTabs) {
-            segurancaTabs.style.display = segurancaViews.includes(viewName) ? 'flex' : 'none';
-        }
-
-        // Highlight the selected horizontal tab
-        document.querySelectorAll('.dash-tab-btn[data-view]').forEach(btn => {
-            if (btn.dataset.view === viewName) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
+        document.querySelectorAll('.nav-menu-item[data-view], .barra-subitem[data-view]').forEach(el => {
+            const aceso = el.dataset.view === viewName;
+            el.classList.toggle('active', aceso);
+            if (aceso) el.setAttribute('aria-current', 'page');
+            else el.removeAttribute('aria-current');
         });
+        const local = document.getElementById('barra-local');
+        if (local) local.textContent = secao === 'inicio' || secao === 'config' ? rotuloTela : `${rotuloSecao} › ${rotuloTela}`;
+        if (SGE.app && SGE.app.fecharSuspensos) SGE.app.fecharSuspensos();
 
         // Show/hide views
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         const target = document.getElementById(`${viewName}-view`);
         if (target) target.classList.add('active');
-
-        // Show/hide kanban-wrap (only on kanban)
-        const kanbanWrap = document.getElementById('kanban-wrap');
-        if (kanbanWrap) {
-            kanbanWrap.style.display = viewName === 'kanban' ? 'flex' : 'none';
-        }
 
         if (viewName !== 'search') {
             const globalSearch = document.getElementById('global-search');
@@ -157,9 +112,10 @@ SGE.navigation = {
                 case 'viz':
                     if (SGE.dashboard) SGE.dashboard.render();
                     break;
-                case 'kanban':
-                    SGE.kanban.render();
-                    setTimeout(() => SGE.kanban.updateArrows(), 100);
+                case 'matriz':
+                    SGE.matriz.render();
+                    // a planilha mede o espaço de novo (estava escondida)
+                    setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
                     break;
                 case 'search': {
                     SGE.search.render();
@@ -169,16 +125,6 @@ SGE.navigation = {
                 }
                 case 'history':
                     SGE.history.render();
-                    break;
-                case 'tabela':
-                    if (SGE.excelTable) SGE.excelTable.render();
-                    else SGE.viz.renderTable();
-                    break;
-                case 'grupo':
-                    SGE.viz.renderGroups();
-                    break;
-                case 'equip':
-                    SGE.equip.render();
                     break;
                 case 'settings':
                     SGE.settings.render();
@@ -218,7 +164,7 @@ SGE.navigation = {
         if (hash && SGE.navigation._validViews.includes(hash)) {
             return hash;
         }
-        return 'tabela'; // default
+        return 'matriz'; // padrão (também para links antigos: #kanban, #tabela, #grupo, #equip)
     },
 
     /**
@@ -490,12 +436,9 @@ SGE.navigation = {
         // Refresh the currently active view with new filter state
         const activeView = SGE.state.activeView;
         switch (activeView) {
-            case 'kanban': SGE.kanban.render(); break;
+            case 'matriz': SGE.matriz.render(); break;
             case 'viz': if (SGE.dashboard) SGE.dashboard.render(); break;
-            case 'tabela': if (SGE.excelTable) SGE.excelTable.render(); else SGE.viz.renderTable(); break;
-            case 'grupo': SGE.viz.renderGroups(); break;
             case 'search': SGE.search.render(); break;
-            case 'equip': SGE.equip.render(); break;
             case 'history': SGE.history.render(); break;
             case 'settings': SGE.settings.render(); break;
             case 'ferias': if (SGE.ferias) SGE.ferias.render(); break;
