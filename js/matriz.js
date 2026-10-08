@@ -37,10 +37,10 @@ SGE.matriz = (() => {
     /* ─── Quem vai para qual aba ─── */
     const ehMotorista = (c) => /MOTORISTA/i.test(c.funcao || '');
     const temSupervisor = (c) => !!c.supervisor && c.supervisor !== 'SEM SUPERVISOR';
-    /** placa/vaga como na planilha: "AP-12" vira "AP 12"; quem está num setor mostra o setor */
+    /** placa/vaga como na planilha: "AP-12" vira "AP 12", "AV-02 - EQUIP 1" vira "AV 02 - EQUIP 1"; quem está num setor mostra o setor */
     function placaDe(c) {
         if (c.setor_id && c.setor && c.setor !== 'SEM SETOR') return maiusculo(c.setor);
-        if (c.equipamento && c.equipamento !== 'SEM EQUIPAMENTO' && c.equipamento !== 'NÃO INFORMADA') return maiusculo(c.equipamento).replace(/-/g, ' ');
+        if (c.equipamento && c.equipamento !== 'SEM EQUIPAMENTO' && c.equipamento !== 'NÃO INFORMADA') return maiusculo(c.equipamento).replace('-', ' ');
         return null;
     }
     /** funções de apoio (não são equipe de caminhão): linha própria no resumo, na ordem da planilha */

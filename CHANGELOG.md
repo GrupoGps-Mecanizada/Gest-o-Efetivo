@@ -1,5 +1,9 @@
 # CHANGELOG — Gestão de Efetivo
 
+## v2.5.1 — 2026-10-08
+### Corrigido
+- Veículo com duas equipes (AV 02, AP 07 e AV 07) aparece em linhas separadas **"EQUIP 1"** e **"EQUIP 2"**, como na planilha. No banco são vagas próprias (equipamento "AV 02 - EQUIP 1" etc.); o nome mostra só o 1º traço como espaço ("AV 02 - EQUIP 1"). Script do banco: equipes-1-e-2-2026-10-08.local.sql (fora do GitHub, tem nomes).
+
 ## v2.5.0 — 2026-10-08
 ### Novo
 - **Vagas** (tabela nova gps_mec.efetivo_gps_mec_vagas, só com login): cada linha da aba de um supervisor é uma vaga (supervisor + equipamento) e aparece mesmo vazia. Carga inicial com os 56 pares em uso hoje. SQL em sql/2026-10-08_vagas_por_supervisor.sql.

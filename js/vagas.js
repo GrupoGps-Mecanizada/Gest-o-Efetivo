@@ -14,9 +14,9 @@ SGE.vagas = {
     return `${eq.sigla}-${eq.numero || ''}`.replace(/-$/, '');
   },
 
-  /** nome como aparece na planilha ("AP 01") — igual ao da Matriz */
+  /** nome como aparece na planilha ("AP 01", "AV 02 - EQUIP 1") — igual ao da Matriz; só o 1º traço separa sigla e número */
   rotulo(eq) {
-    return this.codigo(eq).toLocaleUpperCase('pt-BR').replace(/-/g, ' ');
+    return this.codigo(eq).toLocaleUpperCase('pt-BR').replace('-', ' ');
   },
 
   equipamento(id) {

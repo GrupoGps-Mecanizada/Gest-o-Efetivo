@@ -1,5 +1,5 @@
 {
-  "version": "2.5.0",
+  "version": "2.5.1",
   "updated_at": "2026-10-08",
-  "notes": "Vagas na Matriz (adicionar/remover), mover pergunta o equipamento, edição só de alocação (cadastro é do SST)"
+  "notes": "Veículo com duas equipes aparece como EQUIP 1 e EQUIP 2 (AV 02, AP 07, AV 07), como na planilha"
 }

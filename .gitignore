@@ -4,3 +4,5 @@
 *.csv
 .env
 .env.*
+# SQL com nomes (dados de pessoas): só no computador
+*.local.sql
