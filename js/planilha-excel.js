@@ -770,6 +770,16 @@ tr { page-break-inside: avoid; }
                 if (pronto && aplicar) aplicar(abas);
                 else pendente = abas;
             },
+            /** id da aba aberta agora (ou null enquanto a planilha abre) */
+            abaAtiva() {
+                try {
+                    const wb = api && api.getActiveWorkbook();
+                    const ws = wb && wb.getActiveSheet();
+                    return ws ? ws.getSheetId() : null;
+                } catch (e) {
+                    return null;
+                }
+            },
             /** mostra uma aba (pelo id); se a planilha ainda está abrindo, mostra assim que abrir */
             irPara(id) {
                 if (pronto && abrirAba) abrirAba(id);

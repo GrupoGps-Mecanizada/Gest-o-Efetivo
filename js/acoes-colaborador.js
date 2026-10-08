@@ -49,8 +49,6 @@ SGE.acoesColaborador = {
                 ${this._campoMassa('regime', 'Regime', this.opcoes('regimes'))}
                 ${this._campoMassa('supervisor', 'Supervisor', this.opcoes('supervisores'))}
                 ${this._campoMassa('status', 'Status', this.opcoes('statuses'))}
-                ${this._campoMassa('funcao', 'Função', this.opcoes('funcoes'))}
-                ${this._campoMassa('categoria', 'Categoria', this.opcoes('categorias'))}
             </div>`;
         SGE.modal.open(`Edição em massa — ${ids.length} colaboradores`, corpo, [
             { label: 'Cancelar', action: () => SGE.modal.close() },

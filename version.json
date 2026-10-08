@@ -1,5 +1,5 @@
 {
-  "version": "2.4.2",
+  "version": "2.5.0",
   "updated_at": "2026-10-08",
-  "notes": "Aba TURNO 16HRS segue o cadastro 16 HORAS; encarregados contam como supervisores"
+  "notes": "Vagas na Matriz (adicionar/remover), mover pergunta o equipamento, edição só de alocação (cadastro é do SST)"
 }

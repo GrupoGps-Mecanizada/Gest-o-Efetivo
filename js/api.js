@@ -73,6 +73,7 @@ SGE.api = {
             { schema: 'gps_mec', table: 'efetivo_gps_mec_equipamentos', event: '*' },
             { schema: 'gps_mec', table: 'efetivo_gps_mec_movimentacoes', event: 'INSERT' },
             { schema: 'gps_mec', table: 'efetivo_gps_mec_ferias', event: '*' },
+            { schema: 'gps_mec', table: 'efetivo_gps_mec_vagas', event: '*' },
             { schema: 'gps_compartilhado', table: 'gps_configuracoes_sistema', event: '*' }
         ];
 
@@ -111,14 +112,16 @@ SGE.api = {
                 { data: setores, error: errSetores },
                 { data: movements, error: errMov },
                 { data: equipment, error: errEq },
-                { data: configs, error: errCfg }
+                { data: configs, error: errCfg },
+                { data: vagas, error: errVagas }
             ] = await Promise.all([
                 supabase.schema('gps_mec').from('efetivo_gps_mec_colaboradores').select('id, name, function, cr, regime, status, telefone, matricula_usiminas, matricula_gps, category, supervisor_id, equipment_id, setor_id, supervisors:efetivo_gps_mec_supervisores(name), equipment:efetivo_gps_mec_equipamentos(sigla, numero), setores:efetivo_gps_mec_setores(nome)'),
                 supabase.schema('gps_mec').from('efetivo_gps_mec_supervisores').select('*').order('name'),
                 supabase.schema('gps_mec').from('efetivo_gps_mec_setores').select('*').order('nome'),
                 supabase.schema('gps_mec').from('efetivo_gps_mec_movimentacoes').select('*, employees:efetivo_gps_mec_colaboradores(name, matricula_gps), from_sup:efetivo_gps_mec_supervisores!movements_from_supervisor_id_fkey(name), to_sup:efetivo_gps_mec_supervisores!movements_to_supervisor_id_fkey(name)').order('created_at', { ascending: false }).limit(100),
                 supabase.schema('gps_mec').from('efetivo_gps_mec_equipamentos').select('*'),
-                supabase.schema('gps_compartilhado').from('gps_configuracoes_sistema').select('*').eq('sistema', 'EFETIVO').eq('setor', 'MEC')
+                supabase.schema('gps_compartilhado').from('gps_configuracoes_sistema').select('*').eq('sistema', 'EFETIVO').eq('setor', 'MEC'),
+                supabase.schema('gps_mec').from('efetivo_gps_mec_vagas').select('id, supervisor_id, equipment_id, ordem')
             ]);
 
             if (!silent) this.updateSyncBar(false);
@@ -155,6 +158,9 @@ SGE.api = {
             }));
 
             SGE.state.setores = setores || [];
+            // vagas (supervisor + equipamento): sem a tabela ou sem permissão, a Matriz segue só com quem está alocado
+            if (errVagas) console.warn('SGE: vagas indisponíveis:', errVagas.message);
+            else SGE.state.vagas = vagas || [];
 
             // Map movements
             SGE.state.movimentacoes = movements.map(m => ({
@@ -235,6 +241,7 @@ SGE.api = {
                 colaboradores: SGE.state.colaboradores,
                 supervisores: SGE.state.supervisores,
                 setores: SGE.state.setores,
+                vagas: SGE.state.vagas,
                 movimentacoes: SGE.state.movimentacoes,
                 equipamentos: SGE.state.equipamentos,
                 ferias: SGE.state.ferias
@@ -280,6 +287,7 @@ SGE.api = {
                 .update({
                     supervisor_id: targetSup ? targetSup.id : null,
                     regime: movData.regime_destino,
+                    ...(movData.equipamento_mudou ? { equipment_id: movData.equipment_id_destino || null } : {}),
                     updated_at: new Date()
                 })
                 .eq('id', movData.colaborador_id);
@@ -300,6 +308,7 @@ SGE.api = {
                     to_supervisor_id: targetSup ? targetSup.id : null,
                     from_regime: movData.regime_origem || null,
                     to_regime: movData.regime_destino || null,
+                    ...(movData.equipamento_mudou ? { from_equipment_id: movData.equipment_id_origem || null, to_equipment_id: movData.equipment_id_destino || null } : {}),
                     reason: movData.motivo || 'N/A',
                     observation: movData.observacao || null,
                     created_by_name: userName,
@@ -362,7 +371,7 @@ SGE.api = {
             if (colData.equipamento && colData.equipamento !== 'SEM EQUIPAMENTO') {
                 const parsed = SGE.equip ? SGE.equip.parseEquip(colData.equipamento) : null;
                 if (parsed) {
-                    const eqObj = SGE.state.equipamentos.find(eq => eq.sigla === parsed.sigla && eq.numero === parsed.numero);
+                    const eqObj = SGE.state.equipamentos.find(eq => eq.sigla === parsed.sigla && (eq.numero || '') === parsed.numero);
                     if (eqObj) equipId = eqObj.id;
                 }
             }
@@ -835,6 +844,41 @@ SGE.api = {
         } catch (e) {
             this.updateSyncBar(false);
             return this._handleError(e, 'Normalizar Equipamentos');
+        }
+    },
+
+    /* ──────── VAGAS (supervisor + equipamento) ──────── */
+
+    async syncVaga(action, data, opcoes = {}) {
+        if (!window.supabase) return null;
+        if (!opcoes.silencioso) this.updateSyncBar(true);
+        try {
+            const tabela = supabase.schema('gps_mec').from('efetivo_gps_mec_vagas');
+            if (action === 'add') {
+                const ordem = (SGE.state.vagas || []).filter(v => v.supervisor_id === data.supervisor_id).length + 1;
+                const quem = SGE.auth.currentUser ? (SGE.auth.currentUser.nome || SGE.auth.currentUser.usuario) : null;
+                const { data: nova, error } = await tabela
+                    .insert({ supervisor_id: data.supervisor_id, equipment_id: data.equipment_id, ordem, criado_por: quem })
+                    .select('id, supervisor_id, equipment_id, ordem')
+                    .single();
+                if (error) throw error;
+                SGE.state.vagas = [...(SGE.state.vagas || []), nova];
+            } else if (action === 'delete') {
+                const { error } = await tabela.delete().eq('id', data.id);
+                if (error) throw error;
+                SGE.state.vagas = (SGE.state.vagas || []).filter(v => v.id !== data.id);
+            }
+            this.cacheData();
+            if (!opcoes.silencioso) this.updateSyncBar(false);
+            SGE.navigation._refreshViews();
+            return true;
+        } catch (e) {
+            this.updateSyncBar(false);
+            if (e && /row-level security|permission denied|42501/i.test(`${e.message} ${e.code}`)) {
+                SGE.helpers.toast('Sem permissão para mudar vagas: saia e entre de novo pela Central de Login.', 'error');
+                return false;
+            }
+            return this._handleError(e, `Vaga (${action})`);
         }
     },
 

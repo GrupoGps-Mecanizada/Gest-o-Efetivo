@@ -10,6 +10,7 @@ SGE.state = {
     colaboradores: [],
     supervisores: [],
     setores: [],
+    vagas: [],          // linhas das abas dos supervisores (supervisor + equipamento)
     movimentacoes: [],
     equipamentos: [],
     ferias: [],

@@ -17,6 +17,8 @@ SGE.matriz = (() => {
         imprimir: 'M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2M7 14h10v7H7z',
         pessoa: 'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM4 21a8 8 0 0 1 16 0',
         mover: 'M5 12h14M13 6l6 6-6 6',
+        vagaMais: 'M12 5v14M5 12h14',
+        vagaMenos: 'M5 12h14',
         editar: 'M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4',
         ferramentas: 'M4 6h9m4 0h3M4 12h3m4 0h9M4 18h11m4 0h1M15 4v4M9 10v4M17 16v4',
         fechar: 'M6 6l12 12M18 6 6 18',
@@ -88,6 +90,11 @@ SGE.matriz = (() => {
             if (!porPlaca.has(p)) porPlaca.set(p, { mot: [], op: [] });
             porPlaca.get(p)[ehMotorista(c) ? 'mot' : 'op'].push(c);
         }
+        const vagas = opcoes.vagas && SGE.vagas ? SGE.vagas.doSupervisor(sup.nome).map((x) => x.eq) : [];
+        for (const eq of vagas) {
+            const p = SGE.vagas.rotulo(eq);
+            if (!porPlaca.has(p)) porPlaca.set(p, { mot: [], op: [] });
+        }
         const linhas = [];
         for (const placa of [...porPlaca.keys()].sort(natural)) {
             const { mot, op } = porPlaca.get(placa);
@@ -98,7 +105,8 @@ SGE.matriz = (() => {
         }
         // título como na planilha: "EQUIPE" + tipos de equipamento do supervisor
         const tipos = SGE.CONFIG.equipTipos || {};
-        const nomes = [...new Set(pessoas.map((c) => SGE.equip && SGE.equip.parseEquip(c.equipamento)).filter((x) => x && tipos[x.sigla]).map((x) => maiusculo(tipos[x.sigla].nome)))];
+        const siglas = [...pessoas.map((c) => SGE.equip && SGE.equip.parseEquip(c.equipamento)).filter(Boolean).map((x) => x.sigla), ...vagas.map((e) => e.sigla)];
+        const nomes = [...new Set(siglas.filter((s) => tipos[s]).map((s) => maiusculo(tipos[s].nome)))];
         return {
             id: opcoes.id || `sup-${sup.id}`,
             nome: opcoes.nome || maiusculo(sup.nome),
@@ -247,11 +255,15 @@ SGE.matriz = (() => {
             if (!porSup.has(c.supervisor)) porSup.set(c.supervisor, []);
             porSup.get(c.supervisor).push(c);
         }
-        const cadastrados = (SGE.state.supervisores || []).filter((s) => porSup.has(s.nome));
+        // com busca ou filtro, as vagas vazias somem (mostra só quem combina)
+        const semFiltro = !st.busca.trim() && filtrosAtivos().length === 0;
+        const temVagas = (s) => semFiltro && SGE.vagas && SGE.vagas.doSupervisor(s.nome).length > 0;
+        const supTurno = (SGE.state.supervisores || []).find((s) => ehTurno16({ supervisor: s.nome }));
+        const cadastrados = (SGE.state.supervisores || []).filter((s) => s !== supTurno && s.nome !== 'SEM SUPERVISOR' && (porSup.has(s.nome) || (s.ativo && temVagas(s))));
         const extras = [...porSup.keys()].filter((n) => !cadastrados.some((s) => s.nome === n)).map((n, i) => ({ id: `x${i}`, nome: n }));
-        const equipes = [...cadastrados, ...extras].map((s) => abaEquipe(s, porSup.get(s.nome)));
-        const turno = grupos.turno16.length
-            ? abaEquipe({ id: 'turno16', nome: 'TURNO 16HRS' }, grupos.turno16, { id: 'turno16', nome: 'TURNO 16HRS 7H AS 15H', rotuloGeral: 'TURNO 16HRS', semEquipe: true })
+        const equipes = [...cadastrados, ...extras].map((s) => abaEquipe(s, porSup.get(s.nome) || [], { vagas: semFiltro }));
+        const turno = grupos.turno16.length || (supTurno && temVagas(supTurno))
+            ? abaEquipe(supTurno || { id: 'turno16', nome: 'TURNO 16HRS' }, grupos.turno16, { id: 'turno16', nome: 'TURNO 16HRS 7H AS 15H', rotuloGeral: 'TURNO 16HRS', semEquipe: true, vagas: semFiltro })
             : null;
         const listas = [abaLista('ferias', 'FÉRIAS', grupos.ferias, true), abaLista('sobra', 'SOBRA', grupos.sobra, false), abaLista('atestado', 'ATESTADO', grupos.atestado, false)];
         const comTurno = turno ? [...equipes, turno] : equipes;
@@ -364,6 +376,9 @@ SGE.matriz = (() => {
                       .map((e, i) => `<button type="button" class="mz-etiqueta" data-etiqueta="${i}" aria-label="Remover ${esc(e.rotulo)}">${esc(e.rotulo)} <span aria-hidden="true">×</span></button>`)
                       .join('')}<button type="button" class="mz-limpar" data-acao="limpar">Limpar tudo</button></div>`
                 : ''}
+            ${gestao ? `${secao('Vagas')}
+            ${item({ acao: 'vaga-add', rotulo: 'Adicionar vaga', titulo: 'Nova linha (equipamento) na aba do supervisor, mesmo sem ninguém nela', d: ICONE.vagaMais })}
+            ${item({ acao: 'vaga-del', rotulo: 'Remover vaga vazia', titulo: 'Tira uma linha vazia da aba do supervisor', d: ICONE.vagaMenos })}` : ''}
             ${secao('Ações')}
             ${item({ acao: 'exportar', rotulo: 'Exportar Excel', titulo: 'Exporta todas as abas como estão: filtradas (só o que aparece) ou completas, no mesmo formato', d: ICONE.exportar, primario: true })}
             ${item({ acao: 'imprimir', rotulo: 'Imprimir', titulo: 'Imprimir a aba aberta como está na tela', d: ICONE.imprimir })}
@@ -453,6 +468,8 @@ SGE.matriz = (() => {
                 if (limpar) limpar.click();
                 else render();
             },
+            'vaga-add': () => SGE.vagas.abrirAdicionar(supervisorDaAba()),
+            'vaga-del': () => SGE.vagas.abrirRemover(supervisorDaAba()),
             exportar: () => st.planilha && st.planilha.exportar(),
             imprimir: () => st.planilha && st.planilha.imprimir(),
             abrir: () => um && SGE.drawer.open(um),
@@ -463,6 +480,21 @@ SGE.matriz = (() => {
         // "Limpar tudo" deixa a janela aberta; as outras ações fecham
         if (b.dataset.acao !== 'limpar') fecharPainel();
         if (acoes[b.dataset.acao]) acoes[b.dataset.acao]();
+    }
+
+    /** supervisor da aba aberta (para já vir escolhido em Adicionar/Remover vaga) */
+    function supervisorDaAba() {
+        const id = st.planilha && st.planilha.abaAtiva ? st.planilha.abaAtiva() : null;
+        const sups = SGE.state.supervisores || [];
+        if (id === 'turno16') {
+            const s = sups.find((x) => ehTurno16({ supervisor: x.nome }));
+            return s ? s.nome : undefined;
+        }
+        if (id && id.startsWith('sup-')) {
+            const s = sups.find((x) => String(x.id) === id.slice(4));
+            return s ? s.nome : undefined;
+        }
+        return undefined;
     }
 
     /* ─── Público ─── */

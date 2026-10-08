@@ -81,6 +81,12 @@ SGE.modal = {
       </div>
 
       <div class="form-field">
+        <label for="modal-equip-dest">Equipamento (vaga) de destino</label>
+        <select id="modal-equip-dest">${SGE.modal._opcoesEquipamento(colaborador, supervisorDestino)}</select>
+        <small class="modal-dica">Vai para a coluna <b>${/MOTORISTA/i.test(colaborador.funcao || '') ? 'MOTORISTA' : 'OPERADOR'}</b> (pela função).</small>
+      </div>
+
+      <div class="form-field">
         <label>Regime Destino</label>
         <select id="modal-regime-dest">
           ${SGE.CONFIG.regimes.map(r =>
@@ -113,6 +119,26 @@ SGE.modal = {
     document.getElementById('modal-overlay').classList.add('open');
   },
 
+  /** opções do equipamento de destino: vagas do supervisor primeiro, depois os outros equipamentos */
+  _opcoesEquipamento(colaborador, supervisorDestino) {
+    const esc = SGE.helpers.escapeHtml.bind(SGE.helpers);
+    const atual = colaborador.equipamento;
+    const vagas = SGE.vagas ? SGE.vagas.doSupervisor(supervisorDestino).map(x => x.eq) : [];
+    const ids = new Set(vagas.map(e => e.id));
+    const outros = (SGE.state.equipamentos || []).filter(e => !ids.has(e.id))
+      .sort((a, b) => SGE.vagas.rotulo(a).localeCompare(SGE.vagas.rotulo(b), 'pt-BR', { numeric: true }));
+    // mantém o equipamento atual quando ele já é vaga do destino; senão, sugere a primeira vaga
+    const escolhido = vagas.some(e => SGE.vagas.codigo(e) === atual) ? atual : (vagas[0] ? SGE.vagas.codigo(vagas[0]) : atual);
+    const opcao = (e) => {
+      const cod = SGE.vagas.codigo(e);
+      const n = SGE.vagas.ocupacao(supervisorDestino, e);
+      return `<option value="${esc(cod)}"${cod === escolhido ? ' selected' : ''}>${esc(SGE.vagas.rotulo(e))}${n ? ` · ${n} pessoa(s)` : ' · vazia'}</option>`;
+    };
+    return `${vagas.length ? `<optgroup label="Vagas de ${esc(supervisorDestino)}">${vagas.map(opcao).join('')}</optgroup>` : ''}
+      <optgroup label="Outros equipamentos (vira vaga do supervisor)">${outros.map(opcao).join('')}</optgroup>
+      <option value="SEM EQUIPAMENTO"${escolhido === 'SEM EQUIPAMENTO' ? ' selected' : ''}>Sem equipamento (sobra)</option>`;
+  },
+
   /**
    * Confirm a move
    */
@@ -127,6 +153,7 @@ SGE.modal = {
     const novoRegime = document.getElementById('modal-regime-dest').value;
     const motivo = document.getElementById('modal-motivo').value;
     const obs = document.getElementById('modal-obs').value.trim();
+    const equipDestino = document.getElementById('modal-equip-dest').value;
 
     // ── Input Validation ──
     if (!txData || !/^\d{4}-\d{2}-\d{2}$/.test(txData)) {
@@ -148,6 +175,13 @@ SGE.modal = {
 
     const supOld = colaborador.supervisor;
     const regOld = colaborador.regime || '—';
+    const eqOld = colaborador.equipamento;
+    if (supOld === supervisorDestino && eqOld === equipDestino) {
+      SGE.helpers.toast('Nada mudou: escolha outro supervisor ou outro equipamento.', 'info');
+      return;
+    }
+    const eqDestObj = SGE.vagas.porCodigo(equipDestino);
+    const eqOldObj = SGE.vagas.porCodigo(eqOld);
 
     // Register movement locally first for optimistic UI response
     const mov = {
@@ -161,6 +195,9 @@ SGE.modal = {
       motivo: motivo,
       observacao: obs,
       effective_date: txData,
+      equipamento_mudou: eqOld !== equipDestino,
+      equipment_id_origem: eqOldObj ? eqOldObj.id : null,
+      equipment_id_destino: eqDestObj ? eqDestObj.id : null,
       created_at: new Date().toISOString(),
       usuario: SGE.auth.currentUser ? (SGE.auth.currentUser.nome || SGE.auth.currentUser.usuario) : SGE.CONFIG.usuario
     };
@@ -170,6 +207,7 @@ SGE.modal = {
     // Update collaborator
     colaborador.supervisor = supervisorDestino;
     colaborador.regime = novoRegime;
+    colaborador.equipamento = equipDestino;
 
     SGE.modal.close();
     SGE.helpers.updateStats();
@@ -178,7 +216,10 @@ SGE.modal = {
     // ── Undo: mostra toast com botão "Desfazer" por 10s ──
     let undid = false;
     const undoTimer = setTimeout(async () => {
-        if (!undid) await SGE.api.syncMove(mov);
+        if (undid) return;
+        const ok = await SGE.api.syncMove(mov);
+        // o equipamento escolhido vira vaga do supervisor (a linha fica na aba mesmo se a pessoa sair depois)
+        if (ok && eqDestObj) await SGE.vagas.garantir(supervisorDestino, eqDestObj);
     }, 10000);
 
     SGE.helpers.toastUndo(
@@ -189,6 +230,7 @@ SGE.modal = {
             // Revert in memory
             colaborador.supervisor = supOld;
             colaborador.regime = regOld;
+            colaborador.equipamento = eqOld;
             SGE.state.movimentacoes.shift(); // remove the optimistic entry
             SGE.helpers.updateStats();
             SGE.navigation._refreshViews();
@@ -231,6 +273,7 @@ SGE.modal = {
 
     const body = document.querySelector('.modal-body');
     body.innerHTML = `
+      <p class="modal-aviso">Nome, função, CR, categoria, telefone e matrículas são do cadastro do <b>SST</b>. Aqui você muda a alocação, o regime e o status.</p>
       <div class="edit-modal-form">
         <div class="form-field">
           <label>Nome</label>
@@ -298,7 +341,14 @@ SGE.modal = {
       </div>
     `;
 
-    // No category toggle required anymore: Sector and Equipment can be independently set.
+    // campos do cadastro (SST) ficam só para leitura
+    ['edit-nome', 'edit-cr', 'edit-funcao', 'edit-categoria', 'edit-telefone', 'edit-mat-usiminas', 'edit-mat-gps'].forEach(id => {
+      const campo = document.getElementById(id);
+      if (campo) {
+        campo.disabled = true;
+        campo.title = 'Cadastro do SST';
+      }
+    });
 
     const footer = document.querySelector('.modal-footer');
     footer.innerHTML = `
@@ -416,7 +466,7 @@ SGE.modal = {
       <div class="modal-subtitle">Selecione o supervisor de destino para ${colaborador.nome}</div>
     `;
 
-    const supAtivos = SGE.state.supervisores.filter(s => s.ativo && s.nome !== colaborador.supervisor);
+    const supAtivos = SGE.state.supervisores.filter(s => s.ativo);
     const body = document.querySelector('.modal-body');
     body.innerHTML = `
       <div class="settings-grid">
@@ -426,7 +476,7 @@ SGE.modal = {
                onmouseout="this.style.borderColor='var(--border)'">
             <div class="sup-dot active"></div>
             <div class="sup-name">${SGE.helpers.escapeHtml(s.nome)}</div>
-            <div class="sup-regime">${SGE.helpers.escapeHtml(s.regime_padrao)}</div>
+            <div class="sup-regime">${s.nome === colaborador.supervisor ? 'atual · trocar só o equipamento' : SGE.helpers.escapeHtml(s.regime_padrao)}</div>
           </div>
         `).join('')}
       </div>

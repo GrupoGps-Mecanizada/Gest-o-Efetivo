@@ -123,6 +123,7 @@ SGE.app = {
                     if (parsed.colaboradores) SGE.state.colaboradores = parsed.colaboradores;
                     if (parsed.supervisores) SGE.state.supervisores = parsed.supervisores;
                     if (parsed.setores) SGE.state.setores = parsed.setores;
+                    if (parsed.vagas) SGE.state.vagas = parsed.vagas;
                     if (parsed.movimentacoes) SGE.state.movimentacoes = parsed.movimentacoes;
                     if (parsed.equipamentos) SGE.state.equipamentos = parsed.equipamentos;
                     if (parsed.ferias) SGE.state.ferias = parsed.ferias;

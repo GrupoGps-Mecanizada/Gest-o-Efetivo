@@ -1,5 +1,17 @@
 # CHANGELOG — Gestão de Efetivo
 
+## v2.5.0 — 2026-10-08
+### Novo
+- **Vagas** (tabela nova gps_mec.efetivo_gps_mec_vagas, só com login): cada linha da aba de um supervisor é uma vaga (supervisor + equipamento) e aparece mesmo vazia. Carga inicial com os 56 pares em uso hoje. SQL em sql/2026-10-08_vagas_por_supervisor.sql.
+- Ferramentas da Matriz › **Adicionar vaga** e **Remover vaga vazia** (já vem o supervisor da aba aberta).
+- **Mover** pergunta o **equipamento (vaga) de destino**: vagas do supervisor primeiro, depois os outros equipamentos ou "sem equipamento (sobra)". Dá para trocar só de equipamento dentro do mesmo supervisor. A pessoa cai na coluna certa pela função (motorista ou operador). O equipamento escolhido vira vaga do supervisor.
+
+### Mudou
+- **Cadastro é do SST**: no Efetivo só se muda supervisor, equipamento, regime e status. Nome, função, CR, categoria, telefone e matrículas ficam só para leitura; saem Novo colaborador, Matrículas pendentes e Excluir. Edição em massa só de regime, supervisor e status.
+
+### Corrigido
+- Editar alguém em equipamento sem número (MT, CJ) apagava o equipamento.
+
 ## v2.4.2 — 2026-10-08
 ### Corrigido
 - Aba **TURNO 16HRS** agora reúne quem está no cadastro "16 HORAS" (como na planilha), e não mais pelo regime, que nem sempre está preenchido.

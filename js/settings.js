@@ -371,18 +371,10 @@ SGE.settings = {
 
       <div class="settings-section">
         <div class="settings-section-header">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2h12v12H2z"/><path d="M5 6h6M5 9h4"/></svg>
-          Matrículas Pendentes / Sem Matrícula GPS
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 7v4M8 5h.01"/></svg>
+          Cadastro de colaboradores
         </div>
-        <div class="settings-section-body">${semIdHtml}</div>
-      </div>
-
-      <div class="settings-section">
-        <div class="settings-section-header">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v6M5 8h6"/></svg>
-          Novo Colaborador
-        </div>
-        <div class="settings-section-body">${newColForm}</div>
+        <div class="settings-section-body"><p class="settings-aviso">Novo colaborador, matrícula, nome e função são cadastrados no <b>SST</b>. O Efetivo cuida da alocação: supervisor, equipamento (vaga), regime e status.</p></div>
       </div>
     `;
 

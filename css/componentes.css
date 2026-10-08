@@ -108,3 +108,59 @@
 .ac-texto small {
     color: var(--text-3);
 }
+
+/* janelas de vaga (Matriz) e avisos de cadastro do SST */
+.vaga-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.vaga-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-1);
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.vaga-item span {
+    margin-left: auto;
+    color: var(--text-3);
+    font-size: 12px;
+}
+
+.vaga-item.ocupada {
+    cursor: not-allowed;
+    opacity: .6;
+}
+
+.vaga-item input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+}
+
+.modal-dica {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--text-3);
+}
+
+.modal-aviso,
+.settings-aviso {
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+    border-radius: 8px;
+    background: var(--accent-glow);
+    color: var(--text-2);
+    font-size: 13px;
+}
