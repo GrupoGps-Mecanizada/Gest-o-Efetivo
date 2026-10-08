@@ -9,7 +9,7 @@
   <!-- NOTA: frame-ancestors não funciona via meta tag (limitação do browser) — configurar via HTTP header no servidor -->
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self' https:;
-    script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.sheetjs.com https://grupogps-mecanizada.github.io;
+    script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://grupogps-mecanizada.github.io;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com https://grupogps-mecanizada.github.io;
     font-src 'self' https://fonts.gstatic.com;
     img-src 'self' data: blob:;
@@ -38,7 +38,6 @@
   <link rel="stylesheet" href="css/modal.css?v=2.0.0" />
   <link rel="stylesheet" href="css/toast.css?v=2.0.0" />
   <link rel="stylesheet" href="css/ferias.css?v=2.0.0" />
-  <link rel="stylesheet" href="css/hub.css?v=2.0.0" />
   <link rel="stylesheet" href="css/componentes.css?v=2.0.0" />
   <link rel="stylesheet" href="css/dark-mode.css?v=2.0.0" />
   <!-- Layout do SST com as cores e a fonte do sge-core (por último: vale sobre os anteriores) -->
@@ -188,22 +187,6 @@
         <input type="text" id="global-search" placeholder="Buscar colaborador…" autocomplete="off" aria-label="Pesquisar colaboradores" />
       </label>
 
-      <!-- filtros (valem para a Matriz e o Painel) -->
-      <button id="filter-toggle-btn" class="barra-icone filter-btn" title="Filtros" aria-label="Abrir filtros">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>
-        <span id="filter-count-badge" class="filter-count-badge hidden">0</span>
-      </button>
-
-      <!-- exportar dados -->
-      <button id="topbar-export-btn" class="barra-icone barra-so-computador" title="Exportar dados" aria-label="Exportar dados">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4-4m4 4 4-4M4 19h16"/></svg>
-      </button>
-
-      <!-- outros sistemas do SGE -->
-      <button id="hub-menu-btn" class="barra-icone barra-so-computador" title="Ecossistema SGE (outros sistemas)" aria-label="Abrir Ecossistema SGE">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>
-      </button>
-
       <!-- tema claro/escuro -->
       <button id="dark-mode-btn" class="barra-icone" title="Tema claro ou escuro" aria-label="Alternar tema">
         <svg id="dark-mode-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg>
@@ -233,22 +216,6 @@
       </button>
       <div id="topbar-user" hidden></div>
     </header>
-
-    <!-- Ecossistema SGE (outros sistemas) -->
-    <div id="hub-dropdown-overlay" class="hub-dropdown-overlay hidden">
-      <div class="hub-dropdown-panel" onclick="event.stopPropagation()">
-        <div class="hub-header">
-          <div class="hub-header-title">
-            <span class="brand">SGE Ecossistema</span>
-            <span class="sys">Grupo GPS</span>
-          </div>
-          <button id="hub-close-btn" class="hub-close-btn" aria-label="Fechar Ecossistema SGE">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          </button>
-        </div>
-        <div class="hub-body" id="hub-tree-body"></div>
-      </div>
-    </div>
 
     <!-- Menu lateral do celular (como no SST: escuro, à direita, agrupado por assunto) -->
     <div id="nav-menu-overlay" class="nav-menu-overlay hidden" role="dialog" aria-label="Menu" aria-modal="true">
@@ -293,7 +260,7 @@
       </div>
     </div>
 
-    <!-- ==================== FILTROS ==================== -->
+    <!-- ==================== FILTROS (abertos pelas Ferramentas da Matriz) ==================== -->
     <div id="filter-dropdown-panel" class="filter-dropdown-panel hidden">
       <div class="filter-dropdown-header">
         <span>Filtros</span>
@@ -365,46 +332,35 @@
       <div id="settings-view" class="view"></div>
     </div>
 
-    <!-- ==================== DRAWER ==================== -->
+    <!-- ==================== PAINEL DO COLABORADOR (gaveta do SST) ==================== -->
     <div id="drawer-overlay" aria-hidden="true"></div>
-    <div id="drawer" role="complementary" aria-label="Detalhes do colaborador">
-      <div id="drawer-header">
-        <div>
-          <div id="drawer-title">—</div>
-          <div id="drawer-id">—</div>
+    <aside id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" aria-hidden="true">
+      <div id="drawer-alca" class="gv-alca" role="separator" aria-orientation="vertical" aria-label="Arraste para mudar a largura do painel" title="Arraste para aumentar ou diminuir · dois cliques voltam ao tamanho padrão"><span></span></div>
+      <header id="drawer-header" class="gv-topo">
+        <div class="gv-titulos">
+          <h2 id="drawer-title">—</h2>
+          <div class="gv-sub">
+            <span class="gv-sobretitulo">Colaborador · <span id="drawer-id">—</span></span>
+            <span id="drawer-resumo"></span>
+          </div>
         </div>
-        <button id="drawer-close" aria-label="Fechar painel de detalhes">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="M3 3l10 10M13 3L3 13" />
-          </svg>
+        <button type="button" id="drawer-expandir" class="gv-icone" aria-label="Expandir o painel" title="Expandir para quase a tela toda">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
         </button>
-      </div>
-      <div id="drawer-body"></div>
-      <div id="drawer-footer">
-        <button class="drawer-btn" data-action="move" aria-label="Mover colaborador para outro supervisor">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-            <path d="M1 8h14M11 4l4 4-4 4" />
-          </svg>
-          Mover
+        <button type="button" id="drawer-close" class="gv-icone" aria-label="Fechar painel" title="Fechar (Esc)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
         </button>
-        <button class="drawer-btn" data-action="edit" aria-label="Editar dados do colaborador">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-            <path d="M11 1l4 4L5 15H1v-4z" />
-          </svg>
-          Editar
-        </button>
-        <button class="drawer-btn drawer-btn--danger" data-action="delete" aria-label="Excluir colaborador permanentemente">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-            <path d="M2 4h12M5 4V2h6v2M6 7v5M10 7v5M3 4l1 10h8l1-10" />
-          </svg>
-          Excluir
-        </button>
-      </div>
-      <div
-        style="text-align:center; padding: 12px; font-size: 10px; color: var(--text-3); border-top: 1px solid var(--border);">
-        Desenvolvido por Warlison Abreu | Icaro Bernardo - Grupo GPS
-      </div>
-    </div>
+      </header>
+      <div id="drawer-body" class="gv-corpo"></div>
+      <footer id="drawer-footer" class="gv-rodape">
+        <span class="gv-credito">Desenvolvido por Warlison Abreu &amp; Icaro Bernardo — Grupo GPS</span>
+        <span class="gv-acoes">
+          <button type="button" class="drawer-btn gv-btn gv-btn--perigo" data-action="delete" aria-label="Excluir colaborador permanentemente">Excluir</button>
+          <button type="button" class="drawer-btn gv-btn" data-action="move" aria-label="Mover colaborador para outro supervisor">Mover</button>
+          <button type="button" class="drawer-btn gv-btn gv-btn--pri" data-action="edit" aria-label="Editar dados do colaborador">Editar</button>
+        </span>
+      </footer>
+    </aside>
 
     <!-- ==================== MODAL ==================== -->
     <div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-dialog-title">
@@ -425,7 +381,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 
   <!-- JS Modules (order matters — dependencies first) -->
   <script src="js/config.js?v=2.0.0"></script>
@@ -451,7 +406,6 @@
 
   <script src="js/state.js?v=2.0.0"></script>
   <script src="js/api.js?v=2.0.0"></script>
-  <script src="js/export.js?v=2.0.0"></script>
   <script src="js/auth.js?v=2.0.0"></script>
   <script src="js/sge-session-ping.js?v=2.0.0"></script>
   <script src="js/helpers.js?v=2.0.0"></script>
@@ -465,7 +419,6 @@
   <script src="js/settings.js?v=2.0.0"></script>
   <script src="js/navigation.js?v=2.0.0"></script>
   <script src="js/particles.js?v=2.0.0"></script>
-  <script src="js/hub.js?v=2.0.0"></script>
   <script src="js/dark-mode.js?v=2.0.0"></script>
   <script src="js/planilha-excel.js?v=2.0.0"></script>
   <script src="js/acoes-colaborador.js?v=2.0.0"></script>

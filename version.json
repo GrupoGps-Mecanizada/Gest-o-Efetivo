@@ -1,5 +1,5 @@
 {
-  "version": "2.3.0",
+  "version": "2.4.0",
   "updated_at": "2026-10-08",
-  "notes": "Planilha mais nítida, abas azuis como no documento; saem Treinamentos e Advertências (controlados em outro sistema)"
+  "notes": "Painel do colaborador igual ao do SST (abas e tabelas); barra sem os botões Exportar, Ecossistema e Filtros"
 }

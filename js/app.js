@@ -311,14 +311,6 @@ SGE.app = {
             if (e.key === 'Escape') SGE.app.fecharSuspensos();
         });
 
-        // ── Global Export Button ──
-        const exportBtn = document.getElementById('topbar-export-btn');
-        if (exportBtn) {
-            exportBtn.addEventListener('click', () => {
-                if (SGE.export) SGE.export.openModal();
-            });
-        }
-
         // ── Print / PDF Button ──
         const printBtn = document.getElementById('topbar-print-btn');
         if (printBtn) {
@@ -337,10 +329,11 @@ SGE.app = {
                 e.stopPropagation();
                 filterPanel.classList.toggle('hidden');
             });
-
-            // Close filter panel when clicking outside
+        }
+        // o painel de filtros abre pelas Ferramentas da Matriz: fecha ao clicar fora
+        if (filterPanel) {
             document.addEventListener('click', (e) => {
-                if (!filterPanel.contains(e.target) && e.target !== filterBtn && !filterBtn.contains(e.target)) {
+                if (!filterPanel.contains(e.target) && !(filterBtn && filterBtn.contains(e.target))) {
                     filterPanel.classList.add('hidden');
                 }
             });
@@ -385,6 +378,7 @@ SGE.app = {
     setupDrawer() {
         document.getElementById('drawer-overlay').addEventListener('click', SGE.drawer.close);
         document.getElementById('drawer-close').addEventListener('click', SGE.drawer.close);
+        SGE.drawer.ligar();
 
         // Drawer footer buttons — use event delegation
         document.getElementById('drawer-footer').addEventListener('click', e => {

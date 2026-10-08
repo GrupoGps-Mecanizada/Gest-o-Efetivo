@@ -234,13 +234,6 @@ textarea {
     background: rgba(2, 6, 23, .45);
 }
 
-/* ── Painel lateral do colaborador ── */
-#drawer {
-    background: var(--sge-superficie);
-    border-left: 1px solid var(--sge-borda);
-    box-shadow: var(--sombra-4);
-}
-
 /* ── Painel de filtros (abre abaixo da barra) ── */
 .filter-dropdown-panel {
     position: fixed;
@@ -269,8 +262,7 @@ textarea {
 /* ── Botões de toque grandes no celular e tablet (sge-core: 44px) ── */
 @media (pointer: coarse) {
     .btn-confirm,
-    .btn-cancel,
-    .drawer-btn {
+    .btn-cancel {
         min-height: var(--sge-toque);
     }
 }

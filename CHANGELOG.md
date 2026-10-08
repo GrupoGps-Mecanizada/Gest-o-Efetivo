@@ -1,5 +1,13 @@
 # CHANGELOG — Gestão de Efetivo
 
+## v2.4.0 — 2026-10-08
+### Mudou
+- **Painel do colaborador igual ao do SST**: gaveta à direita com abas (Cadastro · Alocação · Férias · Movimentações · Alterações) e os dados em tabelas rótulo | valor. Largura ajustável (arrastar a borda ou botão expandir), Esc fecha, ações Excluir · Mover · Editar no rodapé.
+- Barra de cima sem os botões **Exportar**, **Ecossistema** e **Filtros**. Os filtros continuam nas Ferramentas da Matriz.
+
+### Saiu
+- Telas de exportação antiga e do Ecossistema (export.js, hub.js) e a biblioteca SheetJS, que só elas usavam.
+
 ## v2.3.0 — 2026-10-08
 ### Corrigido
 - **Nitidez da planilha**: com o Windows ampliado (125%, 150%) a área de desenho caía numa fração de pixel e o navegador borrava. Agora cada desenho é alinhado ao pixel exato da tela (também ao mudar o zoom).

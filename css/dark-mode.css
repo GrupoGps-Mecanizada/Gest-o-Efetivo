@@ -233,40 +233,7 @@
     background: var(--bg-0);
 }
 
-/* ===== DRAWER ===== */
-[data-theme="dark"] #drawer {
-    background: var(--bg-1);
-    border-left-color: var(--border);
-}
-
-[data-theme="dark"] #drawer-header {
-    background: var(--bg-2);
-    border-bottom-color: var(--border);
-}
-
-[data-theme="dark"] #drawer-title {
-    color: var(--text-1);
-}
-
-[data-theme="dark"] #drawer-id {
-    color: var(--text-3);
-}
-
-[data-theme="dark"] #drawer-footer {
-    border-top-color: var(--border);
-    background: var(--bg-2);
-}
-
-[data-theme="dark"] .drawer-btn {
-    background: var(--bg-3);
-    border-color: var(--border);
-    color: var(--text-2);
-}
-
-[data-theme="dark"] .drawer-btn:hover {
-    background: var(--bg-4);
-    color: var(--accent);
-}
+/* Painel do colaborador: usa as cores do tema (drawer.css) */
 
 /* ===== MODAL ===== */
 [data-theme="dark"] #modal {
