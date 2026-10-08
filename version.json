@@ -1,5 +1,5 @@
 {
-  "version": "2.4.0",
+  "version": "2.4.1",
   "updated_at": "2026-10-08",
-  "notes": "Painel do colaborador igual ao do SST (abas e tabelas); barra sem os botões Exportar, Ecossistema e Filtros"
+  "notes": "Matriz sempre abre na aba GERAL"
 }

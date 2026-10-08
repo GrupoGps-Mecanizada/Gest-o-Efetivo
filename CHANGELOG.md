@@ -1,5 +1,10 @@
 # CHANGELOG — Gestão de Efetivo
 
+## v2.4.1 — 2026-10-08
+### Mudou
+- A Matriz sempre abre na aba **GERAL** (ao entrar no sistema e ao voltar de outra tela). Quando os dados se atualizam sozinhos, a aba que você está vendo não muda.
+- Saiu o botão flutuante de ajuda (chamados do SGE Central), que ficava por cima dos botões do rodapé.
+
 ## v2.4.0 — 2026-10-08
 ### Mudou
 - **Painel do colaborador igual ao do SST**: gaveta à direita com abas (Cadastro · Alocação · Férias · Movimentações · Alterações) e os dados em tabelas rótulo | valor. Largura ajustável (arrastar a borda ou botão expandir), Esc fecha, ações Excluir · Mover · Editar no rodapé.

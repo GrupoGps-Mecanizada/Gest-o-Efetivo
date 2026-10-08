@@ -111,7 +111,7 @@ SGE.navigation = {
                     if (SGE.dashboard) SGE.dashboard.render();
                     break;
                 case 'matriz':
-                    SGE.matriz.render();
+                    SGE.matriz.render(true); // sempre abre na aba GERAL
                     // a planilha mede o espaço de novo (estava escondida)
                     setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
                     break;

@@ -328,8 +328,8 @@ tr { page-break-inside: avoid; }
 
     /**
      * Cria a planilha dentro de `caixa`.
-     * opcoes: { nomeArquivo, abas, aoAbrir(pessoaId), aoSelecionar(pessoaIds), ferramentas(el), dica }
-     * Devolve { atualizar(abas), exportar(), imprimir(), tema(escuro), destruir() }.
+     * opcoes: { nomeArquivo, abas, abaInicial, aoAbrir(pessoaId), aoSelecionar(pessoaIds), ferramentas(el), dica }
+     * Devolve { atualizar(abas), irPara(idDaAba), exportar(), imprimir(), tema(escuro), destruir() }.
      */
     function criar(caixa, opcoes) {
         const props = { dica: 'dois cliques num nome abrem o colaborador', nomeArquivo: 'planilha', ...opcoes };
@@ -343,6 +343,8 @@ tr { page-break-inside: avoid; }
         let pendente = null;
         let observador = null;
         let pararNitidez = null;
+        let abrirAba = null;
+        let abaPedida = props.abaInicial || null;
 
         caixa.classList.add('pl');
         caixa.innerHTML = '<div class="pl-area"></div><div class="pl-abrindo">Abrindo planilha…</div>';
@@ -675,6 +677,15 @@ tr { page-break-inside: avoid; }
                 });
 
                 montar(props.abas, false);
+                // mostra a aba pedida (ex.: GERAL) em vez da primeira
+                abrirAba = (id) => {
+                    try {
+                        const ws = id && folhaPorId(id);
+                        if (ws) pasta().setActiveSheet(ws);
+                    } catch (e) { /* aba não existe: fica onde está */ }
+                };
+                abrirAba(abaPedida);
+                abaPedida = null;
 
                 // retrato das abas como estão: o que o filtro deixou, colunas visíveis, larguras, estilos e mesclas
                 retratar = (soAtiva = false) => {
@@ -758,6 +769,11 @@ tr { page-break-inside: avoid; }
                 props.abas = abas;
                 if (pronto && aplicar) aplicar(abas);
                 else pendente = abas;
+            },
+            /** mostra uma aba (pelo id); se a planilha ainda está abrindo, mostra assim que abrir */
+            irPara(id) {
+                if (pronto && abrirAba) abrirAba(id);
+                else abaPedida = id;
             },
             exportar,
             imprimir,

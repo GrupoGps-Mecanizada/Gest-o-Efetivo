@@ -266,6 +266,7 @@ SGE.matriz = (() => {
             <div class="mz-tela"><div class="mz-planilha"></div></div>`;
         st.planilha = SGE.planilha.criar(view.querySelector('.mz-planilha'), {
             nomeArquivo: 'planilha-efetivos-mecanizada',
+            abaInicial: 'geral', // sempre abre na GERAL
             abas: montarAbas(),
             dica: 'dois cliques num nome abrem o colaborador',
             aoAbrir: (id) => {
@@ -464,11 +465,15 @@ SGE.matriz = (() => {
     }
 
     /* ─── Público ─── */
-    function render() {
+    /** entrar = veio de outra tela (abre na GERAL); sem isso é só atualização dos dados (fica na aba atual) */
+    function render(entrar = false) {
         const view = document.getElementById('matriz-view');
         if (!view) return;
         if (!st.planilha || !view.querySelector('.mz-planilha')) montarTela(view);
-        else st.planilha.atualizar(montarAbas());
+        else {
+            st.planilha.atualizar(montarAbas());
+            if (entrar) st.planilha.irPara('geral');
+        }
         atualizarBotoes();
         if (st.painel) desenharPainel();
     }
