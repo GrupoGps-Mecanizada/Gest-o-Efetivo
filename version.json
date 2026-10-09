@@ -1,5 +1,5 @@
 {
-  "version": "2.5.2",
-  "updated_at": "2026-10-08",
-  "notes": "Quem tem supervisor e não tem placa fica na aba do supervisor (linha sem placa), como na planilha; SOBRA é só quem está sem supervisor"
+  "version": "2.6.0",
+  "updated_at": "2026-10-09",
+  "notes": "Barra Universal do SGE no lugar da barra própria: uma barra só dentro do Portal SGE"
 }

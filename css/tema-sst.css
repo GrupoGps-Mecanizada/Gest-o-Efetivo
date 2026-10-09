@@ -275,3 +275,6 @@ textarea {
         transition-duration: .01ms !important;
     }
 }
+
+/* Barra Universal do SGE (sge-core): com ela na página, a barra própria some (uma barra só) */
+.com-barra-universal #topbar, .com-barra-universal #nav-menu-overlay { display: none !important; }

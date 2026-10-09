@@ -1,5 +1,11 @@
 # CHANGELOG — Gestão de Efetivo
 
+## v2.6.0 — 2026-10-09
+### Mudou
+- A barra de cima agora é a **Barra Universal do SGE** (sge-core): mesmos menus (Início, Efetivo, Configurações), busca que leva à Pesquisa, tema, foto e Sair. Dentro do Portal SGE aparece **uma barra só** (antes eram duas) e o logo SGE troca de sistema.
+- O visual do sge-core passa a vir do endereço certo (`/sge-core-/v1/`; o antigo dava erro 404).
+- Sem o sge-core (ex.: falha ao baixar), a barra antiga continua funcionando.
+
 ## v2.5.2 — 2026-10-08
 ### Mudou
 - Quem tem supervisor mas **não tem placa** aparece na **aba do supervisor**, numa linha sem placa no fim, como na planilha (antes caía em SOBRA). A aba **SOBRA** agora é só de quem está **sem supervisor**.
