@@ -1,5 +1,5 @@
 {
-  "version": "2.6.0",
-  "updated_at": "2026-10-09",
-  "notes": "Barra Universal do SGE no lugar da barra própria: uma barra só dentro do Portal SGE"
+  "version": "2.7.0",
+  "updated_at": "2026-10-14",
+  "notes": "Tela Turnos: quem está de turno (4x4 A-D, ADM, 16 horas), calendário das letras, feriados e histórico dos supervisores"
 }

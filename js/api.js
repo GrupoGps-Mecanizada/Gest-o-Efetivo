@@ -196,7 +196,8 @@ SGE.api = {
                         'regimes': 'regimes',
                         'status_colaborador': 'statuses',
                         'mapa_turnos': 'turnoMap',
-                        'ordem_kanban': 'ordemKanban'
+                        'ordem_kanban': 'ordemKanban',
+                        'escala_turnos': 'escala'
                     };
                     const mappedKey = legacyKeys[cfg.chave] || cfg.chave;
                     if (SGE.CONFIG[mappedKey] !== undefined) SGE.CONFIG[mappedKey] = cfg.valor;
@@ -229,6 +230,7 @@ SGE.api = {
         if (v === 'search' && SGE.search) SGE.search.render();
         if (v === 'history' && SGE.history) SGE.history.render();
         if (v === 'ferias' && SGE.ferias) SGE.ferias.render();
+        if (v === 'turnos' && SGE.turnos) SGE.turnos.atualizar();
     },
 
     /**
@@ -608,7 +610,8 @@ SGE.api = {
                 'regimes': 'regimes',
                 'statuses': 'status_colaborador',
                 'turnoMap': 'mapa_turnos',
-                'ordemKanban': 'ordem_kanban'
+                'ordemKanban': 'ordem_kanban',
+                'escala': 'escala_turnos'
             };
             const mappedKey = newKeys[configKey] || configKey;
 
@@ -622,6 +625,25 @@ SGE.api = {
         } catch (e) {
             return this._handleError(e, `Salvar config: ${configKey}`);
         }
+    },
+
+    /**
+     * Histórico dos supervisores (troca de letra/regime, nome, ativo), mais recente primeiro.
+     * Sem a tabela (SQL de 14/10/2026 não rodado) devolve { erro } e a tela avisa.
+     */
+    async carregarHistoricoSupervisores(limite = 100) {
+        if (!window.supabase) return { erro: 'sem conexão' };
+        const { data, error } = await supabase
+            .schema('gps_mec')
+            .from('efetivo_gps_mec_supervisores_historico')
+            .select('supervisor_nome, campo, valor_antes, valor_depois, alterado_por, alterado_em')
+            .order('alterado_em', { ascending: false })
+            .limit(limite);
+        if (error) {
+            console.warn('SGE: histórico dos supervisores indisponível:', error.message);
+            return { erro: error.message };
+        }
+        return data || [];
     },
 
     /**

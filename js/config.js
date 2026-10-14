@@ -142,7 +142,12 @@ SGE.CONFIG = {
     'WELLISON',
     '16 HORAS',
     'SEM REGISTRO'
-  ]
+  ],
+
+  // Escala de turnos e feriados: vêm do banco (chaves escala_turnos e feriados).
+  // null = usa o padrão de escala.js (ciclo 4x4 a partir de 13/10/2026).
+  escala: null,
+  feriados: []
 };
 
 /**

@@ -1,5 +1,17 @@
 # CHANGELOG — Gestão de Efetivo
 
+## v2.7.0 — 2026-10-14
+### Novo
+- Tela **Turnos** (menu Efetivo › Turnos):
+  - **Quem está de turno agora**: a letra do 4x4 (de dia, das 06:40 às 18:40, ou de noite, das 18:40 às 06:40) e o supervisor dela, se o ADM está em expediente (07:00 às 16:48) e qual turno do 16 horas está trabalhando (06:40 às 14:40 e 14:40 às 22:40). Atualiza a cada minuto.
+  - **Quem estava de turno em**: escolha data e hora para saber a letra e o supervisor daquele momento. A noite que passa da meia-noite conta para o dia em que começou.
+  - **Escala dos supervisores**: mostra se cada um está de dia, de noite, de folga ou em expediente ADM. Supervisor sem regime definido fica em destaque.
+  - **Calendário das letras** do mês (letra do dia em cima e da noite embaixo), com os feriados marcados.
+  - **Feriados**: lista e cadastro (quem tem perfil de gestão). ADM e 16 horas não trabalham em feriado. O 4x4 segue a escala.
+  - **Histórico dos supervisores**: toda troca de letra, regime, nome ou ativo fica gravada com quem mudou e quando.
+- Cálculo da escala em `js/escala.js` (4x4: 2 dias + 2 noites + 4 folgas, ordem A → D → B → C, referência 13/10/2026 = A de dia), com 10 testes (`node --test tests/escala.test.js`).
+- Banco: `sql/2026-10-14_escala_e_turnos.sql` (escala e feriados na tabela de configurações, tabela `efetivo_gps_mec_supervisores_historico` com gatilho, 16 HORAS passa a 16HS-5X2). Para desfazer: `sql/voltar/2026-10-14_escala_e_turnos_voltar.sql`. Antes de rodar o SQL, a tela usa a escala padrão do código e avisa que o histórico ainda não existe.
+
 ## v2.6.0 — 2026-10-09
 ### Mudou
 - A barra de cima agora é a **Barra Universal do SGE** (sge-core): mesmos menus (Início, Efetivo, Configurações), busca que leva à Pesquisa, tema, foto e Sair. Dentro do Portal SGE aparece **uma barra só** (antes eram duas) e o logo SGE troca de sistema.

@@ -9,13 +9,14 @@ window.SGE = window.SGE || {};
 SGE.navigation = {
 
     // Valid view names for hash restoration
-    _validViews: ['viz', 'matriz', 'search', 'history', 'settings', 'ferias'],
+    _validViews: ['viz', 'matriz', 'search', 'history', 'settings', 'ferias', 'turnos'],
 
     // Menu por assunto (igual ao SST): cada tela pertence a uma seção da barra de cima
     _secoes: {
         viz: ['inicio', 'Início', 'Painel'],
         matriz: ['efetivo', 'Efetivo', 'Matriz'],
         ferias: ['efetivo', 'Efetivo', 'Férias'],
+        turnos: ['efetivo', 'Efetivo', 'Turnos'],
         history: ['efetivo', 'Efetivo', 'Histórico'],
         search: ['efetivo', 'Efetivo', 'Pesquisa'],
         settings: ['config', 'Configurações', 'Configurações'],
@@ -129,6 +130,9 @@ SGE.navigation = {
                     break;
                 case 'ferias':
                     if (SGE.ferias) SGE.ferias.render();
+                    break;
+                case 'turnos':
+                    if (SGE.turnos) SGE.turnos.render();
                     break;
             }
         } catch (err) {
@@ -434,6 +438,7 @@ SGE.navigation = {
             case 'history': SGE.history.render(); break;
             case 'settings': SGE.settings.render(); break;
             case 'ferias': if (SGE.ferias) SGE.ferias.render(); break;
+            case 'turnos': if (SGE.turnos) SGE.turnos.render(); break;
         }
     }
 };

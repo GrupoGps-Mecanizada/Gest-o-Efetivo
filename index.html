@@ -38,6 +38,7 @@
   <link rel="stylesheet" href="css/modal.css?v=2.0.0" />
   <link rel="stylesheet" href="css/toast.css?v=2.0.0" />
   <link rel="stylesheet" href="css/ferias.css?v=2.0.0" />
+  <link rel="stylesheet" href="css/turnos.css?v=2.7.0" />
   <link rel="stylesheet" href="css/componentes.css?v=2.0.0" />
   <link rel="stylesheet" href="css/dark-mode.css?v=2.0.0" />
   <!-- Layout do SST com as cores e a fonte do sge-core (por último: vale sobre os anteriores) -->
@@ -159,6 +160,10 @@
                 <span class="barra-subitem-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM12 4v1M17.66 6.34l-.7.7M20 12h-1M17.66 17.66l-.7-.7M12 20v-1M6.34 17.66l.7-.7M4 12h1M6.34 6.34l.7.7"/></svg></span>
                 <span class="barra-subitem-texto"><b>Férias</b><small>Quem está e quem vai sair de férias</small></span>
               </button>
+              <button type="button" role="menuitem" class="barra-subitem" data-view="turnos">
+                <span class="barra-subitem-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v15H4zM4 10h16M9 3v4M15 3v4M8 14h2M14 14h2M8 17h2"/></svg></span>
+                <span class="barra-subitem-texto"><b>Turnos</b><small>Quem está de turno, letras A–D e supervisores</small></span>
+              </button>
               <button type="button" role="menuitem" class="barra-subitem" data-view="history">
                 <span class="barra-subitem-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2"/></svg></span>
                 <span class="barra-subitem-texto"><b>Histórico</b><small>Movimentações entre supervisores</small></span>
@@ -239,6 +244,10 @@
           <button class="nav-menu-item" data-view="ferias">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM12 4v1M17.66 6.34l-.7.7M20 12h-1M17.66 17.66l-.7-.7M12 20v-1M6.34 17.66l.7-.7M4 12h1M6.34 6.34l.7.7"/></svg>
             Férias
+          </button>
+          <button class="nav-menu-item" data-view="turnos">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v15H4zM4 10h16M9 3v4M15 3v4M8 14h2M14 14h2M8 17h2"/></svg>
+            Turnos
           </button>
           <button class="nav-menu-item" data-view="history">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2"/></svg>
@@ -328,6 +337,9 @@
       <!-- FERIAS VIEW -->
       <div id="ferias-view" class="view"></div>
 
+      <!-- TURNOS VIEW -->
+      <div id="turnos-view" class="view"></div>
+
       <!-- SETTINGS VIEW -->
       <div id="settings-view" class="view"></div>
     </div>
@@ -413,6 +425,8 @@
   <script src="js/dashboard.js?v=2.0.0"></script>
   <script src="js/equip.js?v=2.0.0"></script>
   <script src="js/ferias.js?v=2.0.0"></script>
+  <script src="js/escala.js?v=2.7.0"></script>
+  <script src="js/turnos.js?v=2.7.0"></script>
   <script src="js/settings.js?v=2.0.0"></script>
   <script src="js/navigation.js?v=2.0.0"></script>
   <script src="js/particles.js?v=2.0.0"></script>
