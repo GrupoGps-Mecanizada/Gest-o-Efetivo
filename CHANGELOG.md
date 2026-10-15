@@ -1,5 +1,13 @@
 # CHANGELOG — Gestão de Efetivo
 
+## v2.8.0 — 2026-10-15
+### Mudou
+- **Login novo da Central** (`SGE.acesso.entrar` do sge-core) no lugar do `sso_client.js`. O sistema só abre com a sessão real de quem entrou; sem ela, vai para o login da Central. Erro de rede não deixa entrar ("Não consegui conferir").
+- O banco passa a ser lido e gravado **com a sessão da pessoa** (uma conexão só, a mesma do login). Antes, quem tinha só o "crachá" antigo lia como anônimo. É o passo que permite fechar a leitura sem login das tabelas gps_mec.
+- O nível vem da régua única: Administrador → ADM, Gestor → GESTAO, os outros → VISAO.
+### Saiu
+- Login local (com "Criar uma conta"), o botão DEV e o `sge-session-ping.js` (o radar da Central agora vem do sge-core).
+
 ## v2.7.0 — 2026-10-14
 ### Novo
 - Tela **Turnos** (menu Efetivo › Turnos):

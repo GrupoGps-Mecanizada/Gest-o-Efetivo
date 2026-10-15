@@ -392,31 +392,16 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Núcleo do SGE antes de tudo: login único da Central (SGE.acesso) e uma conexão só com o banco -->
+  <script src="/sge-core-/v1/sge-core.js"></script>
 
   <!-- JS Modules (order matters — dependencies first) -->
   <script src="js/config.js?v=2.0.0"></script>
-  <script src="js/supabase-config.js?v=2.0.0"></script>
-
-  <!-- DEV MODE: bypass SSO automático em ambiente local (file:// / localhost)
-       SSO não consegue redirecionar de volta para file://, portanto o bypass
-       é ativado automaticamente. Em produção (https) esta lógica é ignorada. -->
-  <script>
-    (function () {
-      var isLocal = location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-      if (isLocal) {
-        window.SGE_SSO_BYPASS = true;
-        console.log('[SGE DEV] Bypass SSO ativado automaticamente — protocolo local detectado (' + location.protocol + ')');
-      }
-    })();
-  </script>
-
-  <!-- SGE SSO AUTH (carregado do GitHub Pages da SGE-CENTRAL) -->
-  <script src="https://grupogps-mecanizada.github.io/SGE-CENTRAL/js/auth/sso_client.js?v=6"></script>
+  <script src="js/supabase-config.js?v=2.8.0"></script>
 
   <script src="js/state.js?v=2.0.0"></script>
   <script src="js/api.js?v=2.0.0"></script>
-  <script src="js/auth.js?v=2.0.0"></script>
-  <script src="js/sge-session-ping.js?v=2.0.0"></script>
+  <script src="js/auth.js?v=2.8.0"></script>
   <script src="js/helpers.js?v=2.0.0"></script>
   <script src="js/drawer.js?v=2.0.0"></script>
   <script src="js/modal.js?v=2.5.2"></script>
@@ -437,11 +422,9 @@
   <script src="js/matriz.js?v=2.5.2"></script>
   <script src="js/app.js?v=2.0.0"></script>
   <!-- Barra Universal do SGE no lugar da barra própria (uma barra só, igual em todos os sistemas) -->
-  <script src="/sge-core-/v1/sge-core.js"></script>
   <script src="/sge-core-/v1/sge-icones.js"></script>
   <script src="/sge-core-/v1/sge-barra.js"></script>
   <script src="js/barra-universal.js?v=2.6.0"></script>
-  <script src="js/dev-mode.js?v=2.0.0"></script>
   <!-- Push Notifications: notifica movimentações quando a aba está em segundo plano -->
   <script src="js/notifications.js?v=2.0.0"></script>
   <!-- Auto-Update: detecta novas versões e atualiza todos os navegadores automaticamente -->
