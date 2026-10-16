@@ -28,15 +28,24 @@ SGE.auth = {
         const r = await SGE.acesso.entrar(SLUG_SISTEMA);
         // Só quem está na lista de editores mexe no efetivo (o banco também barra os outros).
         // Quem não é editor fica só consultando, mesmo sendo Gestor ou Administrador.
-        this.editor = SGE.movimentar ? await SGE.movimentar.souEditor() : false;
+        this.editor = await this.souEditor();
         this.updateCurrentUser({
             id: r.usuario.id,
             email: r.usuario.email,
             nome: r.usuario.nome,
             perfil: this.editor ? (PERFIL_POR_PAPEL[r.papel] || 'GESTAO') : 'VISAO'
         });
-        if (this.editor) SGE.movimentar.montarBotao(); // botão fixo no topo, só para editores
         return true;
+    },
+
+    /** está na lista de editores (gps_mec.efetivo_gps_mec_editores)? Na dúvida, só consulta. */
+    async souEditor() {
+        try {
+            const { data, error } = await window.supabase.schema('gps_mec').rpc('efetivo_gps_mec_e_editor');
+            return !error && data === true;
+        } catch (_) {
+            return false;
+        }
     },
 
     updateCurrentUser(user) {

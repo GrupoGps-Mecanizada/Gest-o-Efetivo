@@ -1,16 +1,9 @@
 # CHANGELOG — Gestão de Efetivo
 
-## v2.9.0 — 2026-10-16
-### Novo
-- Botão **Movimentar** fixo no topo (só para quem está na lista de editores). Janela em 3 passos:
-  1. **Quem?** busca por nome ou matrícula (sem ligar para acento) e mostra onde a pessoa está. "Pessoa nova" leva ao cadastro do SST.
-  2. **Para onde?** trocar de equipamento ou supervisor (mostra as vagas da equipe, livres primeiro), férias, atestado, sobra (com data de volta opcional), voltar ao trabalho (só para quem está fora) e desligado. Se a vaga estiver ocupada, pergunta o que fazer com quem está nela: trocar de lugar, mandar para a Sobra ou deixar como está.
-  3. **Por quê?** motivo pronto e observação opcional, com o **resumo em português** antes de confirmar.
-- Grava tudo junto pela função do banco `efetivo_gps_mec_movimentar` (com o motivo no histórico que ninguém apaga). Depois de gravar aparece **Desfazer** por 10 segundos.
-- Testes: `node --test tests/movimentar.test.js` (11) e a tela clicada num navegador com dados falsos.
+## v2.9.1 — 2026-10-16
 ### Mudou
-- Quem **não é editor** fica só consultando (os botões de editar somem), mesmo sendo Gestor ou Administrador. É a mesma regra que o banco já aplica.
-- O sistema passa a carregar a **data de volta** e os ids de supervisor e equipamento de cada pessoa.
+- O botão **Movimentar** (v2.9.0) foi **retirado** a pedido do dono: mexer nas pessoas volta a ser como na v2.8.0.
+- Fica: quem **não é editor** só consulta (os botões de editar somem), mesmo sendo Gestor ou Administrador. É a mesma regra que o banco já aplica (P-035, etapa 2).
 
 ## v2.8.0 — 2026-10-15
 ### Mudou

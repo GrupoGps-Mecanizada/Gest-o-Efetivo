@@ -1,5 +1,5 @@
 {
-  "version": "2.9.0",
+  "version": "2.9.1",
   "updated_at": "2026-10-16",
-  "notes": "Botão Movimentar: Quem? Para onde? Por quê?, resumo antes de confirmar e Desfazer"
+  "notes": "Botão Movimentar retirado a pedido do dono; quem não é editor só consulta"
 }
