@@ -115,7 +115,7 @@ SGE.api = {
                 { data: configs, error: errCfg },
                 { data: vagas, error: errVagas }
             ] = await Promise.all([
-                supabase.schema('gps_mec').from('efetivo_gps_mec_colaboradores').select('id, name, function, cr, regime, status, telefone, matricula_usiminas, matricula_gps, category, supervisor_id, equipment_id, setor_id, supervisors:efetivo_gps_mec_supervisores(name), equipment:efetivo_gps_mec_equipamentos(sigla, numero), setores:efetivo_gps_mec_setores(nome)'),
+                supabase.schema('gps_mec').from('efetivo_gps_mec_colaboradores').select('id, name, function, cr, regime, status, telefone, matricula_usiminas, matricula_gps, category, supervisor_id, equipment_id, setor_id, data_volta, supervisors:efetivo_gps_mec_supervisores(name), equipment:efetivo_gps_mec_equipamentos(sigla, numero), setores:efetivo_gps_mec_setores(nome)'),
                 supabase.schema('gps_mec').from('efetivo_gps_mec_supervisores').select('*').order('name'),
                 supabase.schema('gps_mec').from('efetivo_gps_mec_setores').select('*').order('nome'),
                 supabase.schema('gps_mec').from('efetivo_gps_mec_movimentacoes').select('*, employees:efetivo_gps_mec_colaboradores(name, matricula_gps), from_sup:efetivo_gps_mec_supervisores!movements_from_supervisor_id_fkey(name), to_sup:efetivo_gps_mec_supervisores!movements_to_supervisor_id_fkey(name)').order('created_at', { ascending: false }).limit(100),
@@ -147,7 +147,11 @@ SGE.api = {
                 supervisor: e.supervisors ? e.supervisors.name : 'SEM SUPERVISOR',
                 equipamento: e.equipment ? `${e.equipment.sigla}-${e.equipment.numero || ''}`.replace(/-$/, '') : 'SEM EQUIPAMENTO',
                 setor: e.setores ? e.setores.nome : 'SEM SETOR',
-                setor_id: e.setor_id
+                setor_id: e.setor_id,
+                // ids e data de volta: usados pelo Movimentar e pela Matriz
+                supervisor_id: e.supervisor_id || null,
+                equipment_id: e.equipment_id || null,
+                data_volta: e.data_volta || null
             }));
 
             SGE.state.supervisores = supervisors.map(s => ({
