@@ -2,9 +2,8 @@
 
 /**
  * SGE — Matriz do efetivo (modelo Excel)
- * Mesmo formato da planilha "EFETIVOS MECANIZADA": aba RELAÇÃO (resumo com contagens), aba GERAL
- * (Nome · Supervisor/Status · Equipamento), uma aba por supervisor (PLACA · MOTORISTA · OPERADOR 1 ·
- * OPERADOR 2, uma linha por equipamento), TURNO 16HRS e as abas FÉRIAS, SOBRA e ATESTADO. A planilha é só para ver e pesquisar: dois cliques num nome
+ * Uma aba só, uma linha por pessoa: COLABORADOR · STATUS · REGIME · LETRA · SUPERVISOR. Quem não está
+ * trabalhando (férias, atestado, sobra, em aviso) tem a linha inteira pintada. A planilha é só para ver e pesquisar: dois cliques num nome
  * abrem o colaborador. Botão "Ferramentas" no canto: buscar, filtrar, exportar, imprimir e agir na seleção.
  */
 window.SGE = window.SGE || {};
@@ -17,8 +16,6 @@ SGE.matriz = (() => {
         imprimir: 'M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2M7 14h10v7H7z',
         pessoa: 'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM4 21a8 8 0 0 1 16 0',
         mover: 'M5 12h14M13 6l6 6-6 6',
-        vagaMais: 'M12 5v14M5 12h14',
-        vagaMenos: 'M5 12h14',
         editar: 'M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4',
         ferramentas: 'M4 6h9m4 0h3M4 12h3m4 0h9M4 18h11m4 0h1M15 4v4M9 10v4M17 16v4',
         fechar: 'M6 6l12 12M18 6 6 18',
@@ -30,206 +27,78 @@ SGE.matriz = (() => {
     const semAcento = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLocaleLowerCase('pt-BR');
     const maiusculo = (s) => String(s || '').toLocaleUpperCase('pt-BR');
     const porNome = (a, b) => String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
-    const natural = (a, b) => a.localeCompare(b, 'pt-BR', { numeric: true });
-    const MESES = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
-    const NAO_APLICAVEL = 'NÃO APLICÁVEL';
 
-    /* ─── Quem vai para qual aba ─── */
-    const ehMotorista = (c) => /MOTORISTA/i.test(c.funcao || '');
+    /* ─── Uma linha por pessoa: COLABORADOR · STATUS · REGIME · LETRA · SUPERVISOR ─── */
     const temSupervisor = (c) => !!c.supervisor && c.supervisor !== 'SEM SUPERVISOR';
-    /** placa/vaga como na planilha: "AP-12" vira "AP 12", "AV-02 - EQUIP 1" vira "AV 02 - EQUIP 1"; quem está num setor mostra o setor */
-    function placaDe(c) {
-        if (c.setor_id && c.setor && c.setor !== 'SEM SETOR') return maiusculo(c.setor);
-        if (c.equipamento && c.equipamento !== 'SEM EQUIPAMENTO' && c.equipamento !== 'NÃO INFORMADA') return maiusculo(c.equipamento).replace('-', ' ');
-        return null;
-    }
-    /** funções de apoio (não são equipe de caminhão): linha própria no resumo, na ordem da planilha */
-    const FUNCOES_APOIO = [
-        ['COORDENADOR', /COORDENADOR/],
-        ['TECNICO DE SEGURANÇA', /SEGURAN/],
-        ['MECANICO (SERVITEC)', /MEC[AÂ]NIC/],
-        ['PLANEJADOR', /PLANEJ|PROGRAMADOR/],
-        ['ALMOXARIFE', /ALMOXARIF/],
-        ['ESTAGIÁRIO', /ESTAGI/],
-        ['SUPERVISORES', /SUPERVISOR|ENCARREGADO/],
-    ];
-    const funcaoApoio = (c) => {
-        const f = maiusculo(c.funcao);
-        const achou = FUNCOES_APOIO.find(([, re]) => re.test(f));
-        return achou ? achou[0] : c.categoria === 'GESTAO' ? 'OUTRAS FUNÇÕES' : null;
-    };
     // turma das 16 horas: no cadastro ela é um 'supervisor' chamado "16 HORAS" (o regime nem sempre está preenchido)
     const ehTurno16 = (c) => /^16\s*H/.test(maiusculo(c.supervisor).trim());
-    function grupoDe(c) {
+    // funções de apoio (coordenador, técnico, mecânico...) não são sobra mesmo sem supervisor
+    const ehApoio = (c) => c.categoria === 'GESTAO' || /COORDENADOR|SEGURAN|MEC[AÂ]NIC|PLANEJ|PROGRAMADOR|ALMOXARIF|ESTAGI|SUPERVISOR|ENCARREGADO/.test(maiusculo(c.funcao));
+    // cor da linha inteira por situação (quem trabalha fica branco); rgb = cor no Excel exportado
+    const COR = {
+        ferias: { chave: 'ferias', rotulo: 'Férias', rgb: '#DBE8FB' },
+        atestado: { chave: 'atestado', rotulo: 'Atestado', rgb: '#FDE6CF' },
+        sobra: { chave: 'sobra', rotulo: 'Sobra', rgb: '#E9EBEF' },
+        aviso: { chave: 'aviso', rotulo: 'Em aviso', rgb: '#FBE1E1' },
+    };
+    const diaMes = (iso) => (iso ? `${String(iso).slice(8, 10)}/${String(iso).slice(5, 7)}` : '');
+
+    /** volta das férias: a que está em andamento ou a próxima agendada */
+    function voltaDasFerias(c) {
+        const lista = (SGE.state.ferias || []).filter((f) => f.employee_id === c.id && f.data_retorno && (f.status === 'EM_ANDAMENTO' || f.status === 'AGENDADA'));
+        const atual = lista.find((f) => f.status === 'EM_ANDAMENTO') || lista.sort((a, b) => String(a.data_inicio).localeCompare(String(b.data_inicio)))[0];
+        return atual ? diaMes(atual.data_retorno) : '';
+    }
+
+    /** situação da pessoa: { texto, cor } — null = fora do quadro (desligado/inativo) */
+    function situacaoDe(c) {
         const s = maiusculo(c.status);
-        if (s === 'DESLIGADO' || s === 'INATIVO') return null; // fora do quadro
-        if (s.startsWith('FÉRIAS') || s.startsWith('FERIAS')) return 'ferias';
-        if (s === 'AFASTADO') return 'atestado';
-        if (funcaoApoio(c)) return 'gestao';
-        // sobra = sem supervisor; quem tem supervisor e não tem placa fica na aba dele, numa linha sem placa (como na planilha)
-        if (!temSupervisor(c)) return 'sobra';
-        return ehTurno16(c) ? 'turno16' : 'equipe';
-    }
-    /** mês das férias: a que está em andamento ou a próxima agendada */
-    function mesDasFerias(c) {
-        const lista = (SGE.state.ferias || []).filter((f) => f.employee_id === c.id && f.data_inicio && f.status !== 'CANCELADA');
-        const atual = lista.find((f) => f.status === 'EM_ANDAMENTO') || lista.sort((a, b) => String(b.data_inicio).localeCompare(String(a.data_inicio)))[0];
-        if (!atual) return '';
-        const m = Number(String(atual.data_inicio).slice(5, 7));
-        return MESES[m - 1] || '';
+        if (s === 'DESLIGADO' || s === 'INATIVO') return null;
+        if (s.startsWith('FÉRIAS') || s.startsWith('FERIAS')) {
+            const volta = voltaDasFerias(c);
+            return { texto: volta ? `FÉRIAS · VOLTA ${volta}` : 'FÉRIAS', cor: COR.ferias };
+        }
+        if (s === 'AFASTADO') return { texto: 'ATESTADO', cor: COR.atestado };
+        if (s === 'EM AVISO') return { texto: 'EM AVISO', cor: COR.aviso };
+        if (s === 'EM CONTRATAÇÃO') return { texto: 'EM CONTRATAÇÃO', cor: null };
+        if (!temSupervisor(c) && !ehApoio(c)) return { texto: 'SOBRA', cor: COR.sobra };
+        return { texto: 'TRABALHANDO', cor: null };
     }
 
-    /* ─── Colunas ─── */
-    const colPessoa = (id, rotulo, largura, campo) => ({ id, rotulo, largura, valor: (l) => (l[campo] ? l[campo].nome : null), pessoa: (l) => (l[campo] ? l[campo].id : null) });
+    /** regime e letra pela regra da escala ("4X4-A" vira 4x4 · A) */
+    function regimeDe(c) {
+        if (ehTurno16(c)) return { regime: '16 HORAS', letra: '–' };
+        const g = SGE.escala ? SGE.escala.grupoDoRegime(c.regime) : { tipo: null, letra: null };
+        const nomes = { '4x4': '4x4', ADM: 'ADM', '16H': '16 HORAS' };
+        return { regime: nomes[g.tipo] || maiusculo(c.regime) || '–', letra: g.letra || '–' };
+    }
 
-    /** aba de um supervisor: uma linha por equipamento, com motorista e até dois operadores */
-    function abaEquipe(sup, pessoas, opcoes = {}) {
-        const porPlaca = new Map();
+    function supervisorDe(c, sit) {
+        if (sit.texto === 'SOBRA') return '–';
+        if (ehTurno16(c) || !temSupervisor(c)) return 'SEM SUPERVISOR';
+        return maiusculo(c.supervisor);
+    }
+
+    function abaColaboradores(pessoas) {
+        const linhas = [];
         for (const c of pessoas) {
-            const p = placaDe(c) || '';
-            if (!porPlaca.has(p)) porPlaca.set(p, { mot: [], op: [] });
-            porPlaca.get(p)[ehMotorista(c) ? 'mot' : 'op'].push(c);
+            const sit = situacaoDe(c);
+            if (!sit) continue;
+            linhas.push({ c, sit, ...regimeDe(c), sup: supervisorDe(c, sit) });
         }
-        const vagas = opcoes.vagas && SGE.vagas ? SGE.vagas.doSupervisor(sup.nome).map((x) => x.eq) : [];
-        for (const eq of vagas) {
-            const p = SGE.vagas.rotulo(eq);
-            if (!porPlaca.has(p)) porPlaca.set(p, { mot: [], op: [] });
-        }
-        const linhas = [];
-        // linhas sem placa vão para o fim da aba, como na planilha
-        for (const placa of [...porPlaca.keys()].sort((a, b) => (a === '') - (b === '') || natural(a, b))) {
-            const { mot, op } = porPlaca.get(placa);
-            mot.sort(porNome);
-            op.sort(porNome);
-            const n = Math.max(mot.length, Math.ceil(op.length / 2), 1);
-            for (let i = 0; i < n; i++) linhas.push({ chave: `${placa}#${i}`, placa, mot: mot[i], op1: op[2 * i], op2: op[2 * i + 1] });
-        }
-        // título como na planilha: "EQUIPE" + tipos de equipamento do supervisor
-        const tipos = SGE.CONFIG.equipTipos || {};
-        const siglas = [...pessoas.map((c) => SGE.equip && SGE.equip.parseEquip(c.equipamento)).filter(Boolean).map((x) => x.sigla), ...vagas.map((e) => e.sigla)];
-        const nomes = [...new Set(siglas.filter((s) => tipos[s]).map((s) => maiusculo(tipos[s].nome)))];
-        return {
-            id: opcoes.id || `sup-${sup.id}`,
-            nome: opcoes.nome || maiusculo(sup.nome),
-            rotuloGeral: opcoes.rotuloGeral || maiusculo(sup.nome),
-            titulo: opcoes.semEquipe ? nomes.join(' E ') || maiusculo(sup.nome) : `EQUIPE ${nomes.length ? nomes.join(' E ') : maiusculo(sup.nome)}`,
-            cabecalho: 'equipe',
-            chave: (l) => l.chave,
-            linhas,
-            colunas: [
-                { id: 'placa', rotulo: 'PLACA', largura: 156, centro: true, valor: (l) => l.placa },
-                colPessoa('mot', 'MOTORISTA', 272, 'mot'),
-                colPessoa('op1', 'OPERADOR 1', 252, 'op1'),
-                colPessoa('op2', 'OPERADOR 2', 295, 'op2'),
-            ],
-        };
-    }
-
-    /** abas FÉRIAS, SOBRA e ATESTADO: motoristas e operadores lado a lado (listas independentes) */
-    function abaLista(id, nome, pessoas, comMes) {
-        const grupos = new Map();
-        for (const c of pessoas) {
-            const g = comMes ? mesDasFerias(c) : '';
-            if (!grupos.has(g)) grupos.set(g, { mot: [], op: [] });
-            grupos.get(g)[ehMotorista(c) ? 'mot' : 'op'].push(c);
-        }
-        const ordem = [...grupos.keys()].sort((a, b) => (MESES.indexOf(a) + 13) % 13 - (MESES.indexOf(b) + 13) % 13);
-        const linhas = [];
-        for (const g of ordem) {
-            const { mot, op } = grupos.get(g);
-            mot.sort(porNome);
-            op.sort(porNome);
-            for (let i = 0; i < Math.max(mot.length, op.length); i++) linhas.push({ chave: `${g}#${i}`, mes: i === 0 ? g : '', mot: mot[i], op: op[i] });
-        }
-        const colunas = [colPessoa('mot', 'MOTORISTA', 270, 'mot'), colPessoa('op', comMes || id === 'sobra' ? 'OPERADOR 1' : 'OPERADOR', 270, 'op')];
-        if (id !== 'atestado') colunas.unshift({ id: 'mes', rotulo: 'MÊS', largura: 150, centro: true, valor: (l) => l.mes });
-        return { id, nome, titulo: `EFETIVOS DE ${nome}`, cabecalho: 'equipe', chave: (l) => l.chave, linhas, colunas };
-    }
-
-    /** aba GERAL: igual à fórmula da planilha (equipes por coluna, depois férias, sobra e atestado) */
-    function abaGeral(equipes, listas, gestao) {
-        const linhas = [];
-        for (const aba of equipes) {
-            for (const campo of ['mot', 'op1', 'op2']) for (const l of aba.linhas) if (l[campo]) linhas.push({ c: l[campo], sup: aba.rotuloGeral, eq: l.placa });
-        }
-        for (const aba of listas) {
-            for (const campo of ['mot', 'op']) for (const l of aba.linhas) if (l[campo]) linhas.push({ c: l[campo], sup: aba.nome, eq: NAO_APLICAVEL });
-        }
-        for (const c of gestao) linhas.push({ c, sup: funcaoApoio(c) || 'GESTÃO', eq: NAO_APLICAVEL });
+        linhas.sort((a, b) => porNome(a.c, b.c));
         return {
             id: 'geral',
-            nome: 'GERAL',
-            cabecalho: 'geral',
+            nome: 'MATRIZ',
             chave: (l) => l.c.id,
+            corLinha: (l) => l.sit.cor,
             linhas,
             colunas: [
-                { id: 'nome', rotulo: 'Nome Colaborador', largura: 254, valor: (l) => l.c.nome, pessoa: (l) => l.c.id },
-                { id: 'sup', rotulo: 'Supervisor / Status', largura: 160, valor: (l) => l.sup },
-                { id: 'eq', rotulo: 'Equipamento', largura: 144, valor: (l) => l.eq },
-            ],
-        };
-    }
-
-    /** aba RELAÇÃO: contagens por função e por supervisor (como a primeira aba da planilha) */
-    function abaRelacao(grupos, equipes, turno) {
-        const conta = (lista, motorista) => lista.filter((c) => ehMotorista(c) === motorista).length;
-        const operacao = [...grupos.equipe, ...grupos.turno16];
-        const apoio = new Map();
-        for (const c of grupos.gestao) apoio.set(funcaoApoio(c), (apoio.get(funcaoApoio(c)) || 0) + 1);
-        const qtd = (nome) => apoio.get(nome) || 0;
-        const funcoes = [
-            ['MOTORISTA', conta(operacao, true)],
-            ['OPERADOR DE EQUIPAMENTOS', conta(operacao, false)],
-            ['COORDENADOR', qtd('COORDENADOR')],
-            ['TECNICO DE SEGURANÇA', qtd('TECNICO DE SEGURANÇA')],
-            ['MECANICO (SERVITEC)', qtd('MECANICO (SERVITEC)')],
-            ['PLANEJADOR', qtd('PLANEJADOR')],
-            ['ALMOXARIFE', qtd('ALMOXARIFE')],
-            ['FERISTAS MOTORISTA', conta(grupos.ferias, true)],
-            ['FERISTAS OPERADOR', conta(grupos.ferias, false)],
-            ['ESTAGIÁRIO', qtd('ESTAGIÁRIO')],
-            ['SOBRA MOTORISTA', conta(grupos.sobra, true)],
-            ['SOBRA OPERADOR', conta(grupos.sobra, false)],
-            // linhas que não existem na planilha só aparecem se houver alguém (assim o total fecha)
-            ...(grupos.atestado.length ? [['ATESTADO', grupos.atestado.length]] : []),
-            ...(qtd('OUTRAS FUNÇÕES') ? [['OUTRAS FUNÇÕES', qtd('OUTRAS FUNÇÕES')]] : []),
-            ['SUPERVISORES', qtd('SUPERVISORES')],
-        ];
-        const total = funcoes.reduce((s, [, n]) => s + n, 0);
-        const linhas = funcoes.map(([a, b]) => ({ chave: `f:${a}`, a, b }));
-        linhas.push({ chave: 'total', a: 'TOTAL DE EFETIVO', b: total });
-        linhas.push({ chave: 'vazio', tipo: 'vazio' });
-        linhas.push({ chave: 'cab2', tipo: 'cab2', a: 'SUPERVISORES', b: 'MOTORISTA', c: 'OPERADOR' });
-        for (const aba of [...equipes, ...(turno ? [turno] : [])]) {
-            let m = 0;
-            let o = 0;
-            for (const l of aba.linhas) {
-                if (l.mot) m++;
-                if (l.op1) o++;
-                if (l.op2) o++;
-            }
-            linhas.push({ chave: `s:${aba.id}`, a: aba.rotuloGeral, b: m, c: o });
-        }
-        const PRETA = { t: { s: 1, cl: { rgb: '#000000' } }, b: { s: 1, cl: { rgb: '#000000' } }, l: { s: 1, cl: { rgb: '#000000' } }, r: { s: 1, cl: { rgb: '#000000' } } };
-        const estilo = (l, col) => {
-            if (l.tipo === 'vazio') return { bd: null };
-            if (col === 'c' && l.c == null && l.tipo !== 'cab2') return { bd: null }; // a 1ª tabela só tem 2 colunas
-            const base = { ff: 'Arial', fs: 11, bl: 1, bd: PRETA, ht: col === 'a' && l.chave.startsWith('s:') ? 1 : 2 };
-            return l.tipo === 'cab2' ? { ...base, bg: { rgb: '#1F054F' }, cl: { rgb: '#FFFFFF' } } : base;
-        };
-        return {
-            id: 'relacao',
-            nome: 'RELAÇÃO DE EFETIVOS MECANIZADA',
-            titulo: 'EFETIVO MECANIZADA',
-            estiloTitulo: { ff: 'Arial', fs: 26, bl: 0, bg: { rgb: '#FFFFFF' }, cl: { rgb: '#253356' }, bd: null },
-            semFiltro: true,
-            cabecalho: 'equipe',
-            chave: (l) => l.chave,
-            linhas,
-            colunas: [
-                { id: 'a', rotulo: 'FUNÇÃO', largura: 260, valor: (l) => l.a, estilo: (l) => estilo(l, 'a') },
-                { id: 'b', rotulo: 'QUANTIDADE', largura: 120, centro: true, valor: (l) => l.b, estilo: (l) => estilo(l, 'b') },
-                { id: 'c', rotulo: '', largura: 120, centro: true, valor: (l) => l.c, estilo: (l) => estilo(l, 'c') },
+                { id: 'nome', rotulo: 'COLABORADOR', largura: 290, valor: (l) => l.c.nome, pessoa: (l) => l.c.id },
+                { id: 'status', rotulo: 'STATUS', largura: 200, valor: (l) => l.sit.texto },
+                { id: 'regime', rotulo: 'REGIME', largura: 110, centro: true, valor: (l) => l.regime },
+                { id: 'letra', rotulo: 'LETRA', largura: 80, centro: true, valor: (l) => l.letra },
+                { id: 'sup', rotulo: 'SUPERVISOR', largura: 200, valor: (l) => l.sup },
             ],
         };
     }
@@ -245,30 +114,7 @@ SGE.matriz = (() => {
     }
 
     function montarAbas() {
-        const grupos = { equipe: [], turno16: [], ferias: [], sobra: [], atestado: [], gestao: [] };
-        for (const c of pessoasVisiveis()) {
-            const g = grupoDe(c);
-            if (g) grupos[g].push(c);
-        }
-        // abas dos supervisores na ordem do cadastro; supervisor sem cadastro ativo entra no fim
-        const porSup = new Map();
-        for (const c of grupos.equipe) {
-            if (!porSup.has(c.supervisor)) porSup.set(c.supervisor, []);
-            porSup.get(c.supervisor).push(c);
-        }
-        // com busca ou filtro, as vagas vazias somem (mostra só quem combina)
-        const semFiltro = !st.busca.trim() && filtrosAtivos().length === 0;
-        const temVagas = (s) => semFiltro && SGE.vagas && SGE.vagas.doSupervisor(s.nome).length > 0;
-        const supTurno = (SGE.state.supervisores || []).find((s) => ehTurno16({ supervisor: s.nome }));
-        const cadastrados = (SGE.state.supervisores || []).filter((s) => s !== supTurno && s.nome !== 'SEM SUPERVISOR' && (porSup.has(s.nome) || (s.ativo && temVagas(s))));
-        const extras = [...porSup.keys()].filter((n) => !cadastrados.some((s) => s.nome === n)).map((n, i) => ({ id: `x${i}`, nome: n }));
-        const equipes = [...cadastrados, ...extras].map((s) => abaEquipe(s, porSup.get(s.nome) || [], { vagas: semFiltro }));
-        const turno = grupos.turno16.length || (supTurno && temVagas(supTurno))
-            ? abaEquipe(supTurno || { id: 'turno16', nome: 'TURNO 16HRS' }, grupos.turno16, { id: 'turno16', nome: 'TURNO 16HRS 7H AS 15H', rotuloGeral: 'TURNO 16HRS', semEquipe: true, vagas: semFiltro })
-            : null;
-        const listas = [abaLista('ferias', 'FÉRIAS', grupos.ferias, true), abaLista('sobra', 'SOBRA', grupos.sobra, false), abaLista('atestado', 'ATESTADO', grupos.atestado, false)];
-        const comTurno = turno ? [...equipes, turno] : equipes;
-        return [abaRelacao(grupos, equipes, turno), abaGeral(comTurno, listas, grupos.gestao.sort(porNome)), ...comTurno, ...listas];
+        return [abaColaboradores(pessoasVisiveis())];
     }
 
     const colaborador = (id) => (SGE.state.colaboradores || []).find((c) => String(c.id) === String(id));
@@ -278,7 +124,7 @@ SGE.matriz = (() => {
         view.innerHTML = `
             <h1 class="sr-only">Matriz do efetivo</h1>
             <div class="mz-tela"><div class="mz-planilha"></div></div>`;
-        st.planilha = SGE.planilha.criar(view.querySelector('.mz-planilha'), {
+        st.planilha = SGE.tabela.criar(view.querySelector('.mz-planilha'), {
             nomeArquivo: 'planilha-efetivos-mecanizada',
             abaInicial: 'geral', // sempre abre na GERAL
             abas: montarAbas(),
@@ -352,8 +198,8 @@ SGE.matriz = (() => {
         const digitando = document.activeElement && document.activeElement.classList.contains('mz-busca-campo');
         const cursor = digitando ? document.activeElement.selectionStart : null;
         const etiquetas = filtrosAtivos();
-        const pessoas = pessoasVisiveis().filter((c) => grupoDe(c)).length;
-        const total = (SGE.state.colaboradores || []).filter((c) => grupoDe(c)).length;
+        const pessoas = pessoasVisiveis().filter((c) => situacaoDe(c)).length;
+        const total = (SGE.state.colaboradores || []).filter((c) => situacaoDe(c)).length;
         const gestao = SGE.auth.hasRole('GESTAO');
         const sel = st.selecao;
         let selecao = '';
@@ -377,9 +223,6 @@ SGE.matriz = (() => {
                       .map((e, i) => `<button type="button" class="mz-etiqueta" data-etiqueta="${i}" aria-label="Remover ${esc(e.rotulo)}">${esc(e.rotulo)} <span aria-hidden="true">×</span></button>`)
                       .join('')}<button type="button" class="mz-limpar" data-acao="limpar">Limpar tudo</button></div>`
                 : ''}
-            ${gestao ? `${secao('Vagas')}
-            ${item({ acao: 'vaga-add', rotulo: 'Adicionar vaga', titulo: 'Nova linha (equipamento) na aba do supervisor, mesmo sem ninguém nela', d: ICONE.vagaMais })}
-            ${item({ acao: 'vaga-del', rotulo: 'Remover vaga vazia', titulo: 'Tira uma linha vazia da aba do supervisor', d: ICONE.vagaMenos })}` : ''}
             ${secao('Ações')}
             ${item({ acao: 'exportar', rotulo: 'Exportar Excel', titulo: 'Exporta todas as abas como estão: filtradas (só o que aparece) ou completas, no mesmo formato', d: ICONE.exportar, primario: true })}
             ${item({ acao: 'imprimir', rotulo: 'Imprimir', titulo: 'Imprimir a aba aberta como está na tela', d: ICONE.imprimir })}
@@ -469,8 +312,6 @@ SGE.matriz = (() => {
                 if (limpar) limpar.click();
                 else render();
             },
-            'vaga-add': () => SGE.vagas.abrirAdicionar(supervisorDaAba()),
-            'vaga-del': () => SGE.vagas.abrirRemover(supervisorDaAba()),
             exportar: () => st.planilha && st.planilha.exportar(),
             imprimir: () => st.planilha && st.planilha.imprimir(),
             abrir: () => um && SGE.drawer.open(um),
@@ -481,21 +322,6 @@ SGE.matriz = (() => {
         // "Limpar tudo" deixa a janela aberta; as outras ações fecham
         if (b.dataset.acao !== 'limpar') fecharPainel();
         if (acoes[b.dataset.acao]) acoes[b.dataset.acao]();
-    }
-
-    /** supervisor da aba aberta (para já vir escolhido em Adicionar/Remover vaga) */
-    function supervisorDaAba() {
-        const id = st.planilha && st.planilha.abaAtiva ? st.planilha.abaAtiva() : null;
-        const sups = SGE.state.supervisores || [];
-        if (id === 'turno16') {
-            const s = sups.find((x) => ehTurno16({ supervisor: x.nome }));
-            return s ? s.nome : undefined;
-        }
-        if (id && id.startsWith('sup-')) {
-            const s = sups.find((x) => String(x.id) === id.slice(4));
-            return s ? s.nome : undefined;
-        }
-        return undefined;
     }
 
     /* ─── Público ─── */

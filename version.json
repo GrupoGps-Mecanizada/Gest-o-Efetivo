@@ -1,5 +1,5 @@
 {
-  "version": "2.9.1",
-  "updated_at": "2026-10-16",
-  "notes": "Botão Movimentar retirado a pedido do dono; quem não é editor só consulta"
+  "version": "2.10.0",
+  "updated_at": "2026-10-22",
+  "notes": "Matriz numa aba só: Colaborador, Status, Regime, Letra e Supervisor"
 }

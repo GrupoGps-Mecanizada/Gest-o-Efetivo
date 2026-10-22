@@ -804,5 +804,6 @@ tr { page-break-inside: avoid; }
         };
     }
 
-    return { criar, carregar, precarregar };
+    // exportar e imprimir também servem para a tabela da Matriz (tabela-excel.js)
+    return { criar, carregar, precarregar, arquivoExcel, baixar, htmlImpressao, imprimirHtml, ESTILO };
 })();

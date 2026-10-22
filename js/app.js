@@ -180,8 +180,6 @@ SGE.app = {
         SGE.app.setupSearch();
         SGE.app.setupHistory();
 
-        if (SGE.planilha) SGE.planilha.precarregar();
-
         // Restore the view the user was on before the page reload (from URL hash)
         const initialView = SGE.navigation.getInitialView();
         SGE.navigation.switchView(initialView, true); // skipHash=true: don't push state again

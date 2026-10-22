@@ -1,5 +1,19 @@
 # CHANGELOG — Gestão de Efetivo
 
+## v2.10.0 — 2026-10-22
+### Mudou
+- **Matriz numa aba só** (pedido do dono, P-115, opção B): uma linha por pessoa com **COLABORADOR, STATUS, REGIME, LETRA e SUPERVISOR**, em ordem alfabética.
+- Quem não está trabalhando tem a **linha inteira pintada**: férias em azul (com o dia da volta), atestado em laranja, sobra em cinza, em aviso em vermelho. Desligados e inativos não aparecem.
+- Regime e letra saem do regime gravado ("4X4-A" vira 4x4 · A); a turma "16 HORAS" aparece como regime 16 HORAS, sem supervisor.
+- A Matriz virou uma **tabela igual à do SST**: cada coluna tem o menu do Excel (**Classificar de A a Z / de Z a A / por Cor**, Remover classificação, Limpar Filtro, Filtrar por Cor, Filtros de Texto, Pesquisar, Selecionar Tudo, OK/Cancelar). Cabeçalho fixo ao rolar, contagem "X de Y pessoas" e botão "Limpar filtros".
+- Clique seleciona a linha (Ctrl e Shift somam); dois cliques abrem o colaborador.
+- O Exportar Excel e o Imprimir saem como a tabela está (filtrada e classificada), com as cores. Cores próprias no tema escuro.
+- A planilha Univer (12 MB) não é mais baixada: a Matriz abre na hora.
+### Saiu
+- As abas RELAÇÃO, GERAL, uma por supervisor (placas), TURNO 16HRS, FÉRIAS, SOBRA e ATESTADO.
+- A barra da planilha Univer (desfazer, fórmulas, zoom).
+- Nas Ferramentas da Matriz, a seção **Vagas** (Adicionar/Remover vaga), que só servia para as abas de placas.
+
 ## v2.9.1 — 2026-10-16
 ### Mudou
 - O botão **Movimentar** (v2.9.0) foi **retirado** a pedido do dono: mexer nas pessoas volta a ser como na v2.8.0.
