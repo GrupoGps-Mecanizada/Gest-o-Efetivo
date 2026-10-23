@@ -1,5 +1,11 @@
 # CHANGELOG — Gestão de Efetivo
 
+## v2.11.0 — 2026-10-23
+### Mudou
+- Matriz com **6 colunas**: COLABORADOR, FUNÇÃO (MOTORISTA, OPERADOR ou a função de apoio), EQUIPAMENTO (AP 01, AV 02 - EQUIP 1 ou o setor), STATUS, REGIME e SUPERVISOR. A coluna **LETRA saiu**: o REGIME mostra **ADM**, **4X4 A/B/C/D** ou **16 HORAS EQUIPE 1 / EQUIPE 2** (a equipe vem da vaga "AP-07 - EQUIP 1"; sem vaga de equipe fica só "16 HORAS").
+- STATUS com os nomes do cadastro: **ATIVO**, **FÉRIAS**, **AFASTADO** e **SOBRA** (mais EM AVISO e EM CONTRATAÇÃO); sai o "volta dd/mm" das férias.
+- **Visual igual à Matriz do SST**: cabeçalho claro com "X de Y colaboradores", nome em negrito com a matrícula embaixo, coluna do nome congelada ao rolar para o lado, linhas de 52 px e **só a célula de status pintada** (Ativo verde, Férias azul, Afastado laranja, Sobra cinza, Em aviso vermelho, Em contratação amarelo), com as cores do SST no claro e no escuro. O Excel exportado pinta só o status. Textos de ajuda das Ferramentas atualizados.
+
 ## v2.10.0 — 2026-10-22
 ### Mudou
 - **Matriz numa aba só** (pedido do dono, P-115, opção B): uma linha por pessoa com **COLABORADOR, STATUS, REGIME, LETRA e SUPERVISOR**, em ordem alfabética.

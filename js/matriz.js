@@ -2,8 +2,8 @@
 
 /**
  * SGE — Matriz do efetivo (modelo Excel)
- * Uma aba só, uma linha por pessoa: COLABORADOR · STATUS · REGIME · LETRA · SUPERVISOR. Quem não está
- * trabalhando (férias, atestado, sobra, em aviso) tem a linha inteira pintada. A planilha é só para ver e pesquisar: dois cliques num nome
+ * Uma aba só, uma linha por pessoa: COLABORADOR · FUNÇÃO · EQUIPAMENTO · STATUS · REGIME · SUPERVISOR. Visual da Matriz do SST:
+ * a célula de status é pintada (ativo, férias, afastado, sobra, em aviso). A planilha é só para ver e pesquisar: dois cliques num nome
  * abrem o colaborador. Botão "Ferramentas" no canto: buscar, filtrar, exportar, imprimir e agir na seleção.
  */
 window.SGE = window.SGE || {};
@@ -28,49 +28,59 @@ SGE.matriz = (() => {
     const maiusculo = (s) => String(s || '').toLocaleUpperCase('pt-BR');
     const porNome = (a, b) => String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
 
-    /* ─── Uma linha por pessoa: COLABORADOR · STATUS · REGIME · LETRA · SUPERVISOR ─── */
+    /* ─── Uma linha por pessoa: COLABORADOR · FUNÇÃO · EQUIPAMENTO · STATUS · REGIME · SUPERVISOR ─── */
     const temSupervisor = (c) => !!c.supervisor && c.supervisor !== 'SEM SUPERVISOR';
     // turma das 16 horas: no cadastro ela é um 'supervisor' chamado "16 HORAS" (o regime nem sempre está preenchido)
     const ehTurno16 = (c) => /^16\s*H/.test(maiusculo(c.supervisor).trim());
     // funções de apoio (coordenador, técnico, mecânico...) não são sobra mesmo sem supervisor
     const ehApoio = (c) => c.categoria === 'GESTAO' || /COORDENADOR|SEGURAN|MEC[AÂ]NIC|PLANEJ|PROGRAMADOR|ALMOXARIF|ESTAGI|SUPERVISOR|ENCARREGADO/.test(maiusculo(c.funcao));
-    // cor da linha inteira por situação (quem trabalha fica branco); rgb = cor no Excel exportado
+    // cor da célula de status, as mesmas da Matriz do SST; rgb = cor no Excel exportado
     const COR = {
-        ferias: { chave: 'ferias', rotulo: 'Férias', rgb: '#DBE8FB' },
-        atestado: { chave: 'atestado', rotulo: 'Atestado', rgb: '#FDE6CF' },
-        sobra: { chave: 'sobra', rotulo: 'Sobra', rgb: '#E9EBEF' },
-        aviso: { chave: 'aviso', rotulo: 'Em aviso', rgb: '#FBE1E1' },
+        ativo: { chave: 'ativo', rotulo: 'Ativo', rgb: '#E2F2E7' },
+        ferias: { chave: 'ferias', rotulo: 'Férias', rgb: '#E3EBF6' },
+        atestado: { chave: 'atestado', rotulo: 'Afastado', rgb: '#FDE5D2' },
+        sobra: { chave: 'sobra', rotulo: 'Sobra', rgb: '#ECEEEF' },
+        aviso: { chave: 'aviso', rotulo: 'Em aviso', rgb: '#FBE0DE' },
+        contratacao: { chave: 'contratacao', rotulo: 'Em contratação', rgb: '#FCF0C6' },
     };
-    const diaMes = (iso) => (iso ? `${String(iso).slice(8, 10)}/${String(iso).slice(5, 7)}` : '');
-
-    /** volta das férias: a que está em andamento ou a próxima agendada */
-    function voltaDasFerias(c) {
-        const lista = (SGE.state.ferias || []).filter((f) => f.employee_id === c.id && f.data_retorno && (f.status === 'EM_ANDAMENTO' || f.status === 'AGENDADA'));
-        const atual = lista.find((f) => f.status === 'EM_ANDAMENTO') || lista.sort((a, b) => String(a.data_inicio).localeCompare(String(b.data_inicio)))[0];
-        return atual ? diaMes(atual.data_retorno) : '';
-    }
 
     /** situação da pessoa: { texto, cor } — null = fora do quadro (desligado/inativo) */
     function situacaoDe(c) {
         const s = maiusculo(c.status);
         if (s === 'DESLIGADO' || s === 'INATIVO') return null;
-        if (s.startsWith('FÉRIAS') || s.startsWith('FERIAS')) {
-            const volta = voltaDasFerias(c);
-            return { texto: volta ? `FÉRIAS · VOLTA ${volta}` : 'FÉRIAS', cor: COR.ferias };
-        }
-        if (s === 'AFASTADO') return { texto: 'ATESTADO', cor: COR.atestado };
+        if (s.startsWith('FÉRIAS') || s.startsWith('FERIAS')) return { texto: 'FÉRIAS', cor: COR.ferias };
+        if (s === 'AFASTADO') return { texto: 'AFASTADO', cor: COR.atestado };
         if (s === 'EM AVISO') return { texto: 'EM AVISO', cor: COR.aviso };
-        if (s === 'EM CONTRATAÇÃO') return { texto: 'EM CONTRATAÇÃO', cor: null };
+        if (s === 'EM CONTRATAÇÃO') return { texto: 'EM CONTRATAÇÃO', cor: COR.contratacao };
         if (!temSupervisor(c) && !ehApoio(c)) return { texto: 'SOBRA', cor: COR.sobra };
-        return { texto: 'TRABALHANDO', cor: null };
+        return { texto: 'ATIVO', cor: COR.ativo };
     }
 
-    /** regime e letra pela regra da escala ("4X4-A" vira 4x4 · A) */
+    /** regime numa coluna só: "ADM", a letra do 4x4 ("4X4 A") ou "16 HORAS" com a equipe 1 ou 2 (vem da vaga "AP-07 - EQUIP 1") */
     function regimeDe(c) {
-        if (ehTurno16(c)) return { regime: '16 HORAS', letra: '–' };
         const g = SGE.escala ? SGE.escala.grupoDoRegime(c.regime) : { tipo: null, letra: null };
-        const nomes = { '4x4': '4x4', ADM: 'ADM', '16H': '16 HORAS' };
-        return { regime: nomes[g.tipo] || maiusculo(c.regime) || '–', letra: g.letra || '–' };
+        if (ehTurno16(c) || g.tipo === '16H') {
+            const eq = /EQUIP\s*([12])/.exec(maiusculo(c.equipamento));
+            return eq ? `16 HORAS EQUIPE ${eq[1]}` : '16 HORAS';
+        }
+        if (g.tipo === '4x4') return `4X4 ${g.letra}`;
+        if (g.tipo === 'ADM') return 'ADM';
+        return maiusculo(c.regime) || '–';
+    }
+
+    /** equipamento como na planilha: "AP-01" vira "AP 01", "AV-02 - EQUIP 1" vira "AV 02 - EQUIP 1"; quem está num setor mostra o setor */
+    function equipamentoDe(c) {
+        if (c.setor_id && c.setor && c.setor !== 'SEM SETOR') return maiusculo(c.setor);
+        const e = maiusculo(c.equipamento);
+        return e && e !== 'SEM EQUIPAMENTO' && e !== 'NÃO INFORMADA' ? e.replace('-', ' ') : '–';
+    }
+
+    /** função curta: MOTORISTA ou OPERADOR; as outras (coordenador, técnico...) como estão no cadastro */
+    function funcaoDe(c) {
+        const f = maiusculo(c.funcao);
+        if (/MOTORISTA/.test(f)) return 'MOTORISTA';
+        if (/OPERADOR/.test(f)) return 'OPERADOR';
+        return f || '–';
     }
 
     function supervisorDe(c, sit) {
@@ -84,7 +94,7 @@ SGE.matriz = (() => {
         for (const c of pessoas) {
             const sit = situacaoDe(c);
             if (!sit) continue;
-            linhas.push({ c, sit, ...regimeDe(c), sup: supervisorDe(c, sit) });
+            linhas.push({ c, sit, funcao: funcaoDe(c), equip: equipamentoDe(c), regime: regimeDe(c), sup: supervisorDe(c, sit) });
         }
         linhas.sort((a, b) => porNome(a.c, b.c));
         return {
@@ -92,13 +102,15 @@ SGE.matriz = (() => {
             nome: 'MATRIZ',
             chave: (l) => l.c.id,
             corLinha: (l) => l.sit.cor,
+            rotuloContagem: 'colaboradores',
             linhas,
             colunas: [
-                { id: 'nome', rotulo: 'COLABORADOR', largura: 290, valor: (l) => l.c.nome, pessoa: (l) => l.c.id },
-                { id: 'status', rotulo: 'STATUS', largura: 200, valor: (l) => l.sit.texto },
-                { id: 'regime', rotulo: 'REGIME', largura: 110, centro: true, valor: (l) => l.regime },
-                { id: 'letra', rotulo: 'LETRA', largura: 80, centro: true, valor: (l) => l.letra },
-                { id: 'sup', rotulo: 'SUPERVISOR', largura: 200, valor: (l) => l.sup },
+                { id: 'nome', rotulo: 'Colaborador', largura: 300, valor: (l) => l.c.nome, pessoa: (l) => l.c.id, sub: (l) => l.c.matricula_gps || l.c.matricula_usiminas || '' },
+                { id: 'funcao', rotulo: 'Função', largura: 150, centro: true, valor: (l) => l.funcao },
+                { id: 'equip', rotulo: 'Equipamento', largura: 170, centro: true, valor: (l) => l.equip },
+                { id: 'status', rotulo: 'Status', largura: 150, centro: true, colorida: true, valor: (l) => l.sit.texto },
+                { id: 'regime', rotulo: 'Regime', largura: 190, centro: true, valor: (l) => l.regime },
+                { id: 'sup', rotulo: 'Supervisor', largura: 200, valor: (l) => l.sup },
             ],
         };
     }
@@ -224,13 +236,13 @@ SGE.matriz = (() => {
                       .join('')}<button type="button" class="mz-limpar" data-acao="limpar">Limpar tudo</button></div>`
                 : ''}
             ${secao('Ações')}
-            ${item({ acao: 'exportar', rotulo: 'Exportar Excel', titulo: 'Exporta todas as abas como estão: filtradas (só o que aparece) ou completas, no mesmo formato', d: ICONE.exportar, primario: true })}
-            ${item({ acao: 'imprimir', rotulo: 'Imprimir', titulo: 'Imprimir a aba aberta como está na tela', d: ICONE.imprimir })}
+            ${item({ acao: 'exportar', rotulo: 'Exportar Excel', titulo: 'Exporta a tabela como está: filtrada e classificada, com as cores', d: ICONE.exportar, primario: true })}
+            ${item({ acao: 'imprimir', rotulo: 'Imprimir', titulo: 'Imprimir a tabela como está na tela', d: ICONE.imprimir })}
             ${secao('Planilha')}
             ${selecao}
             <div class="mz-ajuda">
-                <p><b>${pessoas} de ${total} pessoas</b> · só para ver e pesquisar (Ctrl+F); nada ali altera os dados.</p>
-                <p>Abas embaixo: Relação (resumo), GERAL, uma por supervisor, Turno 16hrs, Férias, Sobra e Atestado. Dois cliques num nome abrem o colaborador; selecione nomes para agir em vários.</p>
+                <p><b>${pessoas} de ${total} pessoas</b> · só para ver e pesquisar; nada ali altera os dados.</p>
+                <p>A setinha de cada coluna classifica (A a Z, Z a A, por cor) e filtra, como no Excel. Dois cliques num nome abrem o colaborador; Ctrl ou Shift selecionam vários.</p>
                 <p>Cores e formatação feitas na planilha são temporárias.</p>
             </div>`;
         const campo = caixa.querySelector('.mz-busca-campo');

@@ -6,8 +6,10 @@
  * Filtrar por Cor · Filtros de Texto · Pesquisar · (Selecionar Tudo) + valores · OK / Cancelar.
  * Só mostra: clique seleciona a linha (Ctrl soma), dois cliques abrem o colaborador.
  *
- * Aba: { id, nome, colunas, linhas, chave(l), corLinha?(l) } — corLinha devolve { chave, rotulo, rgb } ou null.
- * Coluna: { id, rotulo, largura, centro?, valor(l), pessoa?(l) }.
+ * Aba: { id, nome, colunas, linhas, chave(l), corLinha?(l), rotuloContagem? } — corLinha devolve { chave, rotulo, rgb } ou null.
+ * Coluna: { id, rotulo, largura, centro?, valor(l), pessoa?(l), sub?(l), colorida? } — sub = linha pequena embaixo
+ * (ex.: matrícula); colorida = a célula ganha a cor da situação (como a célula de status no SST).
+ * Visual igual à Matriz do SST: cabeçalho claro, 1ª coluna congelada, linhas de 52 px, status pintado.
  * Mesma interface da planilha antiga: { atualizar(abas), irPara(), abaAtiva(), exportar(), imprimir(), tema(), destruir() }.
  */
 window.SGE = window.SGE || {};
@@ -128,6 +130,8 @@ SGE.tabela = (() => {
             <div class="tb-rolar"><table class="tb"><colgroup></colgroup><thead></thead><tbody></tbody></table></div>
             <p class="tb-dica">${esc(props.dica)}</p>`;
         const rolar = caixa.querySelector('.tb-rolar');
+        // sombra na 1ª coluna quando a tabela rola para o lado (como no SST)
+        rolar.addEventListener('scroll', () => caixa.classList.toggle('tb-rolou', rolar.scrollLeft > 0), { passive: true });
         const tabela = caixa.querySelector('.tb');
         const conta = caixa.querySelector('.tb-conta');
         const btnLimpar = caixa.querySelector('.tb-limpar');
@@ -146,7 +150,10 @@ SGE.tabela = (() => {
                     const dir = ordem && ordem.coluna === c.id ? ordem.direcao : null;
                     const marcado = ativo || dir ? ' tb-filtro-on' : '';
                     const aberto = menu && menu.coluna === c.id;
-                    return `<th scope="col"${c.centro ? ' class="tb-centro"' : ''}><div class="tb-cab"><span>${esc(c.rotulo)}</span><button type="button" class="tb-filtro${marcado}" data-col="${esc(c.id)}" aria-haspopup="dialog" aria-expanded="${aberto}" aria-label="Filtrar e classificar ${esc(c.rotulo)}${ativo ? ' (filtro ativo)' : ''}" title="${ativo ? `${esc(c.rotulo)}: filtro ativo` : `Filtrar ${esc(c.rotulo)}`}">${iconeBotao(ativo, dir)}</button></div></th>`;
+                    const primeira = c === aba.colunas[0];
+                    const rotulo = primeira ? `${esc(c.rotulo)}<small>${linhas.length} de ${aba.linhas.length} ${esc(aba.rotuloContagem || 'linhas')}</small>` : esc(c.rotulo);
+                    const cls = [primeira ? 'tb-fixa' : '', c.centro ? 'tb-centro' : ''].filter(Boolean).join(' ');
+                    return `<th scope="col"${cls ? ` class="${cls}"` : ''}><div class="tb-cab"><span>${rotulo}</span><button type="button" class="tb-filtro${marcado}" data-col="${esc(c.id)}" aria-haspopup="dialog" aria-expanded="${aberto}" aria-label="Filtrar e classificar ${esc(c.rotulo)}${ativo ? ' (filtro ativo)' : ''}" title="${ativo ? `${esc(c.rotulo)}: filtro ativo` : `Filtrar ${esc(c.rotulo)}`}">${iconeBotao(ativo, dir)}</button></div></th>`;
                 })
                 .join('')}</tr>`;
             tabela.querySelector('tbody').innerHTML = linhas.length
@@ -154,15 +161,19 @@ SGE.tabela = (() => {
                       .map((l) => {
                           const k = String(aba.chave(l));
                           const cor = aba.corLinha && aba.corLinha(l);
-                          const cls = [cor ? `tb-cor-${cor.chave}` : '', selecionados.has(k) ? 'tb-sel' : ''].filter(Boolean).join(' ');
-                          return `<tr data-k="${esc(k)}"${cls ? ` class="${cls}"` : ''}>${aba.colunas
-                              .map((c) => `<td${c.centro ? ' class="tb-centro"' : ''}>${esc(c.valor(l))}</td>`)
+                          return `<tr data-k="${esc(k)}"${selecionados.has(k) ? ' class="tb-sel"' : ''}>${aba.colunas
+                              .map((c, i) => {
+                                  const cls = [i === 0 ? 'tb-fixa' : '', c.centro ? 'tb-centro' : '', c.colorida && cor ? `tb-st tb-st-${cor.chave}` : ''].filter(Boolean).join(' ');
+                                  const sub = c.sub ? c.sub(l) : '';
+                                  const conteudo = i === 0 ? `<span class="tb-nome">${esc(c.valor(l))}</span>${sub ? `<span class="tb-sub">${esc(sub)}</span>` : ''}` : esc(c.valor(l));
+                                  return `<td${cls ? ` class="${cls}"` : ''}>${conteudo}</td>`;
+                              })
                               .join('')}</tr>`;
                       })
                       .join('')
                 : `<tr><td class="tb-vazio" colspan="${aba.colunas.length}">Nenhuma linha com esses filtros.</td></tr>`;
             const algum = Object.values(filtros).some(filtroAtivo);
-            conta.textContent = algum ? `${linhas.length} de ${aba.linhas.length} pessoas` : `${aba.linhas.length} pessoas`;
+            conta.textContent = algum ? `Filtrado: ${linhas.length} de ${aba.linhas.length}` : '';
             btnLimpar.hidden = !algum && !ordem;
         }
 
@@ -395,7 +406,7 @@ SGE.tabela = (() => {
                 linhas.push({
                     altura: 22,
                     celulas: aba.colunas.map((c) => {
-                        const s = { ...P.ESTILO.dadoEquipe, ...(c.centro ? { ht: 2 } : {}), ...(cor ? { bg: { rgb: cor.rgb } } : {}) };
+                        const s = { ...P.ESTILO.dadoEquipe, ...(c.centro ? { ht: 2 } : {}), ...(cor && c.colorida ? { bg: { rgb: cor.rgb } } : {}) };
                         const v = c.valor(l);
                         return { v: v == null || v === '' ? null : String(v), s };
                     }),
