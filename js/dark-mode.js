@@ -7,35 +7,24 @@
 window.SGE = window.SGE || {};
 
 SGE.darkMode = {
-    STORAGE_KEY: 'SGE_DARK_MODE',
+    // Um tema só para o Portal SGE e os sistemas (mesma chave da Barra Universal). Sem escolha: sempre claro.
+    STORAGE_KEY: 'sge_tema',
 
     init() {
-        const saved = localStorage.getItem(this.STORAGE_KEY);
-        const prefersD = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const isDark = saved !== null ? saved === 'true' : prefersD;
-
-        // sempre grava o tema (claro também): o sge-core segue o sistema operacional se não houver escolha
+        let isDark = false;
+        try { isDark = localStorage.getItem(this.STORAGE_KEY) === 'escuro'; } catch (_) { /* sem armazenamento: claro */ }
         this._apply(isDark);
 
         const btn = document.getElementById('dark-mode-btn');
         if (btn) {
             btn.addEventListener('click', () => this.toggle());
         }
-
-        // Sync on media query change (only if user hasn't set a preference)
-        if (window.matchMedia) {
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-                if (localStorage.getItem(this.STORAGE_KEY) === null) {
-                    this._apply(e.matches);
-                }
-            });
-        }
     },
 
     toggle() {
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         this._apply(!isDark);
-        localStorage.setItem(this.STORAGE_KEY, String(!isDark));
+        try { localStorage.setItem(this.STORAGE_KEY, !isDark ? 'escuro' : 'claro'); } catch (_) { /* vale só nesta visita */ }
     },
 
     _apply(dark) {

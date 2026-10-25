@@ -1,5 +1,9 @@
 # CHANGELOG — Gestão de Efetivo
 
+## v2.12.0 — 2026-10-25
+### Mudou
+- **Um tema só com o Portal SGE**: o tema claro/escuro usa a mesma escolha do portal e dos outros sistemas (chave `sge_tema`); trocar o tema em qualquer barra troca a Gestão de Efetivo junto. **Sem escolha, sempre claro** (não segue mais o tema do computador). `js/dark-mode.js`.
+
 ## v2.11.0 — 2026-10-23
 ### Mudou
 - Matriz com **6 colunas**: COLABORADOR, FUNÇÃO (MOTORISTA, OPERADOR ou a função de apoio), EQUIPAMENTO (AP 01, AV 02 - EQUIP 1 ou o setor), STATUS, REGIME e SUPERVISOR. A coluna **LETRA saiu**: o REGIME mostra **ADM**, **4X4 A/B/C/D** ou **16 HORAS EQUIPE 1 / EQUIPE 2** (a equipe vem da vaga "AP-07 - EQUIP 1"; sem vaga de equipe fica só "16 HORAS").
