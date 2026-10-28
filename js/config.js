@@ -92,7 +92,7 @@ SGE.CONFIG = {
   },
 
   // Available statuses
-  statuses: ['ATIVO', 'INATIVO', 'FÉRIAS', 'AFASTADO', 'DESLIGADO', 'EM AVISO', 'EM CONTRATAÇÃO'],
+  statuses: ['ATIVO', 'INATIVO', 'FÉRIAS', 'AFASTADO', 'BLOQUEADO NA PORTARIA', 'DESLIGADO', 'EM AVISO', 'EM CONTRATAÇÃO'],
 
   // Movement reasons
   motivos: [

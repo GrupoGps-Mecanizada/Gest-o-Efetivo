@@ -702,6 +702,8 @@
 .tb td.tb-st-sobra { background: var(--neu-bg); color: var(--neu-tx); }
 .tb td.tb-st-aviso { background: var(--bad-bg); color: var(--bad-tx); }
 .tb td.tb-st-contratacao { background: var(--warn-bg); color: var(--warn-tx); }
+.tb td.tb-st-bloqueado { background: #e4ddf4; color: #4a3a78; }
+[data-theme="dark"] .tb td.tb-st-bloqueado { background: #2e2650; color: #cfc4f2; }
 
 .tb tr.tb-sel td {
     box-shadow: inset 0 2px 0 var(--tb-prim), inset 0 -2px 0 var(--tb-prim);

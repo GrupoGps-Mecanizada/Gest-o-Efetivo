@@ -39,6 +39,7 @@ SGE.matriz = (() => {
         ativo: { chave: 'ativo', rotulo: 'Ativo', rgb: '#E2F2E7' },
         ferias: { chave: 'ferias', rotulo: 'Férias', rgb: '#E3EBF6' },
         atestado: { chave: 'atestado', rotulo: 'Afastado', rgb: '#FDE5D2' },
+        bloqueado: { chave: 'bloqueado', rotulo: 'Bloqueado na portaria', rgb: '#E4DDF4' },
         sobra: { chave: 'sobra', rotulo: 'Sobra', rgb: '#ECEEEF' },
         aviso: { chave: 'aviso', rotulo: 'Em aviso', rgb: '#FBE0DE' },
         contratacao: { chave: 'contratacao', rotulo: 'Em contratação', rgb: '#FCF0C6' },
@@ -50,6 +51,8 @@ SGE.matriz = (() => {
         if (s === 'DESLIGADO' || s === 'INATIVO') return null;
         if (s.startsWith('FÉRIAS') || s.startsWith('FERIAS')) return { texto: 'FÉRIAS', cor: COR.ferias };
         if (s === 'AFASTADO') return { texto: 'AFASTADO', cor: COR.atestado };
+        // barrado na portaria (ex.: integração vencida): o dia é abonado, não é falta
+        if (s === 'BLOQUEADO NA PORTARIA') return { texto: 'BLOQUEADO NA PORTARIA', cor: COR.bloqueado };
         if (s === 'EM AVISO') return { texto: 'EM AVISO', cor: COR.aviso };
         if (s === 'EM CONTRATAÇÃO') return { texto: 'EM CONTRATAÇÃO', cor: COR.contratacao };
         if (!temSupervisor(c) && !ehApoio(c)) return { texto: 'SOBRA', cor: COR.sobra };
