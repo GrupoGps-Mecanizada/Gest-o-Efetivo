@@ -1,5 +1,13 @@
 # CHANGELOG — Gestão de Efetivo
 
+## v2.13.0 — 2026-10-28
+### Novo
+- **Status "BLOQUEADO NA PORTARIA"** (P-205): para quem foi barrado na portaria. O dia é abonado, não é falta; o aviso do ponto (puxador do Portal GPS) não cobra falta dessas pessoas. Cor própria (lilás) na planilha. SQL `sql/2026-10-28_status_bloqueado_portaria.sql` põe o status na lista e passa o Renato Torres para ele. Pedido do Warlison.
+
+## v2.12.1 — 2026-10-28
+### Mudou
+- **Barra de cima mais fina** (62 → 48 px no computador, 56 → 50 no celular), igual à barra universal do sge-core 1.9.2. Logo, botões e avatar menores para caber. Pedido do Warlison.
+
 ## v2.12.0 — 2026-10-25
 ### Mudou
 - **Um tema só com o Portal SGE**: o tema claro/escuro usa a mesma escolha do portal e dos outros sistemas (chave `sge_tema`); trocar o tema em qualquer barra troca a Gestão de Efetivo junto. **Sem escolha, sempre claro** (não segue mais o tema do computador). `js/dark-mode.js`.

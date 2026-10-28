@@ -251,7 +251,7 @@ textarea {
 
 @media (max-width: 767px) {
     .filter-dropdown-panel {
-        top: 64px;
+        top: 58px;
         right: 8px;
         left: 8px;
         width: auto;
