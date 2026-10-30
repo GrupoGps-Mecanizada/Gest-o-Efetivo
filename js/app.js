@@ -101,7 +101,7 @@ SGE.app = {
         }
 
         const setStatus = (msg) => {
-            if (statusEl) statusEl.innerHTML = msg + '<span class="loading-dots"></span>';
+            if (statusEl) statusEl.textContent = msg;
         };
 
         // Restore persisted scroll positions from sessionStorage
@@ -127,10 +127,14 @@ SGE.app = {
                     if (parsed.movimentacoes) SGE.state.movimentacoes = parsed.movimentacoes;
                     if (parsed.equipamentos) SGE.state.equipamentos = parsed.equipamentos;
                     if (parsed.ferias) SGE.state.ferias = parsed.ferias;
+                    if (parsed.configs) {
+                        SGE.api._configs = parsed.configs;
+                        SGE.api.aplicarConfigs();
+                    }
+                    SGE.api.guardarAssinatura();
 
                     SGE.state.dataLoaded = true;
                     usedCache = true;
-                    setStatus('Carregando offline (instanciado do cache)...');
 
                     // Trigger background sync after UI is ready
                     setTimeout(() => { SGE.api.syncBackground(true); }, 1500);
@@ -149,7 +153,7 @@ SGE.app = {
             if (filterbar) filterbar.style.opacity = '0';
             if (loadingScreen) {
                 loadingScreen.classList.remove('hide');
-                setStatus('Atualizando dados...');
+                setStatus('Carregando o efetivo...');
             }
         }
 
@@ -158,12 +162,12 @@ SGE.app = {
 
         // 2. If no cache, do the network load blocking the screen
         if (!usedCache) {
-            setStatus('Conectando ao banco de dados Supabase...');
+            setStatus('Carregando o efetivo...');
             await Promise.all([
                 SGE.api.loadData(),
                 SGE.api.loadFerias()
             ]);
-            setStatus('Montando interface');
+            setStatus('Montando a tela...');
         }
 
         // Build dynamic filter chips
@@ -182,6 +186,7 @@ SGE.app = {
 
         // Restore the view the user was on before the page reload (from URL hash)
         const initialView = SGE.navigation.getInitialView();
+        SGE.app._pronto = true;
         SGE.navigation.switchView(initialView, true); // skipHash=true: don't push state again
 
         // Listen for browser back/forward navigation + Double-Back Exit

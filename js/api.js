@@ -9,6 +9,8 @@ window.SGE = window.SGE || {};
 SGE.api = {
     activeRequests: 0,
     subscriptions: [],
+    _configs: [],
+    _assinatura: null,
 
     /**
      * Show/Hide sync bar based on active requests
@@ -95,8 +97,9 @@ SGE.api = {
     /**
      * Load all data from Supabase
      * @param {boolean} silent - If true, won't show the sync bar
+     * @param {boolean} soSeMudou - Só redesenha a tela se os dados mudaram (conferência logo depois de abrir pelo cache)
      */
-    async loadData(silent = false) {
+    async loadData(silent = false, soSeMudou = false) {
         if (!window.supabase) {
             console.warn('SGE: Supabase client not initialized. Waiting for config...');
             return false;
@@ -185,30 +188,16 @@ SGE.api = {
 
             SGE.state.equipamentos = equipment;
 
-            // Load configurations
-            if (configs) {
-                configs.forEach(cfg => {
-                    // Mapeia de volta para as chaves antigas para não quebrar o frontend
-                    const legacyKeys = {
-                        'tipos_equipamento': 'equipTipos',
-                        'funcoes': 'funcoes',
-                        'motivos_movimentacao': 'motivos',
-                        'regimes': 'regimes',
-                        'status_colaborador': 'statuses',
-                        'mapa_turnos': 'turnoMap',
-                        'ordem_kanban': 'ordemKanban',
-                        'escala_turnos': 'escala'
-                    };
-                    const mappedKey = legacyKeys[cfg.chave] || cfg.chave;
-                    if (SGE.CONFIG[mappedKey] !== undefined) SGE.CONFIG[mappedKey] = cfg.valor;
-                });
-            }
+            this._configs = configs || [];
+            this.aplicarConfigs();
 
             SGE.state.dataLoaded = true;
             this.cacheData();
 
             // Trigger UI refresh if data changed
-            this.refreshUI();
+            const assinaturaAntiga = this._assinatura;
+            this.guardarAssinatura();
+            if (!soSeMudou || this._assinatura !== assinaturaAntiga) this.refreshUI();
 
             return true;
         } catch (e) {
@@ -218,10 +207,48 @@ SGE.api = {
         }
     },
 
+    /** Mapeia as configurações do banco de volta para as chaves antigas, para não quebrar o frontend */
+    aplicarConfigs() {
+        const legacyKeys = {
+            'tipos_equipamento': 'equipTipos',
+            'funcoes': 'funcoes',
+            'motivos_movimentacao': 'motivos',
+            'regimes': 'regimes',
+            'status_colaborador': 'statuses',
+            'mapa_turnos': 'turnoMap',
+            'ordem_kanban': 'ordemKanban',
+            'escala_turnos': 'escala'
+        };
+        this._configs.forEach(cfg => {
+            const mappedKey = legacyKeys[cfg.chave] || cfg.chave;
+            if (SGE.CONFIG[mappedKey] !== undefined) SGE.CONFIG[mappedKey] = cfg.valor;
+        });
+    },
+
+    /** Tudo o que a tela mostra e que fica guardado no navegador */
+    _dadosGuardados() {
+        return {
+            colaboradores: SGE.state.colaboradores,
+            supervisores: SGE.state.supervisores,
+            setores: SGE.state.setores,
+            vagas: SGE.state.vagas,
+            movimentacoes: SGE.state.movimentacoes,
+            equipamentos: SGE.state.equipamentos,
+            ferias: SGE.state.ferias,
+            configs: this._configs
+        };
+    },
+
+    /** Foto dos dados atuais, para saber se a próxima carga trouxe algo novo */
+    guardarAssinatura() {
+        this._assinatura = JSON.stringify(this._dadosGuardados());
+    },
+
     /**
      * Intelligently refresh the visible parts of the UI
      */
     refreshUI() {
+        if (!SGE.app || !SGE.app._pronto) return; // ainda abrindo: quem desenha a primeira tela é o boot()
         const v = SGE.state.activeView;
         SGE.helpers.updateStats();
 
@@ -238,16 +265,7 @@ SGE.api = {
      */
     cacheData() {
         try {
-            const cachePayload = {
-                timestamp: Date.now(),
-                colaboradores: SGE.state.colaboradores,
-                supervisores: SGE.state.supervisores,
-                setores: SGE.state.setores,
-                vagas: SGE.state.vagas,
-                movimentacoes: SGE.state.movimentacoes,
-                equipamentos: SGE.state.equipamentos,
-                ferias: SGE.state.ferias
-            };
+            const cachePayload = { timestamp: Date.now(), ...this._dadosGuardados() };
             localStorage.setItem('SGE_CACHE', JSON.stringify(cachePayload));
         } catch (e) {
             console.warn('SGE: Could not save cache:', e);
@@ -264,7 +282,7 @@ SGE.api = {
     async syncBackground(immediate = false) {
         if (immediate) {
             await Promise.all([
-                this.loadData(true),
+                this.loadData(true, true),
                 this.loadFerias()
             ]);
         }

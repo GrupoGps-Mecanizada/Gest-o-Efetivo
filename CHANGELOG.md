@@ -1,5 +1,12 @@
 # CHANGELOG — Gestão de Efetivo
 
+## v2.13.1 — 2026-10-30
+### Corrigido
+- **Abertura muito mais rápida** (P-296): a regra de segurança da página (Content-Security-Policy) fazia o Chrome baixar os arquivos do sistema um por vez, e a abertura levava cerca de 8 s. Todos os scripts agora usam `defer` e baixam juntos; a regra de segurança continua.
+- **Sem redesenho à toa**: logo depois de abrir pelo cache, a tela só é redesenhada se os dados mudaram; ao abrir sem cache, a tela é desenhada uma vez só.
+### Mudou
+- **Carregando novo** (P-297): saiu a barrinha antiga; entrou a logo enchendo do sge-core, igual à tela de conferir o acesso.
+
 ## v2.13.0 — 2026-10-28
 ### Novo
 - **Status "BLOQUEADO NA PORTARIA"** (P-205): para quem foi barrado na portaria. O dia é abonado, não é falta; o aviso do ponto (puxador do Portal GPS) não cobra falta dessas pessoas. Cor própria (lilás) na planilha. SQL `sql/2026-10-28_status_bloqueado_portaria.sql` põe o status na lista e passa o Renato Torres para ele. Pedido do Warlison.
