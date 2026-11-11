@@ -1,0 +1,96 @@
+/* ===================== ORGANOGRAMA (árvore clássica num quadro livre) ===================== */
+#organograma-view { overflow: hidden; }
+
+.org-tela { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; height: 100%; box-sizing: border-box; }
+.org-topo { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.org-titulo { font-size: 20px; font-weight: 700; color: var(--text-1); margin: 0; }
+.org-sub { margin: 4px 0 0; color: var(--text-2); font-size: 12px; }
+.org-ferr { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.org-btn {
+    padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-1);
+    color: var(--text-1); font-family: var(--font-display); font-size: 13px; font-weight: 600; cursor: pointer; min-height: 34px; min-width: 34px;
+}
+.org-btn:hover { border-color: var(--accent); color: var(--accent); }
+.org-zoom { min-width: 46px; text-align: center; font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+
+/* quadro livre */
+.org-canvas {
+    position: relative; flex: 1; min-height: 420px; height: calc(100vh - 170px);
+    overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius);
+    background-color: var(--bg-0);
+    background-image: radial-gradient(var(--border) 1px, transparent 1px);
+    background-size: 22px 22px;
+    cursor: grab; touch-action: none; user-select: none;
+}
+.org-canvas.org-movendo { cursor: grabbing; }
+.org-palco { position: absolute; left: 0; top: 0; transform-origin: 0 0; width: max-content; padding: 16px; }
+
+/* visual neutro (pedido do dono 11/11: menos cor). Só o coordenador tem a borda escura. */
+.org-cx, .org-eqc { --org-c: var(--border-bright); }
+.org-coord { --org-c: var(--text-1); }
+
+/* árvore */
+.org-arvore ul { display: flex; justify-content: center; padding: 22px 0 0; margin: 0; position: relative; list-style: none; }
+.org-arvore > ul { padding-top: 0; }
+.org-arvore li { position: relative; padding: 22px 6px 0; text-align: center; display: flex; flex-direction: column; align-items: center; }
+.org-arvore li::before, .org-arvore li::after {
+    content: ""; position: absolute; top: 0; right: 50%; width: 50%; height: 22px; border-top: 1px solid var(--border-bright);
+}
+.org-arvore li::after { right: auto; left: 50%; border-left: 1px solid var(--border-bright); }
+.org-arvore li:only-child::before, .org-arvore li:only-child::after { display: none; }
+.org-arvore li:only-child { padding-top: 0; }
+.org-arvore li:first-child::before, .org-arvore li:last-child::after { border: 0 none; }
+.org-arvore li:last-child::before { border-right: 1px solid var(--border-bright); border-radius: 0 6px 0 0; }
+.org-arvore li:first-child::after { border-radius: 6px 0 0 0; }
+.org-arvore ul ul::before { content: ""; position: absolute; top: 0; left: 50%; height: 22px; border-left: 1px solid var(--border-bright); }
+
+/* caixa */
+.org-cx {
+    display: inline-flex; flex-direction: column; align-items: center; gap: 1px;
+    background: var(--bg-1); border: 1px solid var(--org-c); border-radius: 8px;
+    padding: 7px 12px; min-width: 120px; max-width: 220px; font-family: var(--font-display); font-size: 12px;
+    color: var(--text-1); cursor: inherit;
+}
+.org-coord { border-width: 1.5px; }
+.org-cx[data-sup], .org-cx[data-colab] { cursor: pointer; }
+.org-cx[data-sup]:hover, .org-cx[data-colab]:hover { border-color: var(--text-2); }
+.org-cx b { font-size: 13px; font-weight: 600; line-height: 1.25; }
+.org-cx small { color: var(--text-2); font-size: 11px; }
+.org-cx .org-extra { color: var(--text-3); font-size: 10.5px; letter-spacing: .02em; }
+.org-seta { margin-left: 4px; color: var(--text-3); font-weight: 400; }
+.org-n { margin-top: 2px; color: var(--text-2); font-size: 11px; font-weight: 600; }
+
+/* equipamentos do supervisor: coluna de cartões embaixo da caixa */
+.org-col { position: relative; display: flex; flex-direction: column; gap: 6px; padding-top: 16px; width: 200px; }
+.org-col::before { content: ""; position: absolute; top: 0; bottom: 16px; left: 50%; border-left: 1px dashed var(--border-bright); }
+.org-eqc {
+    position: relative; background: var(--bg-1); border: 1px solid var(--border);
+    border-radius: 6px; padding: 5px 8px 4px; text-align: left;
+}
+.org-eqc-sem { border-style: dashed; }
+.org-eqc-topo { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px; }
+.org-eqc-topo b { font-size: 12.5px; font-weight: 700; color: var(--text-1); letter-spacing: .03em; }
+.org-eqc-topo small { color: var(--text-3); font-size: 10.5px; }
+.org-p {
+    display: flex; align-items: baseline; gap: 6px; width: 100%; border: 0; background: none; padding: 2px 0;
+    font-family: var(--font-display); color: var(--text-1); cursor: pointer; text-align: left;
+}
+.org-p:hover .org-pn { text-decoration: underline; }
+.org-papel { flex: 0 0 30px; font-size: 9.5px; font-weight: 600; color: var(--text-3); letter-spacing: .04em; }
+.org-papel.org-mot { color: var(--text-1); font-weight: 700; }
+.org-pn { font-size: 12px; line-height: 1.3; }
+.org-st { margin-left: auto; font-size: 9px; font-weight: 700; color: var(--red); white-space: nowrap; letter-spacing: .03em; }
+.org-vaga { font-size: 11px; color: var(--text-3); font-style: italic; padding: 2px 0; }
+
+.org-aviso { margin: 0; color: var(--text-2); font-size: 12px; }
+
+@media (max-width: 600px) {
+    .org-tela { padding: 10px; }
+    .org-canvas { height: calc(100vh - 210px); }
+}
+
+@media print {
+    .org-ferr, .org-sub, .org-aviso { display: none !important; }
+    .org-canvas { height: auto; overflow: visible; border: 0; background: none; }
+    .org-palco { position: static; transform: none !important; }
+}

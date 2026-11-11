@@ -39,6 +39,7 @@
   <link rel="stylesheet" href="css/toast.css?v=2.0.0" />
   <link rel="stylesheet" href="css/ferias.css?v=2.0.0" />
   <link rel="stylesheet" href="css/turnos.css?v=2.7.0" />
+  <link rel="stylesheet" href="css/organograma.css?v=2.14.0" />
   <link rel="stylesheet" href="css/componentes.css?v=2.0.0" />
   <link rel="stylesheet" href="css/dark-mode.css?v=2.0.0" />
   <!-- Layout do SST com as cores e a fonte do sge-core (por último: vale sobre os anteriores) -->
@@ -146,6 +147,10 @@
                 <span class="barra-subitem-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM12 4v1M17.66 6.34l-.7.7M20 12h-1M17.66 17.66l-.7-.7M12 20v-1M6.34 17.66l.7-.7M4 12h1M6.34 6.34l.7.7"/></svg></span>
                 <span class="barra-subitem-texto"><b>Férias</b><small>Quem está e quem vai sair de férias</small></span>
               </button>
+              <button type="button" role="menuitem" class="barra-subitem" data-view="organograma">
+                <span class="barra-subitem-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6v5H9zM3 16h6v5H3zM15 16h6v5h-6zM12 8v4M6 16v-4h12v4"/></svg></span>
+                <span class="barra-subitem-texto"><b>Organograma</b><small>Coordenação, supervisores, planejamento, segurança e almoxarifado</small></span>
+              </button>
               <button type="button" role="menuitem" class="barra-subitem" data-view="turnos">
                 <span class="barra-subitem-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v15H4zM4 10h16M9 3v4M15 3v4M8 14h2M14 14h2M8 17h2"/></svg></span>
                 <span class="barra-subitem-texto"><b>Turnos</b><small>Quem está de turno, letras A–D e supervisores</small></span>
@@ -230,6 +235,10 @@
           <button class="nav-menu-item" data-view="ferias">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM12 4v1M17.66 6.34l-.7.7M20 12h-1M17.66 17.66l-.7-.7M12 20v-1M6.34 17.66l.7-.7M4 12h1M6.34 6.34l.7.7"/></svg>
             Férias
+          </button>
+          <button class="nav-menu-item" data-view="organograma">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6v5H9zM3 16h6v5H3zM15 16h6v5h-6zM12 8v4M6 16v-4h12v4"/></svg>
+            Organograma
           </button>
           <button class="nav-menu-item" data-view="turnos">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v15H4zM4 10h16M9 3v4M15 3v4M8 14h2M14 14h2M8 17h2"/></svg>
@@ -323,6 +332,9 @@
       <!-- FERIAS VIEW -->
       <div id="ferias-view" class="view"></div>
 
+      <!-- ORGANOGRAMA VIEW -->
+      <div id="organograma-view" class="view"></div>
+
       <!-- TURNOS VIEW -->
       <div id="turnos-view" class="view"></div>
 
@@ -399,6 +411,7 @@
   <script defer src="js/ferias.js?v=2.0.0"></script>
   <script defer src="js/escala.js?v=2.7.0"></script>
   <script defer src="js/turnos.js?v=2.7.0"></script>
+  <script defer src="js/organograma.js?v=2.14.0"></script>
   <script defer src="js/settings.js?v=2.0.0"></script>
   <script defer src="js/navigation.js?v=2.0.0"></script>
   <script defer src="js/particles.js?v=2.0.0"></script>

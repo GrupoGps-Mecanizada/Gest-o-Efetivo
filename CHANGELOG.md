@@ -1,5 +1,9 @@
 # CHANGELOG — Gestão de Efetivo
 
+## v2.14.0 — 2026-11-11
+### Novo
+- **Tela Organograma** (menu Efetivo > Organograma): árvore de cima para baixo, formato A do portfólio de 11/11. Coordenação no topo; abaixo Supervisores (uma caixa por equipe, com pessoas, motoristas e operadores), Planejamento, Segurança e Almoxarifado. Os grupos saem da função cadastrada (COORDENADOR, PLANEJADOR/PROGRAMADOR, TÉCNICO DE SEGURANÇA, ALMOXARIFE). Cada supervisor desce para os equipamentos dele (vagas, mesmo vazias, e onde a equipe está), e cada equipamento mostra quem trabalha nele: "AP 01 · Motorista · Operador" (quem está sem equipamento fica num cartão "Sem equipamento"). Tudo num **quadro livre**: arrastar move, rodinha do mouse ou dois dedos dão zoom, botões −, +, Ajustar, Abrir/Recolher todos e Imprimir. Clicar no supervisor recolhe os equipamentos dele; clicar numa pessoa abre o painel dela. Só leitura. Visual neutro, primeiro e segundo nome, siglas curtas (AP1, AV2 E1, MOT, OP, FÉR, AFAST) e zoom nítido. Pedido do Warlison.
+
 ## v2.13.1 — 2026-10-30
 ### Corrigido
 - **Abertura muito mais rápida** (P-296): a regra de segurança da página (Content-Security-Policy) fazia o Chrome baixar os arquivos do sistema um por vez, e a abertura levava cerca de 8 s. Todos os scripts agora usam `defer` e baixam juntos; a regra de segurança continua.
