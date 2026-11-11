@@ -1,5 +1,10 @@
 # CHANGELOG — Gestão de Efetivo
 
+## v2.15.0 — 2026-11-11
+### Mudou
+- **Matriz com a tabela do Controle de Medições** (pedido do Warlison: aparência idêntica): cabeçalho ardósia claro com funil escuro em cada coluna, listras, linha clara ao passar o mouse, situação em etiqueta com bolinha, contagem "N colaboradores" e "Limpar filtros (n) ×" na barra. O menu do filtro é o mesmo das Medições: De A a Z / De Z a A (Menor/Maior na matrícula), Procurar, Selecionar tudo, valores com a quantidade, Limpar e Aplicar. Arquivo novo css/tabela-medicoes.css; menu novo em js/tabela-excel.js.
+- **Nome e matrícula em colunas separadas** (Colaborador | Matrícula), cada uma com o próprio filtro.
+
 ## v2.14.0 — 2026-11-11
 ### Novo
 - **Tela Organograma** (menu Efetivo > Organograma): árvore de cima para baixo, formato A do portfólio de 11/11. Coordenação no topo; abaixo Supervisores (uma caixa por equipe, com pessoas, motoristas e operadores), Planejamento, Segurança e Almoxarifado. Os grupos saem da função cadastrada (COORDENADOR, PLANEJADOR/PROGRAMADOR, TÉCNICO DE SEGURANÇA, ALMOXARIFE). Cada supervisor desce para os equipamentos dele (vagas, mesmo vazias, e onde a equipe está), e cada equipamento mostra quem trabalha nele: "AP 01 · Motorista · Operador" (quem está sem equipamento fica num cartão "Sem equipamento"). Tudo num **quadro livre**: arrastar move, rodinha do mouse ou dois dedos dão zoom, botões −, +, Ajustar, Abrir/Recolher todos e Imprimir. Clicar no supervisor recolhe os equipamentos dele; clicar numa pessoa abre o painel dela. Só leitura. Visual neutro, primeiro e segundo nome, siglas curtas (AP1, AV2 E1, MOT, OP, FÉR, AFAST) e zoom nítido. Pedido do Warlison.

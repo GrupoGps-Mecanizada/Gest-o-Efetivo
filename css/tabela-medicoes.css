@@ -1,0 +1,140 @@
+/* ===================== TABELA DA MATRIZ NO VISUAL DO CONTROLE DE MEDIÇÕES (v2.15.0, 11/11/2026) =====================
+   Pedido do dono: aparência idêntica à tabela do Controle de Medições (tema "Azul ardósia" do Portal SGE).
+   Cabeçalho ardósia claro, funil escuro em cada coluna, listras, linha clara ao passar o mouse,
+   situação em etiqueta e o menu de filtro (De A a Z, Procurar, Selecionar tudo, Limpar, Aplicar).
+   Carregado depois de matriz.css: só troca o visual; o funcionamento é o de js/tabela-excel.js. */
+.tb-caixa {
+    --md-sup: #ffffff;
+    --md-borda: #d5dae1;
+    --md-linha: #e3e6eb;
+    --md-zebra: #f3f5f8;
+    --md-hover: #e9f0fa;
+    --md-sel: #eaf0fb;
+    --md-th: #e4eaf2;
+    --md-th-linha: #c2cedd;
+    --md-th-tinta: #24405f;
+    --md-escuro: #1a3350;
+    --md-tinta: #101828;
+    --md-tinta2: #3b4555;
+    --md-suave: #8a94a6;
+    --md-funil: #4a5d77;
+    --md-funil-on: #1B3A6B;
+}
+[data-theme="dark"] .tb-caixa {
+    --md-sup: #161b22;
+    --md-borda: #2c3542;
+    --md-linha: #252d38;
+    --md-zebra: #1b212a;
+    --md-hover: #22324a;
+    --md-sel: #20314b;
+    --md-th: #1f2a38;
+    --md-th-linha: #334256;
+    --md-th-tinta: #c9d6e8;
+    --md-escuro: #e3ebf6;
+    --md-tinta: #e6eaf0;
+    --md-tinta2: #b8c2d0;
+    --md-suave: #8a96a8;
+    --md-funil: #9fb3cb;
+    --md-funil-on: #5b8ad0;
+}
+
+/* barra acima da tabela */
+.tb-caixa .tb-conta { color: var(--md-tinta2); font-size: 12.5px; font-weight: 400; }
+.tb-caixa .tb-conta b { color: var(--md-escuro); font-weight: 700; }
+.tb-caixa .tb-limpar {
+    height: 30px; padding: 0 12px; border: 1px solid var(--md-th-linha); border-radius: 99px;
+    background: var(--md-sup); color: var(--md-th-tinta); font-size: 12px; font-weight: 600;
+}
+.tb-caixa .tb-limpar:hover { background: var(--md-hover); }
+.tb-caixa .tb-acao { border-color: var(--md-borda); border-radius: 8px; font-size: 12.5px; }
+
+/* moldura da tabela */
+.tb-caixa .tb-rolar { border: 1px solid var(--md-borda); border-radius: 8px; background: var(--md-sup); box-shadow: none; }
+.tb-caixa .tb { font-size: 13px; color: var(--md-tinta); font-variant-numeric: tabular-nums; }
+
+/* cabeçalho */
+.tb-caixa .tb th {
+    height: auto; padding: 10px 10px; border-left: 0; border-right: 1px solid var(--md-th-linha);
+    border-bottom: 1px solid var(--md-th-linha); background: var(--md-th); color: var(--md-th-tinta);
+    font-size: 12px; font-weight: 600; white-space: nowrap;
+}
+.tb-caixa .tb th:last-child { border-right: 0; }
+.tb-caixa .tb-cab { gap: 6px; justify-content: space-between; }
+.tb-caixa .tb th.tb-centro .tb-cab > span { align-items: center; }
+.tb-caixa .tb-filtro {
+    width: 22px; height: 22px; border: 0; border-radius: 6px; background: transparent; color: var(--md-funil);
+    transition: background .15s, color .15s;
+}
+.tb-caixa .tb-filtro svg { width: 13px; height: 13px; }
+.tb-caixa .tb-filtro:hover { border: 0; background: rgba(27, 58, 107, .12); color: var(--md-funil-on); }
+.tb-caixa .tb-filtro-on, .tb-caixa .tb-filtro-on:hover { background: var(--md-funil-on); color: #fff; }
+.tb-caixa .tb-filtro[aria-expanded="true"] { box-shadow: none; background: rgba(27, 58, 107, .12); }
+
+/* linhas */
+.tb-caixa .tb td {
+    height: auto; padding: 9px 10px; border-left: 0; border-top: 0; border-bottom: 1px solid var(--md-linha);
+    border-right: 1px solid #eceff3; background: var(--md-sup); font-size: 13px; color: var(--md-tinta2);
+}
+[data-theme="dark"] .tb-caixa .tb td { border-right-color: var(--md-linha); }
+.tb-caixa .tb td:last-child { border-right: 0; }
+.tb-caixa .tb tbody tr { cursor: pointer; }
+.tb-caixa .tb tbody tr:nth-child(even) td { background: var(--md-zebra); }
+.tb-caixa .tb tbody tr:hover td { background: var(--md-hover) !important; }
+.tb-caixa .tb tr.tb-sel td { background: var(--md-sel) !important; box-shadow: none; }
+.tb-caixa .tb td.tb-fixa { padding-left: 14px; border-right: 1px solid var(--md-borda); }
+.tb-caixa .tb-nome { font-size: 13px; font-weight: 600; color: var(--md-escuro); }
+.tb-caixa .tb td.tb-num { color: var(--md-tinta2); font-size: 12.5px; letter-spacing: .01em; }
+.tb-caixa .tb-vz { color: var(--md-suave); }
+.tb-caixa .tb-rolou .tb .tb-fixa, .tb-rolou .tb .tb-fixa { box-shadow: 6px 0 8px -6px rgba(16, 24, 40, .18); }
+
+/* situação em etiqueta (pill) com bolinha, como as do Controle de Medições */
+.tb-pill {
+    display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 3px 10px;
+    font-size: 12px; font-weight: 500; line-height: 1.3; background: var(--neu-bg); color: var(--neu-tx);
+}
+.tb-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.tb-pill-ativo { background: #ecfaf1; color: #157f3c; }
+.tb-pill-ferias { background: var(--reg-bg); color: var(--reg-tx); }
+.tb-pill-atestado { background: #fff6ed; color: #b54708; }
+.tb-pill-sobra { background: #f2f4f7; color: #667085; }
+.tb-pill-aviso { background: #fef1f1; color: #c01f1f; }
+.tb-pill-contratacao { background: var(--warn-bg); color: var(--warn-tx); }
+.tb-pill-bloqueado { background: #e4ddf4; color: #4a3a78; }
+[data-theme="dark"] .tb-pill-ativo { background: var(--ok-bg); color: var(--ok-tx); }
+[data-theme="dark"] .tb-pill-atestado { background: var(--na-bg); color: var(--na-tx); }
+[data-theme="dark"] .tb-pill-sobra { background: var(--neu-bg); color: var(--neu-tx); }
+[data-theme="dark"] .tb-pill-aviso { background: var(--bad-bg); color: var(--bad-tx); }
+[data-theme="dark"] .tb-pill-bloqueado { background: #2e2650; color: #cfc4f2; }
+
+/* menu do filtro (igual ao .fpop do Controle de Medições) */
+.tbm {
+    position: fixed; z-index: 1000; width: 270px; background: #fff; border: 1px solid #dfe4ea; border-radius: 12px;
+    box-shadow: 0 16px 40px rgba(16, 24, 40, .18); padding: 10px; font-size: 13px; color: #2b3443;
+    font-family: var(--font-display, Inter, system-ui, sans-serif);
+}
+.tbm-h { font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: #8a94a6; font-weight: 600; padding: 2px 4px 8px; }
+.tbm-ord { display: flex; gap: 4px; margin-bottom: 8px; }
+.tbm-ord button { flex: 1; border: 1px solid #e3e7ec; background: #fff; border-radius: 8px; padding: 6px 8px; font: inherit; font-size: 12px; color: #3b4555; cursor: pointer; }
+.tbm-ord button:hover { background: #f4f6f9; }
+.tbm-ord button.on { background: #24405f; border-color: #24405f; color: #fff; }
+.tbm-q { width: 100%; box-sizing: border-box; border: 1px solid #dfe4ea; border-radius: 8px; padding: 7px 10px; font: inherit; font-size: 12.5px; margin-bottom: 6px; outline: none; }
+.tbm-q:focus { border-color: #9db8d8; box-shadow: 0 0 0 3px #e6eef8; }
+.tbm-l { max-height: 230px; overflow: auto; border-top: 1px solid #eef0f3; margin-top: 2px; padding-top: 4px; }
+.tbm-it { display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 7px; cursor: pointer; color: #2b3443; }
+.tbm-it:hover { background: #f4f6f9; }
+.tbm-it input { accent-color: #24405f; width: 15px; height: 15px; margin: 0; }
+.tbm-it span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tbm-it small { color: #a0a8b5; font-size: 11.5px; }
+.tbm-all { font-weight: 600; }
+.tbm-vazias { font-style: italic; color: #8a94a6; }
+.tbm-f { display: flex; align-items: center; gap: 8px; border-top: 1px solid #eef0f3; margin-top: 8px; padding-top: 10px; }
+.tbm-sp { flex: 1; }
+.tbm-bt { border: 1px solid #dfe4ea; background: #fff; color: #2e4f75; border-radius: 8px; padding: 5px 14px; font: inherit; font-size: 12px; font-weight: 500; cursor: pointer; }
+.tbm-bt:hover { background: #f4f6f9; }
+.tbm-pri { border: 1px solid #24405f; background: #24405f; color: #fff; border-radius: 8px; padding: 5px 12px; font: inherit; font-size: 12.5px; font-weight: 500; cursor: pointer; }
+.tbm-pri:hover { background: #2e4f75; }
+[data-theme="dark"] .tbm { background: #1b212a; border-color: #2c3542; color: #e6eaf0; }
+[data-theme="dark"] .tbm-it, [data-theme="dark"] .tbm-ord button, [data-theme="dark"] .tbm-bt { color: #e6eaf0; }
+[data-theme="dark"] .tbm-ord button, [data-theme="dark"] .tbm-bt, [data-theme="dark"] .tbm-q { background: #161b22; border-color: #2c3542; color: #e6eaf0; }
+[data-theme="dark"] .tbm-it:hover, [data-theme="dark"] .tbm-ord button:hover { background: #22324a; }
+[data-theme="dark"] .tbm-l, [data-theme="dark"] .tbm-f { border-color: #2c3542; }

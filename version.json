@@ -1,5 +1,5 @@
 {
-  "version": "2.14.0",
+  "version": "2.15.0",
   "updated_at": "2026-11-11",
-  "notes": "Tela Organograma (árvore: coordenação, supervisores, planejamento, segurança e almoxarifado)"
+  "notes": "Matriz no visual da tabela do Controle de Medições; nome e matrícula em colunas separadas"
 }

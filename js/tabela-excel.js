@@ -80,6 +80,8 @@ SGE.tabela = (() => {
         return `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
     }
 
+    const FUNIL = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18l-7 8.5V19l-4 2v-8.5z"/></svg>';
+
     /** abaixo do botão; sobe se não couber até o fim da tela */
     function posicaoMenu(r) {
         const margem = 8;
@@ -151,9 +153,9 @@ SGE.tabela = (() => {
                     const marcado = ativo || dir ? ' tb-filtro-on' : '';
                     const aberto = menu && menu.coluna === c.id;
                     const primeira = c === aba.colunas[0];
-                    const rotulo = primeira ? `${esc(c.rotulo)}<small>${linhas.length} de ${aba.linhas.length} ${esc(aba.rotuloContagem || 'linhas')}</small>` : esc(c.rotulo);
                     const cls = [primeira ? 'tb-fixa' : '', c.centro ? 'tb-centro' : ''].filter(Boolean).join(' ');
-                    return `<th scope="col"${cls ? ` class="${cls}"` : ''}><div class="tb-cab"><span>${rotulo}</span><button type="button" class="tb-filtro${marcado}" data-col="${esc(c.id)}" aria-haspopup="dialog" aria-expanded="${aberto}" aria-label="Filtrar e classificar ${esc(c.rotulo)}${ativo ? ' (filtro ativo)' : ''}" title="${ativo ? `${esc(c.rotulo)}: filtro ativo` : `Filtrar ${esc(c.rotulo)}`}">${iconeBotao(ativo, dir)}</button></div></th>`;
+                    // cabeçalho igual ao do Controle de Medições: nome da coluna + funil (fica escuro quando filtra/ordena)
+                    return `<th scope="col"${cls ? ` class="${cls}"` : ''}><div class="tb-cab"><span>${esc(c.rotulo)}</span><button type="button" class="tb-filtro${marcado}" data-col="${esc(c.id)}" aria-haspopup="dialog" aria-expanded="${aberto}" aria-label="Filtrar e ordenar ${esc(c.rotulo)}${ativo ? ' (filtro ativo)' : ''}" title="Filtrar e ordenar">${FUNIL}</button></div></th>`;
                 })
                 .join('')}</tr>`;
             tabela.querySelector('tbody').innerHTML = linhas.length
@@ -163,9 +165,13 @@ SGE.tabela = (() => {
                           const cor = aba.corLinha && aba.corLinha(l);
                           return `<tr data-k="${esc(k)}"${selecionados.has(k) ? ' class="tb-sel"' : ''}>${aba.colunas
                               .map((c, i) => {
-                                  const cls = [i === 0 ? 'tb-fixa' : '', c.centro ? 'tb-centro' : '', c.colorida && cor ? `tb-st tb-st-${cor.chave}` : ''].filter(Boolean).join(' ');
+                                  const cls = [i === 0 ? 'tb-fixa' : '', c.centro ? 'tb-centro' : '', c.classe || ''].filter(Boolean).join(' ');
                                   const sub = c.sub ? c.sub(l) : '';
-                                  const conteudo = i === 0 ? `<span class="tb-nome">${esc(c.valor(l))}</span>${sub ? `<span class="tb-sub">${esc(sub)}</span>` : ''}` : esc(c.valor(l));
+                                  const v = c.valor(l);
+                                  // situação vira etiqueta (como as do Controle de Medições), não pinta a célula inteira
+                                  const conteudo = c.colorida && cor
+                                      ? `<span class="tb-pill tb-pill-${esc(cor.chave)}">${esc(v)}</span>`
+                                      : i === 0 ? `<span class="tb-nome">${esc(v)}</span>${sub ? `<span class="tb-sub">${esc(sub)}</span>` : ''}` : (v == null || v === '' ? '<span class="tb-vz">–</span>' : esc(v));
                                   return `<td${cls ? ` class="${cls}"` : ''}>${conteudo}</td>`;
                               })
                               .join('')}</tr>`;
@@ -173,8 +179,11 @@ SGE.tabela = (() => {
                       .join('')
                 : `<tr><td class="tb-vazio" colspan="${aba.colunas.length}">Nenhuma linha com esses filtros.</td></tr>`;
             const algum = Object.values(filtros).some(filtroAtivo);
-            conta.textContent = algum ? `Filtrado: ${linhas.length} de ${aba.linhas.length}` : '';
-            btnLimpar.hidden = !algum && !ordem;
+            const rot = aba.rotuloContagem || 'linhas';
+            conta.innerHTML = algum ? `<b>${linhas.length}</b> de ${aba.linhas.length} ${esc(rot)}` : `<b>${aba.linhas.length}</b> ${esc(rot)}`;
+            const nf = Object.values(filtros).filter(filtroAtivo).length + (ordem ? 1 : 0);
+            btnLimpar.hidden = !nf;
+            btnLimpar.textContent = `Limpar filtros (${nf}) ×`;
         }
 
         const porChave = (k) => aba.linhas.find((l) => String(aba.chave(l)) === k);
@@ -237,152 +246,70 @@ SGE.tabela = (() => {
             if (b) b.setAttribute('aria-expanded', 'false');
         }
 
+        /* Menu do filtro igual ao do Controle de Medições (06/11/2026): título, De A a Z / De Z a A,
+           Procurar, Selecionar tudo, valores com a quantidade, Limpar e Aplicar. */
         function abrirMenu(coluna, ancora) {
             fecharMenu();
             const col = aba.colunas.find((c) => c.id === coluna);
             const filtro = filtros[coluna];
             const base = filtrar(aba.linhas, filtros, lerCelula, coluna);
             const todos = distintos(base, coluna, lerCelula);
-            const cores = coresDe(base);
-            const est = { marcados: new Set(filtro && filtro.valores ? filtro.valores : todos), busca: '', marcadosBusca: new Set(), adicionar: false, sub: null, texto: filtro && filtro.texto ? { ...filtro.texto } : null };
-            const pos = posicaoMenu(ancora);
+            const qtd = new Map();
+            base.forEach((l) => { const t = lerCelula(l, coluna).texto || VAZIAS; qtd.set(t, (qtd.get(t) || 0) + 1); });
+            const marcados = new Set(filtro && filtro.valores ? filtro.valores : todos);
+            const minha = ordem && ordem.coluna === coluna ? ordem.direcao : null;
+            const [txtAsc, txtDesc] = col.numero ? ['Menor para maior', 'Maior para menor'] : ['De A a Z', 'De Z a A'];
+
             const el = document.createElement('div');
-            el.className = 'tb-menu';
+            el.className = 'tbm';
             el.setAttribute('role', 'dialog');
             el.setAttribute('aria-label', `Filtro de ${col.rotulo}`);
-            Object.assign(el.style, { left: `${pos.left}px`, top: `${pos.top}px`, maxHeight: `${pos.altura}px`, width: `${LARGURA_MENU}px` });
+            el.innerHTML = `
+                <div class="tbm-h">${esc(col.rotulo)}</div>
+                <div class="tbm-ord"><button type="button" data-m="az" class="${minha === 'asc' ? 'on' : ''}">${txtAsc}</button><button type="button" data-m="za" class="${minha === 'desc' ? 'on' : ''}">${txtDesc}</button></div>
+                ${todos.length > 6 ? '<input class="tbm-q" placeholder="Procurar" aria-label="Procurar valores">' : ''}
+                <label class="tbm-it tbm-all"><input type="checkbox" data-tudo${marcados.size === todos.length ? ' checked' : ''}><span>Selecionar tudo</span></label>
+                <div class="tbm-l">${todos.map((t) => `<label class="tbm-it"><input type="checkbox" data-valor="${esc(t)}"${marcados.has(t) ? ' checked' : ''}><span${t === VAZIAS ? ' class="tbm-vazias"' : ''}>${esc(t)}</span><small>${qtd.get(t) || 0}</small></label>`).join('')}</div>
+                <div class="tbm-f"><button type="button" class="tbm-bt" data-m="limpar">Limpar</button><span class="tbm-sp"></span><button type="button" class="tbm-pri" data-m="ok">Aplicar</button></div>`;
             document.body.appendChild(el);
+            const r = ancora;
+            el.style.left = `${Math.max(8, Math.min(window.innerWidth - LARGURA_MENU - 8, r.right - LARGURA_MENU + 14))}px`;
+            el.style.top = `${Math.max(8, Math.min(r.bottom + 6, window.innerHeight - el.offsetHeight - 8))}px`;
 
-            const aplicar = (f) => {
-                if (f) filtros[coluna] = f;
-                else delete filtros[coluna];
-                fecharMenu();
-                desenhar();
+            const caixas = () => [...el.querySelectorAll('.tbm-l input[data-valor]')];
+            const visivel = (i) => i.closest('.tbm-it').style.display !== 'none';
+            const sincTudo = () => {
+                const l = caixas(), n = l.filter((i) => i.checked).length, t = el.querySelector('[data-tudo]');
+                t.checked = n === l.length; t.indeterminate = n > 0 && n < l.length;
             };
-            const ordenar = (o) => {
-                ordem = o;
-                fecharMenu();
-                desenhar();
+            sincTudo();
+            const ordenar = (o) => { ordem = o; fecharMenu(); desenhar(); };
+            const aplicar = () => {
+                const escolhidos = caixas().filter((i) => i.checked).map((i) => i.dataset.valor);
+                if (escolhidos.length === todos.length) delete filtros[coluna];
+                else filtros[coluna] = { valores: escolhidos };
+                fecharMenu(); desenhar();
             };
-            const minhaOrdem = ordem && ordem.coluna === coluna ? ordem : null;
-            const item = (acao, icone, rotulo, { desativado, marcado } = {}) =>
-                `<button type="button" class="tb-mi${marcado ? ' tb-mi-on' : ''}" data-m="${acao}"${desativado ? ' disabled' : ''}><span class="tb-mi-ico">${icone || ''}</span><span class="tb-mi-txt">${rotulo}</span></button>`;
-            const sub = (id, rotulo, corpo, { desativado, marcado } = {}) =>
-                `<div><button type="button" class="tb-mi${marcado ? ' tb-mi-on' : ''}" data-sub="${id}" aria-expanded="${est.sub === id}"${desativado ? ' disabled' : ''}><span class="tb-mi-ico"></span><span class="tb-mi-txt">${rotulo}</span><span class="tb-seta${est.sub === id ? ' tb-seta-on' : ''}" aria-hidden="true">›</span></button>${est.sub === id ? `<div class="tb-submenu">${corpo}</div>` : ''}</div>`;
-            const itemCor = (acao, c, marcado) =>
-                `<button type="button" class="tb-mi${marcado ? ' tb-mi-on' : ''}" data-m="${acao}" data-cor="${esc(c.chave)}"><span class="tb-amostra" style="background:${esc(c.rgb)}"></span>${esc(c.rotulo)}</button>`;
-
-            function desenharMenu() {
-                const termo = norm(est.busca.trim());
-                const resultados = termo ? todos.filter((t) => norm(t).includes(termo)) : todos;
-                const selecao = termo ? est.marcadosBusca : est.marcados;
-                const tudo = resultados.length > 0 && resultados.every((t) => selecao.has(t));
-                const algum = resultados.some((t) => selecao.has(t));
-                const podeOk = termo ? est.marcadosBusca.size > 0 || est.adicionar : est.marcados.size > 0;
-                const opTexto = est.texto && OPERADORES.find(([o]) => o === est.texto.op);
-                el.innerHTML = `
-                    <div class="tb-grupo">
-                        ${item('az', ICONE_AZ(false), 'Classificar de A a Z', { marcado: minhaOrdem && !minhaOrdem.cor && minhaOrdem.direcao === 'asc' })}
-                        ${item('za', ICONE_AZ(true), 'Classificar de Z a A', { marcado: minhaOrdem && !minhaOrdem.cor && minhaOrdem.direcao === 'desc' })}
-                        ${sub('classCor', 'Classificar por Cor', cores.map((c) => itemCor('classCor', c, minhaOrdem && minhaOrdem.cor === c.chave)).join(''), { desativado: !cores.length })}
-                        ${minhaOrdem ? item('semOrdem', '<span aria-hidden="true">↺</span>', 'Remover classificação') : ''}
-                    </div>
-                    <div class="tb-grupo">
-                        ${item('limpar', ICONE_LIMPAR, `Limpar Filtro de "${esc(col.rotulo)}"`, { desativado: !filtroAtivo(filtro) })}
-                        ${sub('filtCor', 'Filtrar por Cor', cores.map((c) => itemCor('filtCor', c, filtro && filtro.cor === c.chave)).join(''), { desativado: !cores.length })}
-                        ${sub(
-                            'texto',
-                            'Filtros de Texto',
-                            OPERADORES.map(([o, r]) => `<button type="button" class="tb-op${est.texto && est.texto.op === o ? ' tb-op-on' : ''}" data-op="${o}">${r}</button>`).join('') +
-                                (est.texto
-                                    ? `<form class="tb-form-texto"><p>Mostrar linhas onde "${esc(col.rotulo)}" ${esc(opTexto[1].replace('...', '').toLowerCase())}:</p><input class="tb-input" data-campo="texto" value="${esc(est.texto.valor)}" aria-label="Valor do filtro de texto"><button type="submit" class="tb-ok">Aplicar</button></form>`
-                                    : ''),
-                            { marcado: filtro && !!filtro.texto },
-                        )}
-                    </div>
-                    <div class="tb-valores-caixa">
-                        <div class="tb-busca"><input class="tb-input" data-campo="busca" placeholder="Pesquisar" value="${esc(est.busca)}" aria-label="Pesquisar valores de ${esc(col.rotulo)}"></div>
-                        <div class="tb-valores" role="group" aria-label="Valores">
-                            <label class="tb-caixinha"><input type="checkbox" data-tudo${tudo ? ' checked' : ''}> <span>${termo ? '(Selecionar Todos os Resultados da Pesquisa)' : '(Selecionar Tudo)'}</span></label>
-                            ${termo ? `<label class="tb-caixinha"><input type="checkbox" data-adicionar${est.adicionar ? ' checked' : ''}> <span>Adicionar seleção atual ao filtro</span></label>` : ''}
-                            ${resultados.map((t) => `<label class="tb-caixinha tb-recuo${t === VAZIAS ? ' tb-italico' : ''}"><input type="checkbox" data-valor="${esc(t)}"${selecao.has(t) ? ' checked' : ''}> <span>${esc(t)}</span></label>`).join('')}
-                            ${resultados.length ? '' : '<p class="tb-nada">Nenhuma correspondência</p>'}
-                        </div>
-                        <div class="tb-botoes"><button type="button" class="tb-ok" data-m="ok"${podeOk ? '' : ' disabled'}>OK</button><button type="button" class="tb-cancelar" data-m="cancelar">Cancelar</button></div>
-                    </div>`;
-                const tudoCx = el.querySelector('[data-tudo]');
-                if (tudoCx) tudoCx.indeterminate = !tudo && algum;
-            }
-
-            function ok() {
-                const termo = norm(est.busca.trim());
-                let escolhidos;
-                if (termo) {
-                    const b = est.adicionar ? new Set(filtro && filtro.valores ? filtro.valores : todos) : new Set();
-                    for (const t of est.marcadosBusca) b.add(t);
-                    escolhidos = [...b];
-                } else escolhidos = [...est.marcados];
-                const semFiltro = escolhidos.length === todos.length && todos.every((t) => escolhidos.includes(t));
-                aplicar(semFiltro ? undefined : { valores: escolhidos });
-            }
-
             el.addEventListener('click', (e) => {
-                const s = e.target.closest('[data-sub]');
-                if (s) {
-                    est.sub = est.sub === s.dataset.sub ? null : s.dataset.sub;
-                    return desenharMenu();
-                }
-                const op = e.target.closest('[data-op]');
-                if (op) {
-                    est.texto = { op: op.dataset.op, valor: est.texto && est.texto.op === op.dataset.op ? est.texto.valor : '' };
-                    desenharMenu();
-                    const i = el.querySelector('[data-campo="texto"]');
-                    if (i) i.focus();
-                    return;
-                }
                 const m = e.target.closest('[data-m]');
                 if (!m) return;
-                const acoes = {
+                ({
                     az: () => ordenar({ coluna, direcao: 'asc' }),
                     za: () => ordenar({ coluna, direcao: 'desc' }),
-                    classCor: () => ordenar({ coluna, direcao: 'asc', cor: m.dataset.cor }),
-                    semOrdem: () => ordenar(null),
-                    limpar: () => aplicar(undefined),
-                    filtCor: () => aplicar({ cor: m.dataset.cor }),
-                    ok,
-                    cancelar: fecharMenu,
-                };
-                if (acoes[m.dataset.m]) acoes[m.dataset.m]();
+                    limpar: () => { delete filtros[coluna]; if (ordem && ordem.coluna === coluna) ordem = null; fecharMenu(); desenhar(); },
+                    ok: aplicar,
+                })[m.dataset.m]();
             });
             el.addEventListener('change', (e) => {
-                const termo = norm(est.busca.trim());
-                const alvo = termo ? est.marcadosBusca : est.marcados;
-                const resultados = termo ? todos.filter((t) => norm(t).includes(termo)) : todos;
-                if (e.target.matches('[data-tudo]')) resultados.forEach((t) => (e.target.checked ? alvo.add(t) : alvo.delete(t)));
-                else if (e.target.matches('[data-adicionar]')) est.adicionar = e.target.checked;
-                else if (e.target.dataset.valor !== undefined) {
-                    if (e.target.checked) alvo.add(e.target.dataset.valor);
-                    else alvo.delete(e.target.dataset.valor);
-                }
-                desenharMenu();
+                if (e.target.matches('[data-tudo]')) caixas().forEach((i) => { if (visivel(i)) i.checked = e.target.checked; });
+                sincTudo();
             });
             el.addEventListener('input', (e) => {
-                if (e.target.dataset.campo === 'texto') est.texto.valor = e.target.value;
-                if (e.target.dataset.campo !== 'busca') return;
-                est.busca = e.target.value;
-                // pesquisa nova: todos os resultados começam marcados (como no Excel)
-                const t = norm(est.busca.trim());
-                est.marcadosBusca = new Set(t ? todos.filter((x) => norm(x).includes(t)) : []);
-                const cursor = e.target.selectionStart;
-                desenharMenu();
-                const i = el.querySelector('[data-campo="busca"]');
-                i.focus();
-                i.setSelectionRange(cursor, cursor);
+                if (!e.target.matches('.tbm-q')) return;
+                const q = norm(e.target.value.trim());
+                el.querySelectorAll('.tbm-l .tbm-it').forEach((it) => { it.style.display = norm(it.textContent).includes(q) ? '' : 'none'; });
             });
-            el.addEventListener('submit', (e) => {
-                e.preventDefault();
-                if (est.texto && est.texto.valor.trim()) aplicar({ texto: { op: est.texto.op, valor: est.texto.valor.trim() } });
-            });
+            el.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); aplicar(); } });
 
             const fora = (e) => !el.contains(e.target) && !e.target.closest('.tb-filtro') && fecharMenu();
             const tecla = (e) => e.key === 'Escape' && fecharMenu();
@@ -393,7 +320,8 @@ SGE.tabela = (() => {
             menu = { el, coluna, fora, tecla };
             const b = tabela.querySelector(`.tb-filtro[data-col="${CSS.escape(coluna)}"]`);
             if (b) b.setAttribute('aria-expanded', 'true');
-            desenharMenu();
+            const q = el.querySelector('.tbm-q');
+            if (q) q.focus();
         }
 
         /* ─── Exportar / imprimir como está (filtrado e classificado) ─── */

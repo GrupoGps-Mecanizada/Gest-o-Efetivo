@@ -108,7 +108,9 @@ SGE.matriz = (() => {
             rotuloContagem: 'colaboradores',
             linhas,
             colunas: [
-                { id: 'nome', rotulo: 'Colaborador', largura: 300, valor: (l) => l.c.nome, pessoa: (l) => l.c.id, sub: (l) => l.c.matricula_gps || l.c.matricula_usiminas || '' },
+                // nome e matrícula em colunas separadas (pedido do dono, 11/11), cada uma com o próprio filtro
+                { id: 'nome', rotulo: 'Colaborador', largura: 290, valor: (l) => l.c.nome, pessoa: (l) => l.c.id },
+                { id: 'mat', rotulo: 'Matrícula', largura: 120, centro: true, numero: true, classe: 'tb-num', valor: (l) => l.c.matricula_gps || l.c.matricula_usiminas || '' },
                 { id: 'funcao', rotulo: 'Função', largura: 150, centro: true, valor: (l) => l.funcao },
                 { id: 'equip', rotulo: 'Equipamento', largura: 170, centro: true, valor: (l) => l.equip },
                 { id: 'status', rotulo: 'Status', largura: 150, centro: true, colorida: true, valor: (l) => l.sit.texto },
