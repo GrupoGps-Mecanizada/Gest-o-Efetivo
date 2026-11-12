@@ -1,5 +1,9 @@
 # CHANGELOG — Gestão de Efetivo
 
+## v2.15.1 — 2026-11-12
+### Corrigido
+- **Organograma e Turnos não apareciam no menu Efetivo da barra de cima** (a Barra Universal monta o menu pela própria lista em js/barra-universal.js, não pelo menu do index.html). Agora estão lá. Visto pelo Warlison.
+
 ## v2.15.0 — 2026-11-11
 ### Mudou
 - **Matriz com a tabela do Controle de Medições** (pedido do Warlison: aparência idêntica): cabeçalho ardósia claro com funil escuro em cada coluna, listras, linha clara ao passar o mouse, situação em etiqueta com bolinha, contagem "N colaboradores" e "Limpar filtros (n) ×" na barra. O menu do filtro é o mesmo das Medições: De A a Z / De Z a A (Menor/Maior na matrícula), Procurar, Selecionar tudo, valores com a quantidade, Limpar e Aplicar. Arquivo novo css/tabela-medicoes.css; menu novo em js/tabela-excel.js.

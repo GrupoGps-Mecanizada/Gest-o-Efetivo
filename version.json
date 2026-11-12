@@ -1,5 +1,5 @@
 {
-  "version": "2.15.0",
-  "updated_at": "2026-11-11",
-  "notes": "Matriz no visual da tabela do Controle de Medições; nome e matrícula em colunas separadas"
+  "version": "2.15.1",
+  "updated_at": "2026-11-12",
+  "notes": "Organograma e Turnos no menu da barra de cima"
 }

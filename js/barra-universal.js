@@ -25,8 +25,10 @@
             {
                 rotulo: 'Efetivo', icone: 'users', texto: 'Consultar e organizar o quadro de pessoas', itens: [
                     { rotulo: 'Matriz', texto: 'Planilha do efetivo, igual ao Excel', href: '#matriz', icone: 'clipboard', grupo: 'Quadro' },
+                    { rotulo: 'Organograma', texto: 'Coordenação, supervisores, equipamentos e apoio', href: '#organograma', icone: 'layers', grupo: 'Quadro' },
                     { rotulo: 'Pesquisa', texto: 'Achar alguém por nome, ID ou supervisor', href: '#search', icone: 'search', grupo: 'Quadro' },
                     { rotulo: 'Férias', texto: 'Quem está e quem vai sair de férias', href: '#ferias', icone: 'calendar', grupo: 'Acompanhamento' },
+                    { rotulo: 'Turnos', texto: 'Quem está de turno, letras A–D e supervisores', href: '#turnos', icone: 'clock', grupo: 'Acompanhamento' },
                     { rotulo: 'Histórico', texto: 'Movimentações entre supervisores', href: '#history', icone: 'clock', grupo: 'Acompanhamento' },
                 ],
             },
