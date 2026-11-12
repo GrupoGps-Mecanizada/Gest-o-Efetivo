@@ -1,5 +1,5 @@
 {
-  "version": "2.16.0",
+  "version": "2.18.0",
   "updated_at": "2026-11-12",
-  "notes": "Organograma: tabela com o código do equipamento na lateral e a visão Só pessoas"
+  "notes": "Aba Lotação no painel (Mover | Situação), cartões de férias/afastados no Organograma, tela cheia e impressão"
 }

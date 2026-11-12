@@ -1,5 +1,18 @@
 # CHANGELOG — Gestão de Efetivo
 
+## v2.18.0 — 2026-11-12
+### Novo
+- **Aba "Lotação" no painel lateral da pessoa** (opção 3 do portfólio de 12/11 com **Mover | Situação**; no painel oficial à direita, pedido do Warlison). Aparece só para o perfil de Gestão, entre Cadastro e Alocação. Abre direto pela **Matriz** ("Mudar lotação"), pelo botão **Lotação** do painel e pelo **Organograma** (clique na pessoa).
+  - **Mover:** supervisor numa caixa de seleção e a lista dos equipamentos dele com quem está em cada um e se tem vaga (vaga de MOT/OP, já tem MOT, vazio, atual). **SEM EQUIP** é uma linha da lista (tirar do equipamento). Regime, motivo e data já vêm preenchidos ("alterar" abre os campos). Avisa conflito antes de gravar. Grava pelo caminho de sempre (SGE.modal.confirmMove: validação, Desfazer por 10 s, movimentação e vaga) e o painel mostra os dados novos.
+  - **Situação:** Ativo, Férias, Afastado, Bloqueado na portaria, Em aviso, Em contratação. Mostra o que acontece (vai para o cartão FÉRIAS do supervisor; equipamento guardado) e avisa se o equipamento fica sem motorista. Grava **só o status** (SGE.api.syncStatusColaborador, com histórico do campo) com Desfazer por 10 s.
+- **Organograma: cartões de situação** — quem está de FÉRIAS, AFASTADO, BLOQUEADO NA PORTARIA ou EM AVISO sai do cartão do equipamento e vai para o cartão da situação embaixo do supervisor (o equipamento aparece ao lado do nome). Quem está sem supervisor aparece numa equipe **Sem Supervisor**.
+- **Organograma: Tela cheia e Imprimir** (da v2.17.0, que não foi publicada sozinha).
+
+## v2.17.0 — 2026-11-12 (não publicada sozinha; foi junto na v2.18.0)
+### Novo
+- **Organograma: Tela cheia** — a tela ocupa o monitor inteiro e a árvore se ajusta para mostrar tudo (Esc ou o mesmo botão para sair).
+- **Organograma: Imprimir ▾** com 3 opções (também servem para salvar em PDF pela janela de impressão): **Tudo em 1 folha A4 deitada**, **Tudo em 1 folha A3 deitada** (a árvore inteira reduzida para caber) e **Resumo + 1 folha por supervisor** (a hierarquia na 1ª folha; depois cada equipe em 3 colunas, com cabeçalho na cor do supervisor, contagem, coordenação e data). Respeita Com equipamentos / Só pessoas. Pedido do Warlison.
+
 ## v2.16.0 — 2026-11-12
 ### Mudou
 - **Organograma: tabela dentro do cartão** (formato E do portfólio de 12/11, escolha do Warlison): o código do equipamento fica numa coluna à esquerda unindo as linhas (como célula mesclada no Excel), e cada pessoa numa linha com MOT/OP, nome e situação (FÉR, AFAST).

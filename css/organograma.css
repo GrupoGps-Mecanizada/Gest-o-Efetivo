@@ -149,3 +149,61 @@
 .org-sc-minimo .org-seta { font-size: 10px; }
 .org-sc-minimo small { color: var(--text-3) !important; font-size: 10.5px; }
 
+
+/* ===== ver tudo e imprimir (12/11) ===== */
+/* tela cheia: a tela do Organograma ocupa o monitor inteiro */
+#organograma-view:fullscreen { background: var(--bg-0); overflow: hidden; }
+#organograma-view:fullscreen .org-tela { height: 100vh; }
+#organograma-view:fullscreen .org-canvas { height: calc(100vh - 96px); }
+
+/* menu do Imprimir */
+.org-imp { position: relative; }
+.org-imp-menu {
+    position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; width: 300px; padding: 6px;
+    background: var(--bg-1); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 12px 32px rgba(16, 24, 40, .16);
+}
+.org-imp-menu[hidden] { display: none; }
+.org-imp-menu button {
+    display: block; width: 100%; text-align: left; border: 0; background: none; border-radius: 7px; padding: 8px 10px;
+    font-family: var(--font-display); color: var(--text-1); cursor: pointer;
+}
+.org-imp-menu button:hover { background: var(--bg-2); }
+.org-imp-menu b { display: block; font-size: 13px; font-weight: 600; }
+.org-imp-menu small { display: block; font-size: 11.5px; color: var(--text-2); }
+
+/* folha de impressão: montada fora da tela e só aparece no papel/PDF */
+#org-print { position: absolute; left: -100000px; top: 0; width: max-content; background: #fff; color: #2d3748; font-family: 'Inter', Arial, sans-serif; }
+.org-pr-pag { padding: 0; }
+.org-pr-cab { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; border-bottom: 2px solid #2d3748; padding: 0 2px 6px; margin-bottom: 10px; }
+.org-pr-cab b { font-size: 16px; }
+.org-pr-cab span { font-size: 11px; color: #5a6676; }
+.org-pr-equipe .org-pr-cab { border-bottom-color: var(--sc); }
+.org-pr-fit .org-arvore { width: max-content; }
+.org-pr-grade { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 12px; align-items: start; width: 1030px; }
+.org-print-a3 .org-pr-grade { width: 1560px; }
+.org-pr-grade .org-tab { break-inside: avoid; box-shadow: none; }
+.org-print .org-cx, .org-print .org-tab { box-shadow: none !important; }
+.org-print .org-seta { display: none; }
+
+@media print {
+    html.org-imprimindo, html.org-imprimindo body { height: auto !important; overflow: visible !important; background: #fff !important; }
+    html.org-imprimindo body > *:not(#org-print) { display: none !important; }
+    html.org-imprimindo #org-print { position: static; left: auto; width: auto; }
+    html.org-imprimindo .org-pr-pag { break-after: page; }
+    html.org-imprimindo .org-pr-pag:last-child { break-after: auto; }
+    html.org-imprimindo #org-print, html.org-imprimindo #org-print * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+.org-pr-equipe .org-tab td.org-cod {
+    background: color-mix(in srgb, var(--sc) 18%, #fff);
+    color: color-mix(in srgb, var(--sc) 72%, #000);
+    border-right-color: color-mix(in srgb, var(--sc) 40%, #fff);
+}
+
+/* ===== cartões de situação: férias/afastado ficam no cartão próprio (12/11) ===== */
+/* cartões de situação: FÉRIAS (azul), AFASTADOS (laranja), outros (cinza) */
+.org-ramo .org-tab-st td.org-cod, .org-tab-st td.org-cod { font-size: 9px; letter-spacing: .05em; }
+.org-ramo .org-tab-st-fer td.org-cod, .org-tab-st-fer td.org-cod { background: #e3ebf6; color: #2c4a6e; border-right-color: #b9cbe3; }
+.org-ramo .org-tab-st-afa td.org-cod, .org-tab-st-afa td.org-cod { background: #fde5d2; color: #8a3a00; border-right-color: #f2c4a0; }
+.org-ramo .org-tab-st-out td.org-cod, .org-tab-st-out td.org-cod { background: #eceeef; color: #56606a; border-right-color: #cfd4d8; }
+.org-tab-st { border-style: dashed; }
+.org-sit-eq { font-size: 9.5px; color: var(--text-3); font-weight: 600; letter-spacing: .03em; }

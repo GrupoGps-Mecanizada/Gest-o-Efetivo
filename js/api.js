@@ -612,6 +612,42 @@ SGE.api = {
     },
 
     /**
+     * Muda SÓ a situação (status) de um colaborador — usada pelo Organograma (v2.18.0).
+     * Grava apenas o campo status (não mexe em equipamento, supervisor nem nome) e deixa o histórico do campo.
+     * @returns {boolean|null} true quando gravou; null quando deu erro
+     */
+    async syncStatusColaborador(col, novo, anterior) {
+        if (!window.supabase || !col || !novo) return null;
+        this.updateSyncBar(true);
+        try {
+            const { error } = await supabase
+                .schema('gps_mec')
+                .from('efetivo_gps_mec_colaboradores')
+                .update({ status: novo, updated_at: new Date() })
+                .eq('id', col.id);
+            if (error) throw error;
+            const quem = (SGE.auth.currentUser ? (SGE.auth.currentUser.nome || SGE.auth.currentUser.usuario) : null) || 'Sistema';
+            await supabase
+                .schema('gps_compartilhado')
+                .from('gps_field_history')
+                .insert({
+                    entity_type: 'colaborador',
+                    entity_id: String(col.id),
+                    entity_name: col.nome,
+                    changed_by: quem,
+                    changed_at: new Date().toISOString(),
+                    changes: [{ campo: 'Status', de: anterior || '', para: novo }],
+                })
+                .then(({ error: hErr }) => { if (hErr) console.warn('[SGE] histórico do status não gravado:', hErr.message); });
+            this.updateSyncBar(false);
+            return true;
+        } catch (e) {
+            this.updateSyncBar(false);
+            return this._handleError(e, 'Mudar situação');
+        }
+    },
+
+    /**
      * Upsert a config value into app_config table
      * @param {string} configKey - The config key (e.g. 'regimes', 'funcoes')
      * @param {*} value - The value to store (will be stored as JSONB)

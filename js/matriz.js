@@ -223,7 +223,7 @@ SGE.matriz = (() => {
         if (sel.length === 1) {
             selecao = `<p class="mz-sel-nome">${esc(sel[0].nome)}</p>
                 ${item({ acao: 'abrir', rotulo: 'Abrir colaborador', d: ICONE.pessoa, primario: true })}
-                ${gestao ? item({ acao: 'mover', rotulo: 'Mover de supervisor', d: ICONE.mover }) : ''}
+                ${gestao ? item({ acao: 'mover', rotulo: 'Mudar lotação (mover / situação)', d: ICONE.mover }) : ''}
                 ${gestao ? item({ acao: 'editar', rotulo: 'Editar dados', d: ICONE.editar }) : ''}`;
         } else if (sel.length > 1) {
             selecao = `<p class="mz-sel-nome">${sel.length} colaboradores selecionados</p>
@@ -332,7 +332,7 @@ SGE.matriz = (() => {
             exportar: () => st.planilha && st.planilha.exportar(),
             imprimir: () => st.planilha && st.planilha.imprimir(),
             abrir: () => um && SGE.drawer.open(um),
-            mover: () => um && SGE.modal.openMoveSelector(um),
+            mover: () => um && (SGE.lotacao ? SGE.lotacao.abrir(um) : SGE.modal.openMoveSelector(um)),
             editar: () => um && SGE.modal.openEdit(um),
             massa: () => SGE.acoesColaborador.editarEmMassa(sel.map((c) => c.id), render),
         };

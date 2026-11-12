@@ -48,6 +48,7 @@ SGE.drawer = {
     const movs = (SGE.state.movimentacoes || []).filter((m) => m.colaborador_id === col.id);
     return [
       ['cadastro', 'Cadastro', 0],
+      ...(SGE.lotacao && SGE.lotacao.pode() ? [['lotacao', 'Lotação', 0]] : []),
       ['alocacao', 'Alocação', 0],
       ['ferias', 'Férias', ferias.length],
       ['movimentacoes', 'Movimentações', movs.length],
@@ -57,6 +58,7 @@ SGE.drawer = {
 
   _conteudo(col, aba) {
     const h = SGE.helpers;
+    if (aba === 'lotacao' && SGE.lotacao) return SGE.lotacao.html(col); // Mover | Situação (v2.18.0)
     if (aba === 'cadastro') {
       const aviso = h.isSemId(col) ? '<div class="gv-aviso">Colaborador sem ID definitivo: resolva em Configurações.</div>' : '';
       return `${aviso}<h3 class="gv-secao">Cadastro</h3>${this._tabelaCampos('Cadastro', [
@@ -123,6 +125,7 @@ SGE.drawer = {
       </div>
       <div role="tabpanel" class="gv-painel">${this._conteudo(col, this._aba)}</div>`;
     if (this._aba === 'alteracoes') this._carregarAlteracoes(col.id);
+    if (SGE.lotacao) SGE.lotacao._ligar(body);
   },
 
   /**

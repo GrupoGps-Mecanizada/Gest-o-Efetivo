@@ -1,0 +1,53 @@
+/* ===================== ABA "LOTAÇÃO" DO PAINEL LATERAL (v2.18.0) ===================== */
+.lot-painel { display: flex; flex-direction: column; gap: 14px; padding-bottom: 6px; }
+.lot-acoes { display: flex; gap: 8px; justify-content: flex-end; border-top: 1px solid var(--border); padding-top: 12px; }
+.lot-acoes .btn-confirm:disabled { opacity: .5; cursor: default; }
+
+/* abas Mover | Situação */
+.lot-seg { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; flex: 0 0 auto; }
+.lot-seg button { flex: 1; border: 0; background: var(--bg-1); padding: 8px 0; font-family: var(--font-display); font-size: 13px; font-weight: 600; color: var(--text-2); cursor: pointer; }
+.lot-seg button + button { border-left: 1px solid var(--border); }
+.lot-seg button.on { background: var(--accent); color: #fff; }
+
+/* lista dos equipamentos do supervisor */
+.lot-lista { border: 1px solid var(--border); border-radius: 8px; overflow-y: auto; max-height: 46vh; }
+.lot-it { display: grid; grid-template-columns: 16px 70px 1fr auto; gap: 8px; align-items: center; padding: 7px 10px; font-size: 12.5px; border-top: 1px solid var(--border); cursor: pointer; outline: none; }
+.lot-it:first-child { border-top: 0; }
+.lot-it:hover, .lot-it:focus-visible { background: var(--bg-2); }
+.lot-it.on { background: color-mix(in srgb, var(--accent) 8%, var(--bg-1)); }
+.lot-it .rd { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--text-3); box-sizing: border-box; }
+.lot-it.on .rd { border: 4.5px solid var(--accent); }
+.lot-it b { font-size: 12px; letter-spacing: .02em; color: var(--text-1); }
+.lot-it .ps { color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lot-it .ps i { color: var(--text-3); font-style: normal; font-size: 11px; }
+.lot-it .tg { font-size: 10.5px; font-weight: 600; white-space: nowrap; }
+.lot-it .tg.livre { color: #157f3c; }
+.lot-it .tg.ocup { color: var(--text-3); }
+.lot-it .tg.atual { color: var(--accent); }
+.lot-it.dis { opacity: .6; cursor: default; }
+
+/* linha com o que já vem preenchido */
+.lot-auto { font-size: 12px; color: var(--text-2); display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
+.lot-auto b { color: var(--text-1); }
+.lot-auto a { color: var(--accent); font-weight: 600; text-decoration: none; }
+.lot-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* aviso e resumo */
+.lot-aviso { font-size: 12.5px; color: #b54708; background: #fff6ed; border-radius: 6px; padding: 8px 10px; }
+.lot-res { font-size: 13px; color: var(--text-2); border-left: 3px solid var(--accent); padding: 2px 0 2px 10px; }
+.lot-res b { color: var(--text-1); }
+
+/* situação */
+.lot-sit { display: flex; flex-wrap: wrap; gap: 6px; }
+.lot-sit button { border: 1px solid var(--border); background: var(--bg-1); color: var(--text-1); border-radius: 999px; padding: 6px 13px; font-family: var(--font-display); font-size: 12.5px; cursor: pointer; }
+.lot-sit button:hover { border-color: var(--text-2); }
+.lot-sit button.on { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+
+[data-theme="dark"] .lot-aviso { background: #3a2a14; color: #ffcf99; }
+[data-theme="dark"] .lot-it .tg.livre { color: #7fd8a0; }
+
+@media (max-width: 480px) {
+    .lot-it { grid-template-columns: 16px 58px 1fr; }
+    .lot-it .tg { grid-column: 3; }
+    .lot-2 { grid-template-columns: 1fr; }
+}

@@ -394,8 +394,8 @@ SGE.app = {
 
             if (action === 'move') {
                 if (!SGE.auth.hasRole('GESTAO')) return;
-                SGE.drawer.close();
-                SGE.modal.openMoveSelector(col);
+                // aba Lotação do próprio painel (v2.18.0); sem ela, a seleção antiga
+                if (SGE.lotacao) SGE.lotacao.abrir(col); else { SGE.drawer.close(); SGE.modal.openMoveSelector(col); }
             } else if (action === 'edit') {
                 if (!SGE.auth.hasRole('GESTAO')) return;
                 SGE.drawer.close();
