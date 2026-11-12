@@ -60,27 +60,43 @@
 .org-seta { margin-left: 4px; color: var(--text-3); font-weight: 400; }
 .org-n { margin-top: 2px; color: var(--text-2); font-size: 11px; font-weight: 600; }
 
-/* equipamentos do supervisor: coluna de cartões embaixo da caixa */
-.org-col { position: relative; display: flex; flex-direction: column; gap: 6px; padding-top: 16px; width: 200px; }
+/* equipamentos do supervisor: coluna de tabelas embaixo da caixa (formato E do portfólio de 12/11:
+   código do equipamento na lateral, unindo as linhas como célula mesclada) */
+.org-col { position: relative; display: flex; flex-direction: column; gap: 6px; padding-top: 16px; width: 286px; }
 .org-col::before { content: ""; position: absolute; top: 0; bottom: 16px; left: 50%; border-left: 1px dashed var(--border-bright); }
-.org-eqc {
-    position: relative; background: var(--bg-1); border: 1px solid var(--border);
-    border-radius: 6px; padding: 5px 8px 4px; text-align: left;
+.org-col-pes { width: 210px; }
+.org-tab {
+    position: relative; width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0;
+    background: var(--bg-1); border: 1px solid var(--border); border-radius: 6px; overflow: hidden;
+    font-family: var(--font-display); font-size: 12px; color: var(--text-1); text-align: left;
 }
-.org-eqc-sem { border-style: dashed; }
-.org-eqc-topo { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px; }
-.org-eqc-topo b { font-size: 12.5px; font-weight: 700; color: var(--text-1); letter-spacing: .03em; }
-.org-eqc-topo small { color: var(--text-3); font-size: 10.5px; }
-.org-p {
-    display: flex; align-items: baseline; gap: 6px; width: 100%; border: 0; background: none; padding: 2px 0;
-    font-family: var(--font-display); color: var(--text-1); cursor: pointer; text-align: left;
+.org-tab-sem { border-style: dashed; }
+.org-c-cod { width: 62px; }
+.org-c-fn { width: 36px; }
+.org-c-sit { width: 48px; }
+.org-tab td { padding: 4px 6px; border-bottom: 1px solid var(--bg-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
+.org-tab tr:last-child td, .org-tab td.org-cod { border-bottom: 0; }
+.org-tab td.org-cod {
+    text-align: center; font-weight: 700; font-size: 12px; letter-spacing: .02em; color: var(--text-1);
+    background: var(--bg-2); border-right: 1px solid var(--border); white-space: normal; line-height: 1.2; overflow: visible; text-overflow: clip; overflow-wrap: normal; padding: 4px 3px; font-size: 11.5px;
 }
-.org-p:hover .org-pn { text-decoration: underline; }
-.org-papel { flex: 0 0 30px; font-size: 9.5px; font-weight: 600; color: var(--text-3); letter-spacing: .04em; }
-.org-papel.org-mot { color: var(--text-1); font-weight: 700; }
-.org-pn { font-size: 12px; line-height: 1.3; }
-.org-st { margin-left: auto; font-size: 9px; font-weight: 700; color: var(--red); white-space: nowrap; letter-spacing: .03em; }
-.org-vaga { font-size: 11px; color: var(--text-3); font-style: italic; padding: 2px 0; }
+.org-tab td.org-cod small { display: block; margin-top: 1px; font-weight: 400; font-size: 10px; color: var(--text-3); }
+.org-tab tr[data-colab] { cursor: pointer; }
+.org-tab tr[data-colab]:hover td:not(.org-cod) { background: var(--bg-2); }
+.org-tab tr[data-colab]:hover .org-pn { text-decoration: underline; }
+.org-fn { font-size: 9.5px; font-weight: 600; color: var(--text-3); letter-spacing: .04em; }
+.org-fn.org-mot { color: var(--text-1); font-weight: 700; }
+.org-pn { font-size: 12px; }
+.org-sit { text-align: right; overflow: visible !important; text-overflow: clip !important; padding-left: 2px !important; }
+.org-st { font-size: 9px; font-weight: 700; color: var(--red); white-space: nowrap; letter-spacing: .03em; }
+.org-vaga { font-size: 11px; color: var(--text-3); font-style: italic; }
+
+/* Com equipamentos | Só pessoas */
+.org-modo { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--bg-1); margin-right: 4px; }
+.org-modo button { border: 0; background: transparent; color: var(--text-2); font-family: var(--font-display); font-size: 12.5px; font-weight: 500; padding: 0 12px; min-height: 32px; cursor: pointer; }
+.org-modo button + button { border-left: 1px solid var(--border); }
+.org-modo button.on { background: var(--text-1); color: var(--bg-1); }
+.org-modo button:not(.on):hover { background: var(--bg-2); }
 
 .org-aviso { margin: 0; color: var(--text-2); font-size: 12px; }
 
@@ -94,3 +110,42 @@
     .org-canvas { height: auto; overflow: visible; border: 0; background: none; }
     .org-palco { position: static; transform: none !important; }
 }
+
+/* contorno mais forte para as caixas e tabelas se destacarem do fundo pontilhado (pedido do dono, 12/11) */
+.org-cx, .org-eqc { --org-c: #9aa4b2; }
+.org-coord { --org-c: var(--text-1); }
+.org-cx, .org-tab { box-shadow: 0 1px 3px rgba(16, 24, 40, .10), 0 1px 2px rgba(16, 24, 40, .06); }
+.org-tab { border-color: #9aa4b2; }
+.org-tab td.org-cod { border-right-color: #b8c0cc; }
+[data-theme="dark"] .org-cx, [data-theme="dark"] .org-eqc, [data-theme="dark"] .org-tab { --org-c: #5b6576; border-color: #5b6576; }
+[data-theme="dark"] .org-coord { --org-c: var(--text-1); border-color: var(--text-1); }
+@media print { .org-cx, .org-tab { box-shadow: none; } }
+
+/* código do equipamento: fundo mais escuro e sigla menor, sem a quantidade (pedido do dono, 12/11) */
+.org-tab td.org-cod { background: #d3dbe6; color: #1a3350; font-size: 10.5px; letter-spacing: .03em; border-right-color: #aab6c6; }
+[data-theme="dark"] .org-tab td.org-cod { background: #2a3546; color: #dbe4f0; border-right-color: #3d4a5e; }
+
+/* cor de cada supervisor (opção 1 do portfólio de 12/11): faixa no topo da caixa e código do equipamento no tom claro */
+.org-ramo > .org-cx { border-top: 4px solid var(--sc); }
+.org-ramo .org-seta { color: var(--sc); }
+.org-ramo .org-col::before { border-left-color: color-mix(in srgb, var(--sc) 55%, transparent); }
+.org-ramo .org-tab td.org-cod {
+    background: color-mix(in srgb, var(--sc) 18%, #fff);
+    color: color-mix(in srgb, var(--sc) 72%, #000);
+    border-right-color: color-mix(in srgb, var(--sc) 40%, #fff);
+}
+.org-ramo .org-tab-pes { border-top: 3px solid var(--sc); }
+[data-theme="dark"] .org-ramo .org-tab td.org-cod {
+    background: color-mix(in srgb, var(--sc) 30%, #161920);
+    color: color-mix(in srgb, var(--sc) 35%, #fff);
+    border-right-color: color-mix(in srgb, var(--sc) 45%, #161920);
+}
+
+/* sigla do equipamento ainda menor (pedido do dono, 12/11) */
+.org-tab td.org-cod { font-size: 9.5px; font-weight: 600; letter-spacing: .04em; }
+
+/* cartão do supervisor no formato "Mínimo" (escolha do dono, 12/11): só o nome e o total */
+.org-sc-minimo { padding: 6px 14px; min-width: 120px; }
+.org-sc-minimo .org-seta { font-size: 10px; }
+.org-sc-minimo small { color: var(--text-3) !important; font-size: 10.5px; }
+

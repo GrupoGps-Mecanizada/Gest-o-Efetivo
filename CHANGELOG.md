@@ -1,5 +1,16 @@
 # CHANGELOG — Gestão de Efetivo
 
+## v2.16.0 — 2026-11-12
+### Mudou
+- **Organograma: tabela dentro do cartão** (formato E do portfólio de 12/11, escolha do Warlison): o código do equipamento fica numa coluna à esquerda unindo as linhas (como célula mesclada no Excel), e cada pessoa numa linha com MOT/OP, nome e situação (FÉR, AFAST).
+### Novo
+- **Com equipamentos | Só pessoas**: botão no topo do Organograma. "Só pessoas" mostra embaixo de cada supervisor só a lista de pessoas (motoristas primeiro), sem os equipamentos. A escolha fica guardada neste navegador. "Recolher todos" continua mostrando só a hierarquia.
+- **Cartão do supervisor mais limpo (formato "Mínimo", escolha do Warlison)**: só o nome e o total de pessoas, com a faixa na cor do supervisor.
+- **Sigla do equipamento menor.**
+- **Cor por supervisor** (opção 1 do portfólio de 12/11): faixa colorida no topo da caixa do supervisor e o código dos equipamentos no tom claro da mesma cor (Donizete azul, Genesio verde, Junior roxo, Ozias laranja, Matusalém vinho, Fábio petróleo, Israel oliva, 16 horas cinza-azulado; supervisor novo ganha cor fixa pelo nome).
+- **Código do equipamento mais escuro**, sigla menor e sem o número de pessoas embaixo.
+- **Contorno mais forte** nas caixas e tabelas do Organograma, com sombra leve, para destacar do fundo.
+
 ## v2.15.1 — 2026-11-12
 ### Corrigido
 - **Organograma e Turnos não apareciam no menu Efetivo da barra de cima** (a Barra Universal monta o menu pela própria lista em js/barra-universal.js, não pelo menu do index.html). Agora estão lá. Visto pelo Warlison.

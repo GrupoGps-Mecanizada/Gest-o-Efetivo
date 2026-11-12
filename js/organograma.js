@@ -11,6 +11,7 @@ window.SGE = window.SGE || {};
 
 SGE.organograma = {
     _fechados: new Set(),        // supervisores com os equipamentos recolhidos
+    _modo: (() => { try { return localStorage.getItem('sge_organograma_modo') === 'pessoas' ? 'pessoas' : 'equip'; } catch (e) { return 'equip'; } })(),
     _vista: null,                // { x, y, z } posição e zoom do quadro (null = ajustar na tela)
     _arrastou: false,
 
@@ -123,31 +124,58 @@ SGE.organograma = {
         })}</li>`).join('')}</ul>`;
     },
 
+    /** linha de uma pessoa na tabela do cartão: função | nome | situação (clique abre o painel) */
+    _linhaPessoa(c) {
+        const esc = SGE.helpers.escapeHtml;
+        return `<td class="org-fn${this._ehMotorista(c) ? ' org-mot' : ''}">${this._papel(c)}</td>
+            <td class="org-pn">${esc(this._nomeCurto(c.nome))}</td>
+            <td class="org-sit">${c.status !== 'ATIVO' ? `<span class="org-st" title="${esc(c.status)}">${esc(this._status(c))}</span>` : ''}</td>`;
+    },
+
+    /** formato E do portfólio de 12/11: código do equipamento na lateral, unindo as linhas (célula mesclada) */
     _cartaoEquip(e) {
         const esc = SGE.helpers.escapeHtml;
+        const cod = `<td class="org-cod" rowspan="${Math.max(1, e.pessoas.length)}">${esc(e.sem ? 'SEM EQUIP' : e.rotulo)}</td>`;
         const linhas = e.pessoas.length
-            ? e.pessoas.map(c => `<button type="button" class="org-p" data-colab="${esc(String(c.id))}" title="${esc(c.nome)}">
-                    <span class="org-papel${this._ehMotorista(c) ? ' org-mot' : ''}">${this._papel(c)}</span>
-                    <span class="org-pn">${esc(this._nomeCurto(c.nome))}</span>
-                    ${c.status !== 'ATIVO' ? `<span class="org-st" title="${esc(c.status)}">${esc(this._status(c))}</span>` : ''}
-                </button>`).join('')
-            : '<div class="org-vaga">vaga sem ninguém</div>';
-        return `<div class="org-eqc${e.sem ? ' org-eqc-sem' : ''}">
-            <div class="org-eqc-topo"><b>${esc(e.rotulo)}</b><small>${e.pessoas.length}</small></div>
-            ${linhas}
-        </div>`;
+            ? e.pessoas.map((c, i) => `<tr data-colab="${esc(String(c.id))}" title="${esc(c.nome)}">${i === 0 ? cod : ''}${this._linhaPessoa(c)}</tr>`).join('')
+            : `<tr>${cod}<td colspan="3" class="org-vaga">vaga sem ninguém</td></tr>`;
+        return `<table class="org-tab${e.sem ? ' org-tab-sem' : ''}"><colgroup><col class="org-c-cod"><col class="org-c-fn"><col><col class="org-c-sit"></colgroup><tbody>${linhas}</tbody></table>`;
+    },
+
+    /** visão "Só pessoas": uma tabela por supervisor, sem os equipamentos (motoristas primeiro) */
+    _tabelaPessoas(s) {
+        const esc = SGE.helpers.escapeHtml;
+        const ord = c => (this._ehMotorista(c) ? 0 : 1);
+        const l = [...s.equipe].sort((a, b) => ord(a) - ord(b) || a.nome.localeCompare(b.nome, 'pt'));
+        return `<table class="org-tab org-tab-pes"><colgroup><col class="org-c-fn"><col><col class="org-c-sit"></colgroup><tbody>${l.map(c => `<tr data-colab="${esc(String(c.id))}" title="${esc(c.nome)}">${this._linhaPessoa(c)}</tr>`).join('')}</tbody></table>`;
+    },
+
+    // Cor de cada supervisor (opção 1 do portfólio de 12/11: faixa no topo + código no tom claro). Tons fechados, sem neon.
+    CORES_SUP: { 'DONIZETE': '#3b6ea8', 'GENESIO ADAO': '#2f8a6b', 'JUNIOR PEREIRA': '#7a5ba8', 'OZIAS': '#c0702a', 'MATUSALEM': '#a24a5e', 'FABIO': '#2b7f8f', 'ISRAEL': '#7a7d2b', '16 HORAS': '#4f5d75' },
+    PALETA_EXTRA: ['#5b7f3a', '#8a5a2b', '#3a6b8a', '#8a3a6b', '#4a7a6a', '#6a5a8a'],
+    _corSup(nome) {
+        const n = String(nome || '').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+        if (this.CORES_SUP[n]) return this.CORES_SUP[n];
+        let h = 0; for (const ch of n) h = (h * 31 + ch.charCodeAt(0)) >>> 0; // supervisor novo: cor fixa pelo nome
+        return this.PALETA_EXTRA[h % this.PALETA_EXTRA.length];
+    },
+
+    /** cartão do supervisor no formato "Mínimo" (escolha do dono, 12/11): só o nome e o total de pessoas */
+    _cartaoSup(s, fechado) {
+        const esc = SGE.helpers.escapeHtml;
+        const seta = `<span class="org-seta">${fechado ? '▸' : '▾'}</span>`;
+        const t = s.equipe.length;
+        return `<button type="button" class="org-cx org-sc org-sc-minimo" data-sup="${esc(s.nome)}" title="${fechado ? 'Mostrar' : 'Recolher'} os equipamentos">`
+            + `<b>${esc(this._nomeSup(s.nome))}${seta}</b><small>${t} ${t === 1 ? 'pessoa' : 'pessoas'}</small></button>`;
     },
 
     _ramoSupervisor(s) {
-        const esc = SGE.helpers.escapeHtml;
         const fechado = this._fechados.has(s.nome);
-        const caixa = this._caixa({
-            nome: this._nomeSup(s.nome), cargo: s.regime, cor: 'sup', qtd: s.equipe.length,
-            extra: `${s.equipamentos.filter(e => !e.sem).length} EQUIP · ${s.mot} MOT · ${s.equipe.length - s.mot} OP`,
-            attrs: `data-sup="${esc(s.nome)}" title="${fechado ? 'Mostrar' : 'Recolher'} os equipamentos"`,
-            seta: `<span class="org-seta">${fechado ? '▸' : '▾'}</span>`,
-        });
-        return `<li>${caixa}${fechado ? '' : `<div class="org-col">${s.equipamentos.map(e => this._cartaoEquip(e)).join('')}</div>`}</li>`;
+        const caixa = this._cartaoSup(s, fechado);
+        const corpo = this._modo === 'pessoas'
+            ? (s.equipe.length ? this._tabelaPessoas(s) : '')
+            : s.equipamentos.map(e => this._cartaoEquip(e)).join('');
+        return `<li class="org-ramo" style="--sc:${this._corSup(s.nome)}">${caixa}${fechado || !corpo ? '' : `<div class="org-col${this._modo === 'pessoas' ? ' org-col-pes' : ''}">${corpo}</div>`}</li>`;
     },
 
     render() {
@@ -180,6 +208,10 @@ SGE.organograma = {
                     <p class="org-sub">Arraste para mover · rodinha do mouse ou dois dedos para aproximar · clique no supervisor para recolher · clique na pessoa para abrir o painel.</p>
                 </div>
                 <div class="org-ferr">
+                    <div class="org-modo" role="group" aria-label="O que mostrar embaixo dos supervisores">
+                        <button type="button" data-acao="modo-equip" class="${this._modo === 'pessoas' ? '' : 'on'}" title="Equipamentos com motorista e operador">Com equipamentos</button>
+                        <button type="button" data-acao="modo-pessoas" class="${this._modo === 'pessoas' ? 'on' : ''}" title="Só a lista de pessoas de cada supervisor">Só pessoas</button>
+                    </div>
                     <button type="button" class="org-btn" data-acao="menos" title="Afastar">−</button>
                     <span class="org-zoom" id="org-zoom">100%</span>
                     <button type="button" class="org-btn" data-acao="mais" title="Aproximar">+</button>
@@ -215,6 +247,13 @@ SGE.organograma = {
         if (a === 'imprimir') return window.print();
         if (a === 'mais' || a === 'menos') return this._zoomCentro(a === 'mais' ? 1.25 : 0.8);
         if (a === 'ajustar') return this._ajustar();
+        if (a === 'modo-equip' || a === 'modo-pessoas') {
+            this._modo = a === 'modo-pessoas' ? 'pessoas' : 'equip';
+            try { localStorage.setItem('sge_organograma_modo', this._modo); } catch (e) { /* sem armazenamento: só nesta tela */ }
+            this._fechados.clear();
+            this._vista = null; // a árvore muda de tamanho: ajusta na tela de novo
+            return this.render();
+        }
         if (a === 'abrir') { this._fechados.clear(); return this.render(); }
         if (a === 'fechar') { d.supervisores.forEach(s => this._fechados.add(s.nome)); return this.render(); }
         if (b.dataset.sup) {
