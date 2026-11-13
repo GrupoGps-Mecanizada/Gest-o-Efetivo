@@ -243,10 +243,6 @@ SGE.organograma = {
         view.innerHTML = `
         <div class="org-tela">
             <div class="org-topo">
-                <div>
-                    <h2 class="org-titulo">Organograma</h2>
-                    <p class="org-sub">Arraste para mover · rodinha do mouse ou dois dedos para aproximar · clique no supervisor para recolher · clique na pessoa para ${this._podeLotar() ? 'mudar a lotação (mover ou situação)' : 'abrir o painel'}.</p>
-                </div>
                 <div class="org-ferr">
                     <div class="org-modo" role="group" aria-label="O que mostrar embaixo dos supervisores">
                         <button type="button" data-acao="modo-equip" class="${this._modo === 'pessoas' ? '' : 'on'}" title="Equipamentos com motorista e operador">Com equipamentos</button>

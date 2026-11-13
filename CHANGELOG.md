@@ -1,5 +1,9 @@
 # CHANGELOG — Gestão de Efetivo
 
+## v2.18.1 — 2026-11-13
+### Mudado
+- **Organograma sem a faixa de título** (o título "Organograma" e o texto de ajuda "Arraste para mover...") a pedido do Warlison. Os botões ficam no topo.
+
 ## v2.18.0 — 2026-11-12
 ### Novo
 - **Aba "Lotação" no painel lateral da pessoa** (opção 3 do portfólio de 12/11 com **Mover | Situação**; no painel oficial à direita, pedido do Warlison). Aparece só para o perfil de Gestão, entre Cadastro e Alocação. Abre direto pela **Matriz** ("Mudar lotação"), pelo botão **Lotação** do painel e pelo **Organograma** (clique na pessoa).
